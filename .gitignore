@@ -3,6 +3,7 @@ Rally the Troops_paths-of-glory-master/
 cardImage_ko/
 *.pdf
 *:Zone.Identifier
+replays/
 
 # Python / uv
 .venv/
