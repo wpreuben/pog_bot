@@ -65,7 +65,8 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
         for nation, points in card["rp"].items():
             if nation in state["war_nations"] and not state["war_nations"][nation]:
                 continue
-            player["replacement_points"][nation] = player["replacement_points"].get(nation, 0) + points
+            pool = "ALLIED" if nation == "A" else nation
+            player["replacement_points"][pool] = player["replacement_points"].get(pool, 0) + points
         next_state = complete_action(state)
         state.clear()
         state.update(next_state)

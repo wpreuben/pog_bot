@@ -11,6 +11,7 @@ from .rules import trenches as _trenches  # 참호 처리기 등록
 from .rules import sr as _sr  # 전략 재배치 처리기 등록
 from .rules import combat as _combat  # 전투 처리기 등록
 from .rules import forts as _forts  # 공성 처리기 등록
+from .rules import replacements as _replacements  # 보충 처리기 등록
 
 __all__ = [
     "Action",

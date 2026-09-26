@@ -165,6 +165,7 @@ def test_winning_combat_card_is_discarded_at_turn_end():
 
     state = combat_state()
     state["phase"] = "END_TURN"
+    state["decision"] = None
     state["players"]["CP"]["in_play"] = ["WIRELESS_INTERCEPTS"]
     result = advance_automatic_phases(state)
     assert result["players"]["CP"]["in_play"] == []

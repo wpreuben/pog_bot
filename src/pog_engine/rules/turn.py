@@ -95,6 +95,8 @@ _AFTER_ACTIONS = {
 
 
 def advance_automatic_phases(state: FullGameState) -> FullGameState:
+    if state["decision"] is not None:
+        raise InvalidStateError("선택 창이 열려 있는 단계는 자동으로 넘길 수 없습니다")
     next_state = deepcopy(state)
     phase = next_state["phase"]
     if phase == "ATTRITION":
@@ -107,6 +109,10 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         return begin_siege_phase(next_state)
     if phase in _AFTER_ACTIONS:
         next_state["phase"] = _AFTER_ACTIONS[phase]
+        if next_state["phase"] in {"REPLACEMENT_AP", "REPLACEMENT_CP"}:
+            from .replacements import begin_replacement_phase
+
+            return begin_replacement_phase(next_state, "AP" if next_state["phase"] == "REPLACEMENT_AP" else "CP")
         next_state["active_side"] = "AP" if next_state["phase"] == "REPLACEMENT_AP" else (
             "CP" if next_state["phase"] == "REPLACEMENT_CP" else "CHANCE"
         )

@@ -50,6 +50,7 @@ def test_fort_combat_destroys_only_after_units_gone_and_lf_met():
 def test_first_turn_siege_roll_has_minus_two_modifier():
     state = create_game(seed=4)
     state["phase"] = "SIEGE"
+    state["decision"] = None
     state["units"]["GE_1_ARMY_1"]["location"] = "LIEGE"
     state["spaces"]["LIEGE"]["fort_besieged"] = True
     state = advance_automatic_phases(state)

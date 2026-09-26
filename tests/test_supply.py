@@ -85,6 +85,7 @@ def test_attrition_phase_applies_resolution_before_siege():
     state["spaces"]["PARIS"]["control"] = "CP"
     state["spaces"]["PARIS"]["fort_destroyed"] = True
     state["phase"] = "ATTRITION"
+    state["decision"] = None
     result = advance_automatic_phases(state)
     assert result["phase"] == "SIEGE"
     assert result["units"]["GE_1_ARMY_1"]["permanent"]
