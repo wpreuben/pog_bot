@@ -12,6 +12,9 @@ def replay(initial_state: FullGameState, records: list[dict]) -> FullGameState:
         if not isinstance(record, dict) or not isinstance(record.get("action"), dict):
             raise InvalidStateError(f"재생 기록 {index}에 행동이 없습니다")
         action = record["action"]
+        if (action.get("actor") == "CHANCE" and "value" in action
+                and record.get("random_input") != action["value"]):
+            raise InvalidStateError(f"재생 기록 {index}의 주사위 입력이 없습니다")
         try:
             state = apply_action(state, action, record.get("random_input")).state
         except (ValueError, TypeError, KeyError) as exc:

@@ -54,6 +54,9 @@ def test_recorded_die_and_automatic_phase_replay_exact_state():
     forged[0]["random_input"] = 1
     with pytest.raises(InvalidStateError):
         replay(initial, forged)
+    del forged[0]["random_input"]
+    with pytest.raises(InvalidStateError):
+        replay(initial, forged)
     with pytest.raises(InvalidStateError):
         replay(initial, [{"action": {"type": "FORGED", "actor": "CHANCE"}, "random_input": None}])
 

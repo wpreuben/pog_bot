@@ -13,6 +13,17 @@ def test_greece_entry_allows_serbian_army_rebuild_at_allied_salonika():
     assert "SALONIKA" in _army_spaces(state, "SB_1_ARMY_1")
 
 
+def test_public_api_advances_replacement_phases_without_rp():
+    state = rp_state("AP")
+    state = begin_replacement_phase(state, "AP")
+    assert state["decision"] is None
+    action = generate_legal_actions(state)[0]
+    state = apply_action(state, action).state
+    assert state["phase"] == "REPLACEMENT_CP"
+    state = apply_action(state, generate_legal_actions(state)[0]).state
+    assert state["phase"] == "DRAW"
+
+
 def rp_state(side="CP"):
     state = create_game(seed=4)
     state["phase"] = f"REPLACEMENT_{side}"

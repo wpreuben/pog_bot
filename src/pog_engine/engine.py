@@ -9,7 +9,8 @@ from .model import Action, FullGameState, IllegalActionError, InvalidStateError,
 
 Handler = Callable[[FullGameState, Action, object | None], None]
 _HANDLERS: dict[str, Handler] = {}
-_AUTOMATIC_PHASES = {"ATTRITION", "SIEGE", "WAR_STATUS", "DRAW", "END_TURN"}
+_AUTOMATIC_PHASES = {"ATTRITION", "SIEGE", "WAR_STATUS", "REPLACEMENT_AP",
+                     "REPLACEMENT_CP", "DRAW", "END_TURN"}
 _ADVANCE_ACTION: Action = {"type": "ADVANCE_AUTOMATIC_PHASE", "actor": "CHANCE"}
 
 

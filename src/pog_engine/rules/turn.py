@@ -166,6 +166,10 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         from .forts import begin_siege_phase
 
         return begin_siege_phase(next_state)
+    if phase in {"REPLACEMENT_AP", "REPLACEMENT_CP"}:
+        from .replacements import close_replacement_phase
+
+        return close_replacement_phase(next_state, "AP" if phase == "REPLACEMENT_AP" else "CP")
     if phase == "WAR_STATUS":
         from .war import resolve_war_status
         from .events.economy import apply_replacement_phase_events
