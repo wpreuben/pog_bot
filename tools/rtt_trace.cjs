@@ -13,6 +13,22 @@ function observe(state) {
     return JSON.parse(JSON.stringify(copy))
 }
 
+function randomSeeds(before, after, name) {
+    if (before === after)
+        return []
+    let seed = before
+    const visited = []
+    for (let count = 0; count < 1000; ++count) {
+        seed = seed * 200105 % 34359738337
+        visited.push(seed)
+        if (seed === after)
+            return visited
+    }
+    if (name === "undo")
+        return []
+    throw new Error(`RNG state cannot be traced: ${before} → ${after}`)
+}
+
 function main() {
     if (process.argv.length !== 4)
         throw new Error("usage: node rtt_trace.cjs <replay.json> <rules.js>")
@@ -37,10 +53,11 @@ function main() {
             else
                 state = rules.action(state, role, name, argument)
             const after = observe(state)
+            const seeds = randomSeeds(seedBefore, state.seed, name)
             process.stdout.write(JSON.stringify({
                 index, role, name, argument: argument ?? null, before, after,
                 log_delta: state.log.slice(logLength),
-                random: { before: seedBefore, after: state.seed },
+                random: { before: seedBefore, after: state.seed, seeds },
             }) + "\n")
         } catch (error) {
             throw new Error(`index ${index}: ${error.message}`)
