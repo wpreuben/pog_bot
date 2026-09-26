@@ -1,6 +1,7 @@
 """9.5.3: 기본 증원 카드와 유닛 배치 창."""
 
 from collections import Counter
+import re
 
 from pog_engine.data import load_data
 from pog_engine.engine import register_decision_handler
@@ -16,7 +17,9 @@ def reinforcement_unit_ids(state: FullGameState, card_id: str) -> list[str]:
             available.setdefault(unit["name"], []).append(unit_id)
     selected: list[str] = []
     for name, count in Counter(card["reinforcement_units"]).items():
-        candidates = sorted(available.get(name, []))
+        candidates = sorted(available.get(name, []),
+                            key=lambda uid: (re.sub(r"_\d+$", "", uid),
+                                             int(uid.rsplit("_", 1)[-1])))
         if len(candidates) < count:
             return []
         selected.extend(candidates[:count])

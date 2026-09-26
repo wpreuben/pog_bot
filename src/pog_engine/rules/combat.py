@@ -156,7 +156,8 @@ def combat_strength(state: FullGameState, context: dict, side: str) -> int:
     )
     if side != attacker:
         destination = context["defender_space"]
-        if data.spaces[destination]["fort"] and not state["spaces"][destination]["fort_destroyed"]:
+        if (data.spaces[destination]["fort"] and data.spaces[destination]["side"] == side
+                and not state["spaces"][destination]["fort_destroyed"]):
             strength += data.spaces[destination]["fort"]
     return strength
 
@@ -771,6 +772,7 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             card_id = action["card_id"]
             if kind == "PLAY_COMBAT_CARD":
                 state["players"][side]["hand"].remove(card_id)
+                state["players"][side]["war_status"] += load_data().cards[card_id]["war_status"]
             context["cards"][side].append(card_id)
             state["flags"].setdefault("combat_card_used_round", {})[card_id] = [state["turn"], state["action_round"]]
             from .events.combat import COMBAT_HANDLERS

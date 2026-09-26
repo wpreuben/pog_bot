@@ -48,18 +48,19 @@ def entrench_decision(state: FullGameState) -> None:
         state.clear()
         state.update(next_state)
         return
-    unit_id = pending[0]
     state["phase"] = "TRENCH_ROLL"
     state["decision"] = {
-        "kind": "TRENCH_ROLL", "actor": "CHANCE", "unit_id": unit_id,
-        "options": [{"type": "RECORD_ENTRENCH_DIE", "actor": "CHANCE", "unit_id": unit_id, "value": value} for value in range(1, 7)],
+        "kind": "TRENCH_ROLL", "actor": "CHANCE",
+        "options": [{"type": "RECORD_ENTRENCH_DIE", "actor": "CHANCE", "unit_id": uid, "value": value}
+                    for uid in pending for value in range(1, 7)],
     }
 
 
 def apply_entrench_result(state: FullGameState, action: Action) -> FullGameState:
     if state["phase"] != "TRENCH_ROLL" or action not in state["decision"]["options"]:
         raise IllegalActionError("참호 굴림 결과가 합법적이지 않습니다")
-    unit_id = state["entrench_pending"].pop(0)
+    unit_id = action["unit_id"]
+    state["entrench_pending"].remove(unit_id)
     unit = state["units"][unit_id]
     definition = load_data().units[unit_id]
     loss_factor = definition["reduced_lf"] if unit["reduced"] else definition["lf"]

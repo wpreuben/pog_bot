@@ -1,10 +1,11 @@
 """전략 카드의 사용 방식과 덱 영역."""
 
 from copy import deepcopy
+from collections import Counter
 
 from pog_engine.data import load_data
 from pog_engine.engine import register_decision_handler
-from pog_engine.model import Action, FullGameState, IllegalActionError
+from pog_engine.model import Action, FullGameState, IllegalActionError, InvalidStateError
 from pog_engine.randomness import shuffle_with_state
 from .turn import complete_action
 
@@ -100,6 +101,18 @@ def _apply_card(state: FullGameState, action: Action, random_input: object | Non
 def draw_to_hand(state: FullGameState, side: str) -> FullGameState:
     next_state = deepcopy(state)
     player = next_state["players"][side]
+    schedule = next_state.get("flags", {}).get("rtt_replay_draws", {}).get(side, [])
+    if schedule and schedule[0]["turn"] == next_state["turn"]:
+        observed = schedule.pop(0)
+        zones = ("hand", "deck", "discard")
+        before_cards = Counter(card for zone in zones for card in player[zone])
+        after_cards = Counter(card for zone in zones for card in observed[zone])
+        if before_cards != after_cards:
+            raise InvalidStateError("RTT 카드 보충 관측에 카드가 누락되거나 추가되었습니다")
+        for zone in zones:
+            player[zone] = list(observed[zone])
+        player["shuffle_pending"] = False
+        return next_state
     if player.get("shuffle_pending"):
         player["deck"].extend(player["discard"])
         player["discard"] = []

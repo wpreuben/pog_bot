@@ -22,8 +22,11 @@ def _rtt_trenches(player: dict, ids: SourceIds) -> dict[str, int]:
 
 
 def _rtt_cards(player: dict, ids: SourceIds) -> dict:
-    return {zone: [ids.lookup("cards", card) for card in player[zone]]
-            for zone in ("hand", "deck", "discard", "removed")}
+    cards = {zone: [ids.lookup("cards", card) for card in player[zone]]
+             for zone in ("hand", "deck", "discard", "removed")}
+    cards["war_status"] = player["ws"]
+    cards["commitment"] = player["commitment"].upper()
+    return cards
 
 
 def project_rtt(state: dict, ids: SourceIds) -> dict:
@@ -37,11 +40,13 @@ def project_rtt(state: dict, ids: SourceIds) -> dict:
     for source_id in range(1, len(state["location"])):
         uid = ids.lookup("units", source_id)
         place = state["location"][source_id]
+        place_id = ids.lookup("spaces", place) if place else None
+        eliminated = bool(place_id and place_id.endswith("_ELIMINATED_BOX"))
         units[uid] = {
-            "location": ids.lookup("spaces", place) if place else None,
-            "reduced": source_id in reduced,
-            "eliminated": False,
-            "permanent": source_id in removed,
+            "location": None if eliminated else place_id,
+            "reduced": None if eliminated else source_id in reduced,
+            "eliminated": eliminated,
+            "permanent": source_id in removed or bool(place_id and "PERMANENTLY_ELIMINATED" in place_id),
         }
     spaces = {}
     board = load_data().spaces
@@ -73,15 +78,18 @@ def project_rtt(state: dict, ids: SourceIds) -> dict:
 def project_engine(state: FullGameState) -> dict:
     return {
         "turn": state["turn"], "vp": state["vp"],
-        "units": {uid: {key: value for key, value in unit.items()
+        "units": {uid: {key: (None if key in ("location", "reduced") and unit["eliminated"] else value)
+                         for key, value in unit.items()
                          if key in ("location", "reduced", "eliminated", "permanent")}
                   for uid, unit in state["units"].items()},
         "spaces": {sid: {key: value for key, value in space.items()
                           if key in ("control", "trenches", "fort_destroyed", "fort_besieged")}
                    for sid, space in state["spaces"].items()
                    if load_data().spaces[sid]["kind"] == "BOARD"},
-        "players": {side: {zone: list(state["players"][side][zone])
-                           for zone in ("hand", "deck", "discard", "removed")}
+        "players": {side: {**{zone: list(state["players"][side][zone])
+                             for zone in ("hand", "deck", "discard", "removed")},
+                            "war_status": state["players"][side]["war_status"],
+                            "commitment": state["players"][side]["commitment"]}
                     for side in ("AP", "CP")},
         "war_nations": dict(state["war_nations"]),
         "result": None if state["result"] is None else state["result"].get("winner"),

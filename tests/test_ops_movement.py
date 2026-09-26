@@ -29,6 +29,14 @@ def test_activation_cost_counts_nations_and_refuses_insufficient_ops():
     assert not any(a["space_id"] == "AACHEN" for a in legal_ops_actions(state) if a["type"] == "ACTIVATE_SPACE")
 
 
+def test_sud_army_one_ah_and_multiple_german_corps_cost_one_op():
+    state = ops_state(1)
+    state["events"]["SUD_ARMY"] = 1
+    for uid in ("AH_1_ARMY_1", "GEC_CORPS_2", "GEC_CORPS_4"):
+        state["units"][uid]["location"] = "TARNOW"
+    assert activation_cost(state, "TARNOW", "ATTACK") == 1
+
+
 def test_activated_unit_moves_one_edge_and_changes_control():
     state = ops_state()
     state["spaces"]["LIEGE"]["fort_destroyed"] = True
@@ -39,6 +47,37 @@ def test_activated_unit_moves_one_edge_and_changes_control():
     state = choose(state, "MOVE", unit_id="GE_1_ARMY_1", to="LIEGE")
     assert state["units"]["GE_1_ARMY_1"]["location"] == "LIEGE"
     assert state["spaces"]["LIEGE"]["control"] == "CP"
+
+
+def test_two_armies_can_move_as_a_stack_for_multiple_edges():
+    state = ops_state()
+    state["active_side"] = "AP"
+    state["units"]["RU_5_ARMY_1"]["location"] = "KHARKOV"
+    state["units"]["RU_11_ARMY_1"]["location"] = "KHARKOV"
+    state["activated"]["MOVE"] = ["KHARKOV"]
+    state["phase"] = "MOVEMENT"
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP", "options": legal_movement_actions(state)}
+    group = ["RU_11_ARMY_1", "RU_5_ARMY_1"]
+    state = choose(state, "MOVE_STACK", unit_ids=group, to="KIEV")
+    assert state["movement"]["stack"] == group
+    assert {"type": "MOVE_STACK", "actor": "AP", "unit_ids": group, "to": "ZHITOMIR"} in generate_legal_actions(state)
+
+
+def test_movement_may_temporarily_overstack_but_cannot_end_overstacked():
+    state = ops_state()
+    state["active_side"] = "AP"
+    state["phase"] = "MOVEMENT"
+    state["activated"]["MOVE"] = ["LONDON"]
+    for uid in ("BR_1_ARMY_1", "BR_2_ARMY_1", "BR_4_ARMY_1"):
+        state["units"][uid]["location"] = "LONDON"
+    state["units"]["FRC_CORPS_3"]["location"] = "CALAIS"
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP", "options": legal_movement_actions(state)}
+    group = ["BR_1_ARMY_1", "BR_2_ARMY_1", "BR_4_ARMY_1"]
+    state = choose(state, "MOVE_STACK", unit_ids=group, to="CALAIS")
+    assert not any(a["type"] == "END_MOVEMENT" for a in generate_legal_actions(state))
+    assert {"type": "MOVE_STACK", "actor": "AP", "unit_ids": group, "to": "CAMBRAI"} in generate_legal_actions(state)
 
 
 def test_undestroyed_enemy_fort_keeps_control_when_entered():
@@ -60,7 +99,7 @@ def test_stack_limit_enemy_occupation_and_repeat_move():
     for unit_id in ["GEC_CORPS_1", "GEC_CORPS_2", "GEC_CORPS_3"]:
         state["units"][unit_id]["location"] = "ESSEN"
     state["decision"]["options"] = legal_movement_actions(state)
-    assert not any(a.get("to") == "ESSEN" for a in generate_legal_actions(state))
+    assert any(a.get("to") == "ESSEN" for a in generate_legal_actions(state))
     state = choose(state, "MOVE", unit_id="GE_1_ARMY_1", to="LIEGE")
     state = choose(state, "STOP_MOVING_UNIT")
     assert not any(a.get("unit_id") == "GE_1_ARMY_1" for a in generate_legal_actions(state))

@@ -52,7 +52,8 @@ def activation_cost(state: FullGameState, space_id: str, kind: str) -> int:
         if used.get("turn") != state["turn"] or used.get("round") != state["action_round"] or used.get("space") == space_id:
             if _sud_army_eligible(state, space_id, pieces):
                 ah_count = sum(data.units[uid]["nation"] == "AH" for uid in pieces)
-                cost = 1 if ah_count == 1 and len(pieces) == 2 else 2
+                cost = 1 if ah_count == 1 and all(data.units[uid]["nation"] in {"AH", "GE"}
+                                                  for uid in pieces) else 2
     if side == "CP" and state["events"].get("11TH_ARMY") and "GE_11_ARMY_1" in pieces:
         armies = [data.units[uid] for uid in pieces if data.units[uid]["type"] == "ARMY"]
         if len(armies) < 2:

@@ -41,6 +41,18 @@ def test_all_27_combat_cards_registered(card_id):
     assert hasattr(EVENT_HANDLERS[card_id], "can_play")
 
 
+def test_combat_event_adds_its_war_status_when_played():
+    state = combat_state(defender_space="VERDUN", defender_ids=("FR_1_ARMY_1",))
+    state["events"]["FALKENHAYN"] = 1
+    state["players"]["CP"]["hand"].append("PLACE_OF_EXECUTION")
+    state["decision"]["options"] = legal_combat_actions(state)
+    before = state["players"]["CP"]["war_status"]
+    action = {"type": "PLAY_COMBAT_CARD", "actor": "CP", "card_id": "PLACE_OF_EXECUTION"}
+    assert action in generate_legal_actions(state)
+    state = apply_action(state, action).state
+    assert state["players"]["CP"]["war_status"] == before + 1
+
+
 def test_nationality_and_side_requirements_limit_combat_cards():
     state = combat_state()
     assert not combat_card_eligible(state, "VON_FRANCOIS", "ATTACKER_CARDS")

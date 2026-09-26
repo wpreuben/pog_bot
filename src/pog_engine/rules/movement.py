@@ -25,10 +25,6 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
     if any(other["location"] == destination and data.units[other_id]["side"] != side
            for other_id, other in state["units"].items()):
         return False
-    if sum(other["location"] == destination for other in state["units"].values()) >= 3:
-        return False
-    if destination in state["activated"]["ATTACK"]:
-        return False
     from .forts import siege_survives_departure
 
     if not siege_survives_departure(state, state["units"][unit_id]["location"], (unit_id,)):
@@ -59,14 +55,15 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
 
     side = state["active_side"]
     context = state["movement"]
-    moving = context["unit"]
-    candidates = [moving] if moving else [
+    moving_stack = context.get("stack")
+    moving = context["unit"] or moving_stack
+    candidates = ([context["unit"]] if context["unit"] else list(moving_stack)) if moving else [
         unit_id for unit_id, unit in state["units"].items()
         if unit_id not in context["done"] and unit["location"] in state["activated"]["MOVE"]
         and data.units[unit_id]["side"] == side
     ]
     actions: list[Action] = []
-    for unit_id in candidates:
+    for unit_id in ([] if moving_stack else candidates):
         unit = state["units"][unit_id]
         if unit["location"] is None:
             continue
@@ -83,6 +80,24 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
         for destination in sorted(data.neighbors(unit["location"], definition["nation"])):
             if _can_enter(state, unit_id, destination):
                 actions.append({"type": "MOVE", "actor": side, "unit_id": unit_id, "to": destination})
+    stack_groups = ([tuple(moving_stack)] if moving_stack else
+                    [group for size in (2, 3) for group in combinations(sorted(candidates), size)
+                     if len({state["units"][uid]["location"] for uid in group}) == 1])
+    for group in stack_groups:
+        if any(uid in state.get("activated_oos", []) for uid in group):
+            continue
+        if not moving and any(not supply_status(state, uid).supplied for uid in group):
+            continue
+        source = state["units"][group[0]]["location"]
+        if not source:
+            continue
+        destinations = set(data.neighbors(source, data.units[group[0]]["nation"]))
+        for uid in group[1:]:
+            destinations.intersection_update(data.neighbors(source, data.units[uid]["nation"]))
+        for destination in sorted(destinations):
+            if all(context["spent"] < (data.units[uid]["reduced_mf"] if state["units"][uid]["reduced"] else data.units[uid]["mf"])
+                   and _can_enter(state, uid, destination) for uid in group):
+                actions.append({"type": "MOVE_STACK", "actor": side, "unit_ids": list(group), "to": destination})
     if not moving:
         from .forts import siege_survives_departure
 
@@ -109,12 +124,17 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
                        for source in sources):
                     actions.append({"type": "MOVE_STACK", "actor": side, "unit_ids": list(group), "to": destination})
     if moving:
-        actions.append({"type": "STOP_MOVING_UNIT", "actor": side})
+        current_places = ([state["units"][uid]["location"] for uid in moving_stack]
+                          if moving_stack else [state["units"][context["unit"]]["location"]])
+        if all(place not in state["activated"]["ATTACK"] for place in current_places):
+            actions.append({"type": "STOP_MOVING_UNIT", "actor": side})
     else:
         from .trenches import legal_entrench_actions
 
         actions.extend(legal_entrench_actions(state))
-        actions.append({"type": "END_MOVEMENT", "actor": side})
+        if all(sum(unit["location"] == place for unit in state["units"].values()) <= 3
+               for place, static in data.spaces.items() if static["kind"] == "BOARD"):
+            actions.append({"type": "END_MOVEMENT", "actor": side})
     return actions
 
 
@@ -128,13 +148,37 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
 
         destination = action["to"]
         sources = {state["units"][uid]["location"] for uid in action["unit_ids"]}
+        general = not (load_data().spaces[destination]["fort"]
+                       and load_data().spaces[destination]["side"] != state["active_side"]
+                       and not state["spaces"][destination]["fort_destroyed"])
         for uid in action["unit_ids"]:
             state["units"][uid]["location"] = destination
             state["flags"].get("failed_entrench", {}).pop(uid, None)
-            context["done"].append(uid)
+            if not general:
+                context["done"].append(uid)
+        if not general:
+            context["stack"] = None
+            context["spent"] = 0
         for source in sources:
             update_siege_status(state, source)
         update_siege_status(state, destination)
+        if general:
+            space = state["spaces"][destination]
+            enemy = "AP" if state["active_side"] == "CP" else "CP"
+            if space["control"] != state["active_side"] and space["vp"]:
+                state["vp"] += 1 if state["active_side"] == "CP" else -1
+            space["control"] = state["active_side"]
+            opposing_trench = space["trenches"][enemy]
+            if opposing_trench:
+                space["trenches"][enemy] = 0
+                space["trenches"][state["active_side"]] = 1 if opposing_trench == 2 else 0
+            context["stack"] = list(action["unit_ids"])
+            context["spent"] += 1
+            if any(context["spent"] >= (load_data().units[uid]["reduced_mf"] if state["units"][uid]["reduced"]
+                                         else load_data().units[uid]["mf"]) for uid in action["unit_ids"]):
+                context["done"].extend(action["unit_ids"])
+                context["stack"] = None
+                context["spent"] = 0
     elif kind == "MOVE":
         from .forts import update_siege_status
 
@@ -170,8 +214,9 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
             context["unit"] = None
             context["spent"] = 0
     elif kind == "STOP_MOVING_UNIT":
-        context["done"].append(context["unit"])
+        context["done"].extend(context.get("stack") or [context["unit"]])
         context["unit"] = None
+        context["stack"] = None
         context["spent"] = 0
     elif kind == "ENTRENCH":
         unit_id = action["unit_id"]

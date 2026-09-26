@@ -91,9 +91,8 @@ def _pending_forts(state: FullGameState) -> list[str]:
 def legal_siege_actions(state: FullGameState) -> list[Action]:
     if state["phase"] != "SIEGE" or not state.get("pending_sieges"):
         return []
-    place = state["pending_sieges"][0]
     return [{"type": "RECORD_SIEGE_DIE", "actor": "CHANCE", "space_id": place, "value": value}
-            for value in range(1, 7)]
+            for place in state["pending_sieges"] for value in range(1, 7)]
 
 
 def begin_siege_phase(state: FullGameState) -> FullGameState:
@@ -111,7 +110,8 @@ def begin_siege_phase(state: FullGameState) -> FullGameState:
 def apply_siege_result(state: FullGameState, action: Action) -> FullGameState:
     if action not in legal_siege_actions(state):
         raise IllegalActionError("공성 주사위 행동이 합법적이지 않습니다")
-    place = state["pending_sieges"].pop(0)
+    place = action["space_id"]
+    state["pending_sieges"].remove(place)
     status = fort_status(state, place)
     modifier = -2 if state["turn"] <= 2 else 0
     if action["value"] + modifier > status.strength:

@@ -1,6 +1,7 @@
 """RTT 첫 Guns of August 전투의 합법 행동 번역."""
 
 import json
+from dataclasses import replace
 from pathlib import Path
 import subprocess
 
@@ -105,7 +106,9 @@ def test_recorded_entrench_and_siege_dice_use_chance_actions(opening):
     assert entrench == ({"type": "ENTRENCH", "actor": "CP", "unit_id": "GE_3_ARMY_1"},)
     state = apply_action(state, entrench[0]).state
     state = apply_action(state, translate_intent(state, intents[788], ids)[0]).state
-    assert translate_intent(state, intents[789], ids) == (
+    koblenz = next(int(number) for number, space in ids.mappings["spaces"].items()
+                   if space == "KOBLENZ")
+    assert translate_intent(state, replace(intents[789], argument=koblenz), ids) == (
         {"type": "RECORD_ENTRENCH_DIE", "actor": "CHANCE", "unit_id": "GE_3_ARMY_1", "value": 6},)
 
     state = create_game(seed=4)
@@ -115,8 +118,8 @@ def test_recorded_entrench_and_siege_dice_use_chance_actions(opening):
     state["spaces"]["PRZEMYSL"]["fort_besieged"] = True
     state["decision"] = {"kind": "SIEGE_ROLL", "actor": "CHANCE",
                          "options": legal_siege_actions(state)}
-    assert translate_intent(state, intents[169], ids) == (
-        {"type": "RECORD_SIEGE_DIE", "actor": "CHANCE", "space_id": "PRZEMYSL", "value": 2},)
+    assert translate_intent(state, intents[169], ids)[0] == (
+        {"type": "RECORD_SIEGE_DIE", "actor": "CHANCE", "space_id": "PRZEMYSL", "value": 2})
 
 
 def test_pass_flank_and_confirm_end_attack(opening):
@@ -138,3 +141,95 @@ def test_pass_flank_and_confirm_end_attack(opening):
                          "options": legal_combat_actions(state)}
     assert translate_intent(state, intents[1071], ids) == (
         {"type": "END_COMBAT", "actor": "CP"},)
+
+
+def test_attack_that_rolls_immediately_enters_losses(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(146):
+        if index not in intents:
+            continue
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    assert state["combat_context"]["stage"] == "LOSSES"
+
+
+def test_attack_unit_order_uses_engine_canonical_legal_action(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(3):
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    from copy import deepcopy
+    before = deepcopy(intents[7].before)
+    before["attack"]["pieces"] = [3, 1, 2]
+    intent = Intent(7, 7, "Central Powers", "attack", None, before, intents[7].after, ())
+    result = translate_intent(state, intent, ids)
+    assert result[0]["type"] == "DECLARE_ATTACK"
+    assert result[0]["unit_ids"] == ["GE_1_ARMY_1", "GE_2_ARMY_1", "GE_3_ARMY_1"]
+
+
+def test_wireless_intercepts_during_flank_is_translated(opening):
+    rows, intents = opening
+    from pog_engine.rtt_replay.runner import build_draw_schedule
+
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(rows, ids)
+    for index in range(195):
+        if index not in intents:
+            continue
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    assert translate_intent(state, intents[195], ids) == (
+        {"type": "PLAY_COMBAT_CARD", "actor": "CP", "card_id": "WIRELESS_INTERCEPTS"},)
+
+
+def test_besieging_enemy_does_not_get_forts_combat_factor(opening):
+    rows, intents = opening
+    from pog_engine.rtt_replay.runner import build_draw_schedule
+    from pog_engine.rules.combat import combat_snapshot
+
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(rows, ids)
+    for index in range(200):
+        if index not in intents:
+            continue
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    snapshot = combat_snapshot(state, state["combat_context"])
+    assert snapshot["strengths"]["AP"] == 1
+
+
+def test_reinforcement_placement_uses_observed_unit_and_space(opening):
+    rows, intents = opening
+    from pog_engine.rtt_replay.runner import build_draw_schedule
+
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(rows, ids)
+    for index in range(209):
+        if index not in intents:
+            continue
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    assert translate_intent(state, intents[209], ids) == (
+        {"type": "PLACE_REINFORCEMENT", "actor": "AP", "unit_id": "BR_2_ARMY_1", "to": "LONDON"},)
+
+
+def test_fort_destruction_uses_defender_loss_completion(opening):
+    rows, intents = opening
+    from pog_engine.rtt_replay.runner import build_draw_schedule
+
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(rows, ids)
+    for index in range(235):
+        if index not in intents:
+            continue
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    assert translate_intent(state, intents[235], ids) == ({"type": "END_LOSSES", "actor": "AP"},)

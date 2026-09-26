@@ -66,6 +66,19 @@ def test_first_turn_siege_roll_has_minus_two_modifier():
     assert state["spaces"]["LIEGE"]["control"] == "CP"
 
 
+def test_multiple_sieges_may_be_rolled_in_any_order():
+    state = create_game(seed=4)
+    state["phase"] = "SIEGE"
+    state["units"]["GE_1_ARMY_1"]["location"] = "LIEGE"
+    state["units"]["RU_1_ARMY_1"]["location"] = "PRZEMYSL"
+    for place in ("LIEGE", "PRZEMYSL"):
+        state["spaces"][place]["fort_besieged"] = True
+    state["pending_sieges"] = ["LIEGE", "PRZEMYSL"]
+    state["decision"] = {"kind": "SIEGE_ROLL", "actor": "CHANCE", "options": legal_siege_actions(state)}
+    state = choose(state, "RECORD_SIEGE_DIE", space_id="PRZEMYSL", value=1)
+    assert state["pending_sieges"] == ["LIEGE"]
+
+
 def test_corps_cannot_advance_into_intact_enemy_fort_without_siege_force():
     state = create_game(seed=4)
     state["phase"] = "COMBAT"

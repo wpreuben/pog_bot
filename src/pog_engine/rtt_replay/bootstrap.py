@@ -45,6 +45,6 @@ def bootstrap_historical(seed: int, rtt_setup_state: dict, ids: SourceIds) -> Fu
     for uid, status in expected["units"].items():
         state["units"][uid].update(status)
     for side in ("AP", "CP"):
-        for zone, cards in expected["players"][side].items():
-            state["players"][side][zone] = list(cards)
+        for zone in ("hand", "deck", "discard", "removed"):
+            state["players"][side][zone] = list(expected["players"][side][zone])
     return state

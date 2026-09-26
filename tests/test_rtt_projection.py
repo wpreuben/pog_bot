@@ -54,3 +54,18 @@ def test_first_difference_reports_nested_path():
     assert diff.path == "$.units.GE_1.reduced"
     assert diff.expected is True
     assert diff.actual is False
+
+
+def test_eliminated_box_matches_engine_elimination_without_step_state():
+    from pog_engine.rtt_replay.ids import SourceIds
+    from pog_engine.rtt_replay.projection import project_engine, project_rtt
+
+    rtt = rtt_setup()
+    rtt["location"][59] = 284  # AP_ELIMINATED_BOX
+    rtt["reduced"] = [unit for unit in rtt["reduced"] if unit != 59]
+    expected = project_rtt(rtt, SourceIds.from_data())["units"]["RU_8_ARMY_1"]
+    engine = create_game(seed=4)
+    engine["units"]["RU_8_ARMY_1"].update(location=None, eliminated=True, reduced=True)
+    actual = project_engine(engine)["units"]["RU_8_ARMY_1"]
+    assert expected == actual == {"location": None, "reduced": None,
+                                  "eliminated": True, "permanent": False}
