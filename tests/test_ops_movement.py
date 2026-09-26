@@ -80,6 +80,18 @@ def test_movement_may_temporarily_overstack_but_cannot_end_overstacked():
     assert {"type": "MOVE_STACK", "actor": "AP", "unit_ids": group, "to": "CAMBRAI"} in generate_legal_actions(state)
 
 
+def test_unit_cannot_exhaust_movement_in_attack_activated_space():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "CP"
+    state["activated"]["MOVE"] = ["AACHEN"]
+    state["activated"]["ATTACK"] = ["LIEGE"]
+    state["movement"] = {"unit": "GE_1_ARMY_1", "spent": 2, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP", "options": legal_movement_actions(state)}
+    assert not any(action["type"] == "MOVE" and action.get("to") == "LIEGE"
+                   for action in generate_legal_actions(state))
+
+
 def test_undestroyed_enemy_fort_keeps_control_when_entered():
     state = ops_state()
     state = choose(choose(state, "ACTIVATE_SPACE", space_id="AACHEN", kind="MOVE"), "FINISH_ACTIVATION")

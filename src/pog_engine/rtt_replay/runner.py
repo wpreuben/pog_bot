@@ -27,6 +27,10 @@ class ReplayDifference:
     legal_candidates: tuple[dict, ...]
 
 
+class ReplayTraceError(ValueError):
+    """RTT 관측기 입력·규칙 실행 오류."""
+
+
 @dataclass(frozen=True)
 class AdjudicatedDifference:
     index: int
@@ -45,6 +49,7 @@ class ReplayReport:
     final_state: FullGameState
     first_difference: ReplayDifference | None
     adjudicated_differences: tuple[AdjudicatedDifference, ...] = ()
+    checked_steps: int = 0
 
 
 def compare_checkpoint(rtt_state: dict, engine_state: FullGameState,
@@ -75,7 +80,9 @@ def compare_checkpoint(rtt_state: dict, engine_state: FullGameState,
 def _trace(path: Path, rules_path: Path) -> list[dict]:
     script = Path(__file__).resolve().parents[3] / "tools/rtt_trace.cjs"
     result = subprocess.run(["node", str(script), str(path), str(rules_path)],
-                            capture_output=True, text=True, check=True)
+                            capture_output=True, text=True)
+    if result.returncode:
+        raise ReplayTraceError(result.stderr.strip() or f"RTT 관측기 종료 코드 {result.returncode}")
     return [json.loads(line) for line in result.stdout.splitlines()]
 
 
@@ -109,6 +116,7 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
     initial = state
     records: list[dict] = []
     adjudications: list[AdjudicatedDifference] = []
+    checked_steps = 0
     intents = normalize_steps(source.actions, observations[:-1])
     for intent in intents:
         try:
@@ -122,19 +130,24 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
                                           str(exc), state["phase"],
                                           tuple(generate_legal_actions(state)[:20]))
             return ReplayReport(False, intent.end_index + 1, tuple(records), initial, state,
-                                difference, tuple(adjudications))
-        if intent.end_index == 0 or intent.after["state"] in ("action_phase", "game_over"):
+                                difference, tuple(adjudications), checked_steps)
+        after_phase = intent.after["state"]
+        boundary = (intent.end_index == 0 or after_phase in {
+            "action_phase", "game_over", "replacement_phase", "siege_phase"}
+            or (after_phase == "draw_cards_phase" and intent.before["state"] == "draw_cards_phase"))
+        if boundary:
+            checked_steps += 1
             difference = compare_checkpoint(intent.after, state, intent.end_index, intent.kind,
                                             ids, adjudications)
             if difference is not None:
                 return ReplayReport(False, intent.end_index + 1, tuple(records), initial, state,
-                                    difference, tuple(adjudications))
+                                    difference, tuple(adjudications), checked_steps)
     final = observations[-1]
     if (state["turn"], state["vp"]) != (final["turn"], final["vp"]):
         difference = ReplayDifference(len(source.actions) - 1, ".final", "$.final",
                                       (final["turn"], final["vp"]), (state["turn"], state["vp"]),
                                       state["phase"], tuple(generate_legal_actions(state)[:20]))
         return ReplayReport(False, len(source.actions), tuple(records), initial, state,
-                            difference, tuple(adjudications))
+                            difference, tuple(adjudications), checked_steps)
     return ReplayReport(True, len(source.actions), tuple(records), initial, state,
-                        None, tuple(adjudications))
+                        None, tuple(adjudications), checked_steps)

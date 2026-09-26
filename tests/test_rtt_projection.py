@@ -71,3 +71,21 @@ def test_eliminated_box_matches_engine_elimination_without_step_state():
     actual = project_engine(engine)["units"]["RU_8_ARMY_1"]
     assert expected == actual == {"location": None, "reduced": None,
                                   "eliminated": True, "permanent": False}
+
+
+def test_projection_checks_round_replacement_points_and_major_events():
+    from pog_engine.rtt_replay.ids import SourceIds
+    from pog_engine.rtt_replay.projection import first_difference, project_engine, project_rtt
+
+    rtt = rtt_setup()
+    engine = create_game(seed=10762091171)
+    expected = project_rtt(rtt, SourceIds.from_data())
+    actual = project_engine(engine)
+    assert expected["round"] == actual["round"] == {"AP": 0, "CP": 0}
+    assert expected["rp"] == actual["rp"] == {}
+    assert expected["major_events"] == actual["major_events"] == {}
+    rtt["rp"]["ge"] = 2
+    rtt["events"]["sud_army"] = 1
+    changed = project_rtt(rtt, SourceIds.from_data())
+    assert first_difference({"rp": changed["rp"]}, {"rp": actual["rp"]}).path == "$.rp.GE"
+    assert changed["major_events"]["SUD_ARMY"] == 1

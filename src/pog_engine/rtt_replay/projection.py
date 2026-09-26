@@ -29,6 +29,42 @@ def _rtt_cards(player: dict, ids: SourceIds) -> dict:
     return cards
 
 
+_MAJOR_EVENTS = {
+    "guns_of_august": "GUNS_OF_AUGUST",
+    "reichstag_truce": "REICHSTAG_TRUCE",
+    "sud_army": "SUD_ARMY",
+    "oberost": "OBEROST",
+    "blockade": "BLOCKADE",
+    "rape_of_belgium": "RAPE_OF_BELGIUM",
+    "great_retreat": "GREAT_RETREAT",
+    "falkenhayn": "FALKENHAYN",
+    "lusitania": "LUSITANIA",
+    "entrench": "ENTRENCH",
+    "war_in_africa": "WAR_IN_AFRICA",
+    "tsar_takes_command": "TSAR_TAKES_COMMAND",
+    "eleventh_army": "11TH_ARMY",
+}
+
+
+def _rtt_major_events(state: dict) -> dict:
+    return {card: (True if card == "ENTRENCH" else state["events"][source])
+            for source, card in _MAJOR_EVENTS.items() if source in state["events"]}
+
+
+def _engine_major_events(state: FullGameState) -> dict:
+    return {card: (True if card == "ENTRENCH" else state["events"][card])
+            for card in _MAJOR_EVENTS.values() if card in state["events"]}
+
+
+def _rtt_rp(state: dict) -> dict:
+    return {nation.upper(): value for nation, value in state["rp"].items() if value}
+
+
+def _engine_rp(state: FullGameState) -> dict:
+    return {nation: value for side in ("AP", "CP")
+            for nation, value in state["players"][side]["replacement_points"].items() if value}
+
+
 def project_rtt(state: dict, ids: SourceIds) -> dict:
     ap_trenches = _rtt_trenches(state["ap"], ids)
     cp_trenches = _rtt_trenches(state["cp"], ids)
@@ -67,6 +103,11 @@ def project_rtt(state: dict, ids: SourceIds) -> dict:
         winner = "CP"
     return {
         "turn": state["turn"], "vp": state["vp"],
+        "round": {"AP": len(state["ap"]["actions"]), "CP": len(state["cp"]["actions"])},
+        "rp": _rtt_rp(state),
+        "major_events": _rtt_major_events(state),
+        "played_reinforcements": sorted(ids.lookup("cards", number)
+                                          for number in state["events"].get("reinforcements", [])),
         "units": units, "spaces": spaces,
         "players": {"AP": _rtt_cards(state["ap"], ids),
                     "CP": _rtt_cards(state["cp"], ids)},
@@ -78,6 +119,12 @@ def project_rtt(state: dict, ids: SourceIds) -> dict:
 def project_engine(state: FullGameState) -> dict:
     return {
         "turn": state["turn"], "vp": state["vp"],
+        "round": {side: state["players"][side]["actions_taken"] for side in ("AP", "CP")},
+        "rp": _engine_rp(state),
+        "major_events": _engine_major_events(state),
+        "played_reinforcements": sorted(card for card in state["events"]
+                                          if card in load_data().cards
+                                          and load_data().cards[card]["reinforcement_nation"]),
         "units": {uid: {key: (None if key in ("location", "reduced") and unit["eliminated"] else value)
                          for key, value in unit.items()
                          if key in ("location", "reduced", "eliminated", "permanent")}

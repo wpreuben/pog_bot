@@ -25,6 +25,11 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
     if any(other["location"] == destination and data.units[other_id]["side"] != side
            for other_id, other in state["units"].items()):
         return False
+    if destination in state["activated"]["ATTACK"]:
+        movement = state["movement"]
+        mf = unit["reduced_mf"] if state["units"][unit_id]["reduced"] else unit["mf"]
+        if movement["spent"] + 1 >= mf:
+            return False
     from .forts import siege_survives_departure
 
     if not siege_survives_departure(state, state["units"][unit_id]["location"], (unit_id,)):

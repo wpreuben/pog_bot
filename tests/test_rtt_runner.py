@@ -6,6 +6,7 @@ import subprocess
 
 from rtt_test_support import rules_path
 import json
+import pytest
 
 from pog_engine.replay import replay
 from pog_engine.rtt_replay.bootstrap import bootstrap_historical
@@ -23,6 +24,18 @@ from pog_engine.rtt_replay.projection import project_engine, project_rtt
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests/fixtures/replay-258629.json"
 RULES = rules_path(__file__)
+
+
+def test_trace_error_preserves_original_action_index(tmp_path):
+    from pog_engine.rtt_replay.runner import ReplayTraceError, _trace
+
+    payload = {"setup": {"game_id": 1, "scenario": "Historical", "options": {}},
+               "replay": [[None, ".setup", [10762091171, "Historical", {}]],
+                          ["Central Powers", "not_a_real_action"]]}
+    path = tmp_path / "bad.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ReplayTraceError, match="index 1"):
+        _trace(path, RULES)
 
 
 def test_changed_vp_reports_first_path_and_source_index():
@@ -65,6 +78,7 @@ def test_entire_historical_replay_matches_and_records_are_replayable():
     report = run_replay(FIXTURE, RULES)
     assert report.ok, report.first_difference
     assert report.processed_steps == 1447
+    assert report.checked_steps >= 200
     assert report.first_difference is None
     assert report.final_state["turn"] == 8
     assert report.final_state["vp"] == 7

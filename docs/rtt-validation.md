@@ -33,7 +33,7 @@ print(report.adjudicated_differences)
 
 ## 검증 결과
 
-RTT 입력 1,447개에는 되돌리기 85회와 마지막 항복이 포함된다. 되돌리기를 정제한 뒤 각 선택을 Python 엔진의 합법 행동으로 적용한다. RTT의 행동 단계와 종료 상태에서 보드, 유닛, 카드 구역, 전쟁 상태, 참여 수준, VP, 승자를 대조한다. 적용된 Python 행동 기록은 `replay(initial_state, records)`로 같은 최종 상태를 재현한다.
+RTT 입력 1,447개에는 되돌리기 85회와 마지막 항복이 포함된다. 되돌리기를 정제한 뒤 각 선택을 Python 엔진의 합법 행동으로 적용한다. 초기화, 행동 단계, 교체, 공성, 카드 보충, 종료를 포함한 의미 경계 203곳에서 보드, 유닛, 카드 구역, 전쟁 상태, 참여 수준, 행동 라운드, RP, 주요 이벤트, 증원 카드 사용, VP, 승자를 대조한다. 적용된 Python 행동 기록은 `replay(initial_state, records)`로 같은 최종 상태를 재현한다.
 
 최종 상태는 8턴, VP 7, CP 항복에 따른 AP 승리다. 공식 영문 룰북을 우선한 아라비아 보급 판정과 RTT 항복 승자 필드의 모순은 [차이 기록](rtt-differences.md)에 입력 번호와 근거를 남겼다. `ReplayReport.adjudicated_differences`에서도 두 차이를 확인할 수 있다. 다른 불일치는 첫 원본 입력 번호, 상태 경로, RTT 기대값, Python 실제값, 합법 행동 후보를 담은 `first_difference`로 보고된다.
 
