@@ -24,6 +24,8 @@
 
 아래 분류는 카드의 인쇄 속성과 룰북 9.5절을 기준으로 한다. 카드별 합법 조건·효과·회귀 테스트는 작업 14–18에서 검증표에 추가한다.
 
+증원 카드 36장의 인쇄된 유닛 이름·수량·진영은 `tests/cards/test_reinforcements.py::test_all_reinforcement_cards_have_handler_and_unique_unused_units`에서 카드별로 검증한다. 같은 파일은 9.5.3의 첫 턴 금지, 국가별 턴당 1장, 미군 참전, 군/군단 배치와 특수 배치 장소를 검증한다. 다른 종류의 카드는 작업 15–18에서 효과를 확인한다.
+
 | 진영 | 카드 ID | 이벤트 종류 | 기본 조항 |
 | --- | --- | --- | --- |
 | AP | `BRITISH_REINFORCEMENTS_BR_2` | 증원 | 9.5.3 |

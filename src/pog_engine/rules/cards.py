@@ -127,3 +127,7 @@ def discard_combat_cards(state: FullGameState, side: str, card_ids: list[str]) -
 
 
 register_decision_handler("ACTION_PHASE", _apply_card)
+
+from .events.reinforcements import register_reinforcements
+
+register_reinforcements(EVENT_HANDLERS)
