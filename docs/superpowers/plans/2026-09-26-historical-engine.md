@@ -47,7 +47,7 @@
 
 각 작업의 대상 테스트와 기존 전체 테스트를 통과한 뒤 해당 작업의 소스·테스트·문서만 커밋한다. 아래의 검증 명령은 작업 대상 테스트용이며 전체 테스트 명령은 `UV_CACHE_DIR=.uv-cache uv run pytest -q`다.
 
-### 작업 1: 패키지와 안전한 공개 전이 경계
+### Task 1: 패키지와 안전한 공개 전이 경계
 
 **파일:** `pyproject.toml`, `src/pog_engine/{__init__,model,engine}.py`, `tests/test_engine_contract.py` 생성; `.gitignore` 수정.
 
@@ -61,7 +61,7 @@
 - [ ] 대상·전체 테스트, `UV_CACHE_DIR=.uv-cache uv lock --check`, `git diff --check`가 통과하는지 확인한다.
 - [ ] `feat: uv 엔진 계약 추가`로 커밋한다.
 
-### 작업 2: 정규화된 규칙 데이터
+### Task 2: 정규화된 규칙 데이터
 
 **파일:** `src/pog_engine/data/{__init__,loader}.py`, `data/{spaces,edges,units,cards,historical,source_ids}.json`, `tests/test_data.py`, `docs/rules-coverage.md` 생성.
 
@@ -75,7 +75,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 데이터 해시로 우발적 변경을 탐지한다.
 - [ ] `feat: Historical 규칙 데이터 추가`로 커밋한다.
 
-### 작업 3: Historical 초기화와 결정적 카드 순서
+### Task 3: Historical 초기화와 결정적 카드 순서
 
 **파일:** `src/pog_engine/rules/setup.py`, `src/pog_engine/randomness.py`, `tests/test_setup.py` 생성.
 
@@ -89,7 +89,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 RTT 초기 배치와 수량을 비교한다.
 - [ ] `feat: Historical 캠페인 초기화`로 커밋한다.
 
-### 작업 4: 턴 단계와 의무 공세
+### Task 4: 턴 단계와 의무 공세
 
 **파일:** `src/pog_engine/rules/{turn,war}.py`, `tests/test_turn.py` 생성.
 
@@ -103,7 +103,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 일곱 번째 행동 라운드가 열리지 않는지 확인한다.
 - [ ] `feat: Historical 턴 순서 추가`로 커밋한다.
 
-### 작업 5: 카드 영역·모드·덱 수명 주기
+### Task 5: 카드 영역·모드·덱 수명 주기
 
 **파일:** `src/pog_engine/rules/cards.py`, `tests/test_cards.py` 생성; `docs/rules-coverage.md` 수정.
 
@@ -117,7 +117,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 전략 카드 수명 주기 추가`로 커밋한다.
 
-### 작업 6: OPS 활성화와 이동
+### Task 6: OPS 활성화와 이동
 
 **파일:** `src/pog_engine/rules/{ops,movement}.py`, `tests/test_ops_movement.py` 생성.
 
@@ -131,7 +131,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: OPS와 이동 규칙 추가`로 커밋한다.
 
-### 작업 7: 참호와 전략재배치
+### Task 7: 참호와 전략재배치
 
 **파일:** `src/pog_engine/rules/{trenches,sr}.py`, `tests/test_trenches_sr.py` 생성.
 
@@ -145,7 +145,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 참호와 전략재배치 추가`로 커밋한다.
 
-### 작업 8: 보급과 소모
+### Task 8: 보급과 소모
 
 **파일:** `src/pog_engine/rules/supply.py`, `tests/test_supply.py` 생성.
 
@@ -159,7 +159,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 보급과 소모 규칙 추가`로 커밋한다.
 
-### 작업 9: 공격 합법성·측면 공격·CRT
+### Task 9: 공격 합법성·측면 공격·CRT
 
 **파일:** `src/pog_engine/rules/combat.py`, `tests/test_combat_math.py` 생성.
 
@@ -173,7 +173,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 인쇄된 보조표의 경계 칸과 비교한다.
 - [ ] `feat: 전투 합법성과 CRT 추가`로 커밋한다.
 
-### 작업 10: 전투 선택 창과 결과
+### Task 10: 전투 선택 창과 결과
 
 **파일:** `src/pog_engine/rules/combat.py` 확장, `tests/test_combat_sequence.py` 생성.
 
@@ -187,7 +187,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 전투 중간 선택 처리`로 커밋한다.
 
-### 작업 11: 요새와 공성 단계
+### Task 11: 요새와 공성 단계
 
 **파일:** `src/pog_engine/rules/forts.py`, `tests/test_forts.py` 생성.
 
@@ -201,7 +201,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 요새와 공성 규칙 추가`로 커밋한다.
 
-### 작업 12: RP와 유닛 보충
+### Task 12: RP와 유닛 보충
 
 **파일:** `src/pog_engine/rules/replacements.py`, `tests/test_replacements.py` 생성.
 
@@ -215,7 +215,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 보충 단계 추가`로 커밋한다.
 
-### 작업 13: 전쟁 상태·VP·승리
+### Task 13: 전쟁 상태·VP·승리
 
 **파일:** `src/pog_engine/rules/war.py` 확장, `src/pog_engine/rules/victory.py`, `tests/test_war_victory.py` 생성.
 
@@ -229,7 +229,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 전쟁 상태와 Historical 승리 추가`로 커밋한다.
 
-### 작업 14: 증원 카드 이벤트
+### Task 14: 증원 카드 이벤트
 
 **파일:** `src/pog_engine/rules/events/{__init__,reinforcements}.py`, `tests/cards/test_reinforcements.py` 생성.
 
@@ -243,7 +243,7 @@
 - [ ] 대상·전체 테스트를 통과시킨다.
 - [ ] `feat: 증원 카드 이벤트 추가`로 커밋한다.
 
-### 작업 15: 중립국 참전과 정치 이벤트
+### Task 15: 중립국 참전과 정치 이벤트
 
 **파일:** `src/pog_engine/rules/events/{entry,politics}.py`, `tests/cards/test_entry_politics.py` 생성.
 
@@ -257,7 +257,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 해당 카드 검증표를 갱신한다.
 - [ ] `feat: 참전과 정치 이벤트 추가`로 커밋한다.
 
-### 작업 16: 지속 경제·전쟁 이벤트
+### Task 16: 지속 경제·전쟁 이벤트
 
 **파일:** `src/pog_engine/rules/events/{war_status,economy}.py`, `tests/cards/test_persistent_events.py` 생성; `docs/rule-differences.md` 수정.
 
@@ -271,7 +271,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 검증표를 갱신한다.
 - [ ] `feat: 지속 전쟁 이벤트 추가`로 커밋한다.
 
-### 작업 17: 전투 카드 이벤트
+### Task 17: 전투 카드 이벤트
 
 **파일:** `src/pog_engine/rules/events/combat.py`, `tests/cards/test_combat_events.py` 생성.
 
@@ -285,7 +285,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 전투 카드 검증표를 갱신한다.
 - [ ] `feat: 전투 카드 이벤트 추가`로 커밋한다.
 
-### 작업 18: 작전 이벤트와 남은 기본 카드
+### Task 18: 작전 이벤트와 남은 기본 카드
 
 **파일:** `src/pog_engine/rules/events/{operations,misc}.py`, `tests/cards/{test_operational_events,test_event_inventory}.py` 생성; `docs/rules-coverage.md` 수정.
 
@@ -299,7 +299,7 @@
 - [ ] 대상·전체 테스트를 통과시키고 미배정 카드가 0장인지 확인한다.
 - [ ] `feat: 기본 카드 이벤트 완성`으로 커밋한다.
 
-### 작업 19: 플레이어 뷰·재생·전체 게임 검증
+### Task 19: 플레이어 뷰·재생·전체 게임 검증
 
 **파일:** `src/pog_engine/{view,replay}.py`, `tests/{test_view_replay,test_full_game}.py` 생성; `src/pog_engine/__init__.py`, 두 규칙 문서 수정.
 
