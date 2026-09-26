@@ -70,9 +70,9 @@ def create_game(scenario: str = "HISTORICAL", seed: int = 0) -> FullGameState:
     decision = {
         "kind": "MANDATORY_OFFENSIVE_ROLL",
         "actor": "CHANCE",
-        "purpose": "CP_MANDATORY_OFFENSIVE",
+        "purpose": "AP_MANDATORY_OFFENSIVE",
         "options": [
-            {"type": "RECORD_DIE_RESULT", "actor": "CHANCE", "purpose": "CP_MANDATORY_OFFENSIVE", "value": value}
+            {"type": "RECORD_DIE_RESULT", "actor": "CHANCE", "purpose": "AP_MANDATORY_OFFENSIVE", "value": value}
             for value in range(1, 7)
         ],
     }
