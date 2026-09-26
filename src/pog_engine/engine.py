@@ -49,7 +49,10 @@ def _decision(state: FullGameState) -> Mapping[str, object] | None:
 def generate_legal_actions(state: FullGameState) -> list[Action]:
     decision = _decision(state)
     if decision is None:
-        return [deepcopy(_ADVANCE_ACTION)] if state["phase"] in _AUTOMATIC_PHASES else []
+        actions = [deepcopy(_ADVANCE_ACTION)] if state["phase"] in _AUTOMATIC_PHASES else []
+        if state.get("scenario") == "HISTORICAL" and state.get("result") is None and state.get("active_side") in {"AP", "CP"}:
+            actions.append({"type": "RESIGN", "actor": state["active_side"]})
+        return actions
     actions: list[Action] = []
     seen: set[str] = set()
     for option in decision["options"]:
@@ -59,6 +62,8 @@ def generate_legal_actions(state: FullGameState) -> list[Action]:
         if key not in seen:
             actions.append(deepcopy(option))
             seen.add(key)
+    if state.get("scenario") == "HISTORICAL" and state.get("result") is None and state.get("active_side") in {"AP", "CP"}:
+        actions.append({"type": "RESIGN", "actor": state["active_side"]})
     return actions
 
 
@@ -70,6 +75,11 @@ def apply_action(state: FullGameState, action: Action, random_input: object | No
         raise IllegalActionError("무작위 입력과 선택한 주사위 결과가 다릅니다")
     consumed = deepcopy(action.get("value")) if action.get("actor") == "CHANCE" else None
     next_state = deepcopy(state)
+    if action["type"] == "RESIGN":
+        from .rules.victory import finish_game, resignation_result
+
+        next_state = finish_game(next_state, resignation_result(next_state, action["actor"]))
+        return Transition(next_state, {"action": deepcopy(action), "random_input": None})
     decision = _decision(next_state)
     if decision is None:
         from .rules.turn import advance_automatic_phases

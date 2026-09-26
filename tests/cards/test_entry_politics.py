@@ -62,7 +62,8 @@ def test_late_italian_and_romanian_cards_are_event_only():
     state = with_card(action_state("AP"), "ITALY")
     state["players"]["CP"]["commitment"] = "TOTAL"
     state["decision"]["options"] = legal_card_actions(state, "AP")
-    assert {a["mode"] for a in generate_legal_actions(state) if a["card_id"] == "ITALY"} == {"EVENT"}
+    assert {a["mode"] for a in generate_legal_actions(state)
+            if a["type"] == "PLAY_CARD" and a["card_id"] == "ITALY"} == {"EVENT"}
 
 
 def test_russian_political_chain_and_event_ops():

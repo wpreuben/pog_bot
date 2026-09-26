@@ -31,9 +31,10 @@ def test_ap_roll_precedes_cp_and_turn_one_british_mo_becomes_french():
 
 def test_first_cp_action_is_guns_of_august_event_only():
     state = after_opening_rolls()
-    assert generate_legal_actions(state) == [
+    assert [action for action in generate_legal_actions(state) if action["type"] == "PLAY_CARD"] == [
         {"type": "PLAY_CARD", "actor": "CP", "card_id": "GUNS_OF_AUGUST", "mode": "EVENT"}
     ]
+    assert {"type": "RESIGN", "actor": "CP"} in generate_legal_actions(state)
 
 
 def test_six_action_rounds_alternate_cp_then_ap_without_seventh_round():

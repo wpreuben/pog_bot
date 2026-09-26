@@ -37,6 +37,12 @@ def game_result(state: FullGameState) -> dict | None:
     return {"winner": "CP" if vp >= cp_threshold else "AP", "reason": reason, "vp": vp}
 
 
+def resignation_result(state: FullGameState, side: str) -> dict:
+    if side not in {"AP", "CP"}:
+        raise ValueError("항복 진영은 AP 또는 CP여야 합니다")
+    return {"winner": "AP" if side == "CP" else "CP", "reason": "RESIGN", "vp": state["vp"]}
+
+
 def finish_game(state: FullGameState, result: dict) -> FullGameState:
     state["result"] = result
     state["phase"] = "GAME_OVER"

@@ -49,7 +49,8 @@ def test_combat_cards_and_chance_rolls_switch_actor():
     assert state["decision"]["actor"] == "AP"
     state = choose(state, "PASS_COMBAT_CARDS")
     assert state["decision"]["actor"] == "CHANCE"
-    assert all(a["actor"] == "CHANCE" for a in generate_legal_actions(state))
+    assert all(a["actor"] == "CHANCE" for a in generate_legal_actions(state)
+               if a["type"] != "RESIGN")
 
 
 def test_losses_two_space_retreat_and_advance_are_replayable():
