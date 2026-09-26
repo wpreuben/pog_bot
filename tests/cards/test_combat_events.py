@@ -51,6 +51,15 @@ def test_nationality_and_side_requirements_limit_combat_cards():
     assert not combat_card_eligible(state, "PUTNIK", "DEFENDER_CARDS")
 
 
+def test_putnik_expires_after_turn_seven():
+    state = combat_state(attacker="CP", defender_ids=("SB_1_ARMY_1",))
+    state["combat_context"]["stage"] = "DEFENDER_CARDS"
+    state["turn"] = 7
+    assert combat_card_eligible(state, "PUTNIK", "DEFENDER_CARDS")
+    state["turn"] = 8
+    assert not combat_card_eligible(state, "PUTNIK", "DEFENDER_CARDS")
+
+
 def test_combat_card_drm_modifies_actual_crt_die():
     state = combat_state()
     state["players"]["CP"]["hand"].append("CHLORINE_GAS")

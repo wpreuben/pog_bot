@@ -137,6 +137,8 @@ from .events.politics import register_political_events
 from .events.war_status import register_war_status_events
 from .events.economy import register_economy_events
 from .events.combat import register_combat_events
+from .events.operations import register_operational_events
+from .events.misc import register_misc_events
 
 register_reinforcements(EVENT_HANDLERS)
 register_entry_events(EVENT_HANDLERS)
@@ -144,3 +146,5 @@ register_political_events(EVENT_HANDLERS)
 register_war_status_events(EVENT_HANDLERS)
 register_economy_events(EVENT_HANDLERS)
 register_combat_events(EVENT_HANDLERS)
+register_operational_events(EVENT_HANDLERS)
+register_misc_events(EVENT_HANDLERS)

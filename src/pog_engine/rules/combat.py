@@ -381,6 +381,53 @@ def _advance_options(state: FullGameState) -> list[Action]:
     return actions
 
 
+def _great_retreat_options(state: FullGameState) -> list[Action]:
+    context = state["combat_context"]
+    data = load_data()
+    destination = context["defender_space"]
+    actions = []
+    for uid, unit in state["units"].items():
+        if unit["location"] != destination or data.units[uid]["nation"] != "RU":
+            continue
+        for place in sorted(data.neighbors(destination, "RU")):
+            if data.spaces[place]["kind"] != "BOARD" or not state["war_nations"].get(data.spaces[place]["nation"], True):
+                continue
+            if state["spaces"][place]["control"] != "AP":
+                continue
+            if any(other["location"] == place and data.units[other_id]["side"] == "CP"
+                   for other_id, other in state["units"].items()):
+                continue
+            if sum(other["location"] == place for other in state["units"].values()) >= 3:
+                continue
+            actions.append({"type": "RETREAT_RUSSIAN_UNIT", "actor": "AP", "unit_id": uid, "to": place})
+    return actions + [{"type": "PASS_GREAT_RETREAT", "actor": "AP"}]
+
+
+def _after_precombat_retreat(state: FullGameState) -> None:
+    context = state["combat_context"]
+    from .events.combat import TRENCH_CARDS, combat_card_eligible
+
+    attacker = context["attacker"]
+    context["stage"] = "TRENCH_CARDS"
+    if not any(combat_card_eligible(state, card_id, "TRENCH_CARDS") for card_id in
+               state["players"][attacker]["hand"] + state["players"][attacker].get("in_play", [])
+               if card_id in TRENCH_CARDS) and not _brusilov_trench_available(state):
+        context["stage"] = "FLANK"
+
+
+def _brusilov_trench_available(state: FullGameState) -> bool:
+    context = state["combat_context"]
+    data = load_data()
+    return bool(
+        context["attacker"] == "AP"
+        and state["temporary_effects"].get("BRUSILOV_OFFENSIVE") == state["turn"]
+        and not state["temporary_effects"].get("BRUSILOV_TRENCH_USED")
+        and any(data.units[uid]["nation"] == "RU" for uid in context["attackers"])
+        and not any(data.units[uid]["nation"] == "GE" for uid in context["defending_units"])
+        and state["spaces"][context["defender_space"]]["trenches"]["CP"] > 0
+    )
+
+
 def legal_combat_actions(state: FullGameState) -> list[Action]:
     if state["phase"] != "COMBAT":
         return []
@@ -406,8 +453,13 @@ def legal_combat_actions(state: FullGameState) -> list[Action]:
         )
         return actions
 
+    if stage == "GREAT_RETREAT":
+        return _great_retreat_options(state)
     if stage == "TRENCH_CARDS":
-        return card_options(attacker) + [{"type": "PASS_TRENCH_CARDS", "actor": attacker}]
+        actions = card_options(attacker)
+        if _brusilov_trench_available(state):
+            actions.append({"type": "USE_BRUSILOV_TRENCH", "actor": attacker})
+        return actions + [{"type": "PASS_TRENCH_CARDS", "actor": attacker}]
     if stage == "FLANK":
         actions = card_options(attacker) + [{"type": "SKIP_FLANK", "actor": attacker}]
         for place in sorted({state["units"][uid]["location"] for uid in context["attackers"]}):
@@ -419,6 +471,11 @@ def legal_combat_actions(state: FullGameState) -> list[Action]:
     if stage in {"ATTACKER_CARDS", "DEFENDER_CARDS"}:
         side = attacker if stage == "ATTACKER_CARDS" else defender
         actions = card_options(side)
+        if stage == "ATTACKER_CARDS" and attacker == "AP" and state["temporary_effects"].get("KERENSKY_OFFENSIVE") == state["turn"]:
+            data = load_data()
+            if (any(data.units[uid]["nation"] == "RU" for uid in context["attackers"])
+                    and any(data.units[uid]["nation"] in {"AH", "BU", "TU"} for uid in context["defending_units"])):
+                actions.append({"type": "USE_KERENSKY_OFFENSIVE", "actor": attacker})
         return actions + [{"type": "PASS_COMBAT_CARDS", "actor": side}]
     if stage == "FIRE":
         side = context["fire_order"][context["fire_index"]]
@@ -589,17 +646,38 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             "fire_order": [attacker, defender], "fire_index": 0,
             "loss_queue": [], "loss_side": None, "loss_remaining": 0, "advanced": [],
         }
-        from .events.combat import TRENCH_CARDS, combat_card_eligible
-
         context = state["combat_context"]
-        context["stage"] = "TRENCH_CARDS"
-        if not any(combat_card_eligible(state, card_id, "TRENCH_CARDS") for card_id in
-                   state["players"][attacker]["hand"] + state["players"][attacker].get("in_play", [])
-                   if card_id in TRENCH_CARDS):
-            context["stage"] = "FLANK"
+        data = load_data()
+        if attacker == "AP":
+            nations = {data.units[uid]["nation"] for uid in action["unit_ids"]}
+            drm = 0
+            if "US" in nations and state["temporary_effects"].get("YANKS_AND_TANKS") == state["turn"]:
+                drm += 2
+            if "RU" in nations and state["temporary_effects"].get("BRUSILOV_OFFENSIVE") == state["turn"]:
+                drm += 1
+            if drm:
+                context.setdefault("drm", {})["AP"] = drm
+        if (attacker == "CP" and state["events"].get("GREAT_RETREAT") == state["turn"]
+                and any(data.units[uid]["nation"] == "RU" for uid in defending_units)):
+            context["stage"] = "GREAT_RETREAT"
+        else:
+            _after_precombat_retreat(state)
     else:
         context = state["combat_context"]
-        if kind == "PASS_TRENCH_CARDS":
+        if kind == "RETREAT_RUSSIAN_UNIT":
+            state["units"][action["unit_id"]]["location"] = action["to"]
+            if not any(option["type"] == "RETREAT_RUSSIAN_UNIT" for option in _great_retreat_options(state)):
+                _after_precombat_retreat(state)
+        elif kind == "PASS_GREAT_RETREAT":
+            _after_precombat_retreat(state)
+        elif kind == "USE_BRUSILOV_TRENCH":
+            context["trench_negated"] = True
+            state["temporary_effects"]["BRUSILOV_TRENCH_USED"] = True
+            context["stage"] = "FLANK"
+        elif kind == "USE_KERENSKY_OFFENSIVE":
+            context.setdefault("drm", {})["AP"] = context.get("drm", {}).get("AP", 0) + 2
+            state["temporary_effects"].pop("KERENSKY_OFFENSIVE", None)
+        elif kind == "PASS_TRENCH_CARDS":
             context["stage"] = "FLANK"
         elif kind == "SKIP_FLANK":
             context["stage"] = "ATTACKER_CARDS"

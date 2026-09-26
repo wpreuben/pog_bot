@@ -62,6 +62,9 @@ def complete_action(state: FullGameState) -> FullGameState:
         raise InvalidStateError("행동 단계가 아닙니다")
     next_state = deepcopy(state)
     side = next_state["active_side"]
+    for effect in ("YANKS_AND_TANKS", "KERENSKY_OFFENSIVE", "BRUSILOV_OFFENSIVE",
+                   "BRUSILOV_TRENCH_USED", "revealed_hand"):
+        next_state["temporary_effects"].pop(effect, None)
     if side == "AP" and next_state["events"].get("HIGH_SEAS_FLEET"):
         from .war import apply_vp_change
 

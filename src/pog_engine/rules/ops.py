@@ -8,6 +8,14 @@ from pog_engine.model import Action, FullGameState, IllegalActionError
 _BRITISH = {"BR", "AUS", "CND", "PT", "ANA"}
 
 
+def _sud_army_eligible(state: FullGameState, space_id: str, pieces: list[str]) -> bool:
+    definitions = [load_data().units[uid] for uid in pieces]
+    ah = [item for item in definitions if item["nation"] == "AH"]
+    ge_corps = [item for item in definitions if item["nation"] == "GE" and item["type"] == "CORPS"]
+    return bool(ah and sum(item["type"] == "ARMY" for item in ah) <= 1 and ge_corps
+                and all(item["type"] == "CORPS" for item in definitions if item["nation"] != "AH"))
+
+
 def activation_cost(state: FullGameState, space_id: str, kind: str) -> int:
     if kind not in {"MOVE", "ATTACK"}:
         raise ValueError("알 수 없는 활성화 종류")
@@ -17,9 +25,11 @@ def activation_cost(state: FullGameState, space_id: str, kind: str) -> int:
     side = state["active_side"]
     nations = set()
     russian_attackers = 0
+    pieces = []
     for unit_id, unit in state["units"].items():
         if unit["location"] != space_id or data.units[unit_id]["side"] != side:
             continue
+        pieces.append(unit_id)
         nation = data.units[unit_id]["nation"]
         if not state["war_nations"].get(nation, True):
             continue
@@ -33,7 +43,26 @@ def activation_cost(state: FullGameState, space_id: str, kind: str) -> int:
         elif nation == "US" and data.spaces[space_id]["nation"] in {"FR", "GE"}:
             nation = "FR"
         nations.add(nation)
-    return len(nations) + russian_attackers
+    cost = len(nations)
+    if side == "AP" and state["events"].get("EVERYONE_INTO_BATTLE") == state["turn"]:
+        if data.spaces[space_id]["nation"] in {"IT", "FR", "BE"} and cost:
+            cost = 1
+    if side == "CP" and state["events"].get("SUD_ARMY"):
+        used = state["flags"].get("sud_army_used_round", {})
+        if used.get("turn") != state["turn"] or used.get("round") != state["action_round"] or used.get("space") == space_id:
+            if _sud_army_eligible(state, space_id, pieces):
+                ah_count = sum(data.units[uid]["nation"] == "AH" for uid in pieces)
+                cost = 1 if ah_count == 1 and len(pieces) == 2 else 2
+    if side == "CP" and state["events"].get("11TH_ARMY") and "GE_11_ARMY_1" in pieces:
+        armies = [data.units[uid] for uid in pieces if data.units[uid]["type"] == "ARMY"]
+        if len(armies) < 2:
+            cost = len({item["nation"] for item in armies})
+    if side == "CP" and state["events"].get("MOLTKE") and not state["events"].get("FALKENHAYN"):
+        if data.spaces[space_id]["nation"] in {"FR", "BE"}:
+            cost = len(pieces)
+    if russian_attackers:
+        cost = russian_attackers + len(nations)
+    return cost
 
 
 def legal_ops_actions(state: FullGameState) -> list[Action]:
@@ -65,6 +94,16 @@ def _apply_ops(state: FullGameState, action: Action, random_input: object | None
             raise IllegalActionError("활성화 비용이 부족합니다")
         state["ops_remaining"] -= cost
         state["activated"][kind].append(space_id)
+        if state["active_side"] == "CP" and state["events"].get("SUD_ARMY"):
+            pieces = [uid for uid, unit in state["units"].items()
+                      if unit["location"] == space_id and load_data().units[uid]["side"] == "CP"]
+            used = state["flags"].get("sud_army_used_round", {})
+            if _sud_army_eligible(state, space_id, pieces) and (
+                used.get("turn") != state["turn"] or used.get("round") != state["action_round"]
+            ):
+                state["flags"]["sud_army_used_round"] = {
+                    "turn": state["turn"], "round": state["action_round"], "space": space_id,
+                }
         state.setdefault("activated_oos", []).extend(
             uid for uid, unit in state["units"].items()
             if unit["location"] == space_id and not supply_status(state, uid).supplied

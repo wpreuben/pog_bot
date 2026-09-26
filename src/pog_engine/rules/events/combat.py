@@ -56,6 +56,8 @@ def combat_card_eligible(state: FullGameState, card_id: str, stage: str) -> bool
                              for source in sources)
         return attacker == "CP" and "GE" in attackers and "RU" in defenders and possible_flank
     if card_id in {"PLEVE", "PUTNIK", "LIMAN_VON_SANDERS"}:
+        if card_id == "PUTNIK" and state["turn"] > 7:
+            return False
         nation = {"PLEVE": "RU", "PUTNIK": "SB", "LIMAN_VON_SANDERS": "TU"}[card_id]
         return nation in (attackers if card_side == attacker else defenders)
     if card_id == "WITHDRAWAL":
