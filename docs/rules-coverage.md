@@ -28,6 +28,8 @@
 
 `tests/cards/test_entry_politics.py`는 Guns of August, Italy·Romania·Bulgaria·Greece, Tsar Takes Command·Fall of the Tsar·Bolshevik Revolution·Treaty of Brest-Litovsk, Zimmermann Telegram·Over There의 선행 조건과 핵심 효과를 검증한다. 5.7.4.7 이벤트 후 OPS, 9.5.2.2 턴당 중립국 한 장, 16.4.9 러시아군 제한도 포함한다.
 
+`tests/cards/test_persistent_events.py`는 Blockade·Lusitania·Rape of Belgium·14 Points·Reichstag Truce의 VP, U-boats·Convoy·Zeppelin Raids·Walter Rathenau·Independent Air Force의 RP, High Seas Fleet·Grand Fleet 대응, French Mutiny 공격 벌점, War in Africa 선택, 카드 보충 및 마지막 턴 종료를 검증한다.
+
 | 진영 | 카드 ID | 이벤트 종류 | 기본 조항 |
 | --- | --- | --- | --- |
 | AP | `BRITISH_REINFORCEMENTS_BR_2` | 증원 | 9.5.3 |

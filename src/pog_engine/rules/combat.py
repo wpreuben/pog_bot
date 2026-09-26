@@ -522,7 +522,20 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
                            if unit["location"] == action["defender_space"] and load_data().units[uid]["side"] == defender]
         from .war import satisfies_mandatory_offensive
 
-        if satisfies_mandatory_offensive(
+        french_mutiny_mo = (attacker == "AP" and state["events"].get("FRENCH_MUTINY")
+                           and state["players"]["AP"]["mandatory_offensive"] == "FR")
+        if french_mutiny_mo and load_data().spaces[action["defender_space"]]["nation"] in {"FR", "BE", "GE"}:
+            sources = {state["units"][uid]["location"] for uid in action["unit_ids"]
+                       if load_data().units[uid]["nation"] == "FR"}
+            if any(not any(unit["location"] == source and load_data().units[uid]["nation"] == "US"
+                           for uid, unit in state["units"].items()) for source in sources):
+                from .war import apply_vp_change
+
+                updated = apply_vp_change(state, 1, "FRENCH_MUTINY")
+                state.clear()
+                state.update(updated)
+                state["players"]["AP"]["mandatory_offensive"] = None
+        elif not french_mutiny_mo and satisfies_mandatory_offensive(
             state, attacker, action["unit_ids"], defending_units, action["defender_space"]
         ):
             state["players"][attacker]["mandatory_offensive"] = None

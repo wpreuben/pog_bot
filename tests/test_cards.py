@@ -5,6 +5,7 @@ import pytest
 from pog_engine import IllegalActionError, apply_action, create_game, generate_legal_actions
 from pog_engine.rules.cards import discard_combat_cards, draw_to_hand, legal_card_actions
 from pog_engine.rules.turn import complete_action
+from pog_engine.data import load_data
 
 
 def rolled(state, value):
@@ -36,7 +37,8 @@ def test_card_modes_require_ownership_and_combat_card_event_is_unavailable():
     assert any(action["mode"] == "SR" for action in actions)
     assert any(action["mode"] == "RP" for action in actions)
     assert all(action["card_id"] in state["players"]["AP"]["hand"] for action in actions)
-    assert all(action["mode"] != "EVENT" for action in actions)
+    assert all(not load_data().cards[action["card_id"]]["combat_card"]
+               for action in actions if action["mode"] == "EVENT")
 
     before = copy.deepcopy(state)
     with pytest.raises(IllegalActionError):

@@ -134,7 +134,11 @@ register_decision_handler("ACTION_PHASE", _apply_card)
 from .events.reinforcements import register_reinforcements
 from .events.entry import register_entry_events
 from .events.politics import register_political_events
+from .events.war_status import register_war_status_events
+from .events.economy import register_economy_events
 
 register_reinforcements(EVENT_HANDLERS)
 register_entry_events(EVENT_HANDLERS)
 register_political_events(EVENT_HANDLERS)
+register_war_status_events(EVENT_HANDLERS)
+register_economy_events(EVENT_HANDLERS)

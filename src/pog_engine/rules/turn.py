@@ -62,6 +62,11 @@ def complete_action(state: FullGameState) -> FullGameState:
         raise InvalidStateError("행동 단계가 아닙니다")
     next_state = deepcopy(state)
     side = next_state["active_side"]
+    if side == "AP" and next_state["events"].get("HIGH_SEAS_FLEET"):
+        from .war import apply_vp_change
+
+        next_state = apply_vp_change(next_state, 1, "HIGH_SEAS_FLEET")
+        del next_state["events"]["HIGH_SEAS_FLEET"]
     ordinal = (next_state["turn"] - 1) * 6 + next_state["players"][side]["actions_taken"]
     failed = next_state["flags"].get("failed_entrench", {})
     for unit_id, next_ordinal in list(failed.items()):
@@ -109,10 +114,28 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         return begin_siege_phase(next_state)
     if phase == "WAR_STATUS":
         from .war import resolve_war_status
+        from .events.economy import apply_replacement_phase_events
 
         next_state = resolve_war_status(next_state)
         if next_state["phase"] == "GAME_OVER":
             return next_state
+        if next_state["turn"] >= 20:
+            from .victory import finish_game, game_result
+
+            next_state["phase"] = "END_TURN"
+            victory = game_result(next_state)
+            assert victory is not None
+            return finish_game(next_state, victory)
+        apply_replacement_phase_events(next_state)
+    if phase == "DRAW":
+        from .cards import draw_to_hand
+
+        for side in ("AP", "CP"):
+            player = next_state["players"][side]
+            player["discard"].extend(player.get("in_play", []))
+            player["in_play"] = []
+        next_state = draw_to_hand(next_state, "AP")
+        next_state = draw_to_hand(next_state, "CP")
     if phase in _AFTER_ACTIONS:
         next_state["phase"] = _AFTER_ACTIONS[phase]
         if next_state["phase"] in {"REPLACEMENT_AP", "REPLACEMENT_CP"}:
@@ -126,10 +149,12 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         return next_state
     if phase == "END_TURN":
         from .victory import finish_game, game_result
+        from .events.economy import expire_effects
 
         victory = game_result(next_state)
         if victory is not None:
             return finish_game(next_state, victory)
+        expire_effects(next_state, phase)
         for side in ("AP", "CP"):
             player = next_state["players"][side]
             player["discard"].extend(player.get("in_play", []))
