@@ -16,18 +16,24 @@ def activation_cost(state: FullGameState, space_id: str, kind: str) -> int:
         raise ValueError("활성화할 수 없는 공간")
     side = state["active_side"]
     nations = set()
+    russian_attackers = 0
     for unit_id, unit in state["units"].items():
         if unit["location"] != space_id or data.units[unit_id]["side"] != side:
             continue
         nation = data.units[unit_id]["nation"]
         if not state["war_nations"].get(nation, True):
             continue
+        if kind == "ATTACK" and nation == "RU" and state["events"].get("TREATY_OF_BREST_LITOVSK"):
+            continue
+        if kind == "ATTACK" and nation == "RU" and state["events"].get("FALL_OF_THE_TSAR"):
+            russian_attackers += 1
+            continue
         if nation in _BRITISH or (nation == "BE" and space_id in {"ANTWERP", "OSTEND", "CALAIS", "AMIENS"}):
             nation = "BR"
         elif nation == "US" and data.spaces[space_id]["nation"] in {"FR", "GE"}:
             nation = "FR"
         nations.add(nation)
-    return len(nations)
+    return len(nations) + russian_attackers
 
 
 def legal_ops_actions(state: FullGameState) -> list[Action]:

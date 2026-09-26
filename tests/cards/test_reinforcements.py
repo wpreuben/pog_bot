@@ -95,3 +95,17 @@ def test_special_reinforcement_destinations():
     assert "ALEXANDRIA" not in placement_spaces(state, "BR_NE_ARMY_1")
     state["events"]["SINAI_PIPELINE"] = 2
     assert "ALEXANDRIA" in placement_spaces(state, "BR_NE_ARMY_1")
+
+
+def test_mef_requires_turkey_and_us_reinforcements_obey_uboats():
+    state = action_state("MEF_BR_REINFORCEMENTS")
+    assert not EVENT_HANDLERS["MEF_BR_REINFORCEMENTS"].can_play(state, "MEF_BR_REINFORCEMENTS")
+    state["war_nations"]["TU"] = True
+    assert EVENT_HANDLERS["MEF_BR_REINFORCEMENTS"].can_play(state, "MEF_BR_REINFORCEMENTS")
+    state = action_state("USA_REINFORCEMENTS_US_1")
+    state["us_entry"] = 3
+    state["war_nations"]["US"] = True
+    state["events"]["U_BOATS_UNLEASHED"] = 6
+    assert not EVENT_HANDLERS["USA_REINFORCEMENTS_US_1"].can_play(state, "USA_REINFORCEMENTS_US_1")
+    state["events"]["CONVOY"] = 7
+    assert EVENT_HANDLERS["USA_REINFORCEMENTS_US_1"].can_play(state, "USA_REINFORCEMENTS_US_1")

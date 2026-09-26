@@ -26,6 +26,8 @@
 
 증원 카드 36장의 인쇄된 유닛 이름·수량·진영은 `tests/cards/test_reinforcements.py::test_all_reinforcement_cards_have_handler_and_unique_unused_units`에서 카드별로 검증한다. 같은 파일은 9.5.3의 첫 턴 금지, 국가별 턴당 1장, 미군 참전, 군/군단 배치와 특수 배치 장소를 검증한다. 다른 종류의 카드는 작업 15–18에서 효과를 확인한다.
 
+`tests/cards/test_entry_politics.py`는 Guns of August, Italy·Romania·Bulgaria·Greece, Tsar Takes Command·Fall of the Tsar·Bolshevik Revolution·Treaty of Brest-Litovsk, Zimmermann Telegram·Over There의 선행 조건과 핵심 효과를 검증한다. 5.7.4.7 이벤트 후 OPS, 9.5.2.2 턴당 중립국 한 장, 16.4.9 러시아군 제한도 포함한다.
+
 | 진영 | 카드 ID | 이벤트 종류 | 기본 조항 |
 | --- | --- | --- | --- |
 | AP | `BRITISH_REINFORCEMENTS_BR_2` | 증원 | 9.5.3 |

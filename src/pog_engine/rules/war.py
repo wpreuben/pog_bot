@@ -117,7 +117,10 @@ def update_entry_markers(state: dict) -> None:
         marker = 6
     elif events.get("FALL_OF_THE_TSAR"):
         snapshot = state["flags"].setdefault("tsar_fell_russian_vp", controlled)
-        marker = 5 if controlled > snapshot or controlled >= 7 else 4
+        all_seven = all(state["spaces"][space_id]["control"] == "CP" for space_id in (
+            "RIGA", "KOVNO", "VILNA", "WARSAW", "LODZ", "KIEV", "ODESSA"
+        ))
+        marker = 5 if controlled > snapshot or all_seven else 4
     elif events.get("TSAR_TAKES_COMMAND"):
         marker = 3 if combined + controlled >= 33 else 2
     else:

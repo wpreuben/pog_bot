@@ -24,6 +24,7 @@ def test_allied_rp_card_uses_same_pool_as_minor_nation_units():
         purpose = state["decision"]["purpose"]
         state = apply_action(state, {"type": "RECORD_DIE_RESULT", "actor": "CHANCE", "purpose": purpose, "value": value}).state
     state = apply_action(state, {"type": "PLAY_CARD", "actor": "CP", "card_id": "GUNS_OF_AUGUST", "mode": "EVENT"}).state
+    state = apply_action(state, {"type": "END_COMBAT", "actor": "CP"}).state
     state["players"]["AP"]["hand"] = ["BLOCKADE"]
     state["decision"]["options"] = [{"type": "PLAY_CARD", "actor": "AP", "card_id": "BLOCKADE", "mode": "RP"}]
     state = apply_action(state, {"type": "PLAY_CARD", "actor": "AP", "card_id": "BLOCKADE", "mode": "RP"}).state

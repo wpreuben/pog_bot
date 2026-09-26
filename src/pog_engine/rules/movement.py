@@ -13,6 +13,13 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
     side, nation = unit["side"], unit["nation"]
     if space["kind"] != "BOARD":
         return False
+    if state["events"].get("TREATY_OF_BREST_LITOVSK") and side == "AP":
+        if nation == "RU" and space["nation"] not in {"RU", "GE", "TU", "AH", "RO"}:
+            return False
+        if any(other["location"] == destination and data.units[other_id]["side"] == "AP"
+               and (data.units[other_id]["nation"] == "RU") != (nation == "RU")
+               for other_id, other in state["units"].items()):
+            return False
     if space["nation"] in state["war_nations"] and not state["war_nations"][space["nation"]]:
         return False
     if any(other["location"] == destination and data.units[other_id]["side"] != side

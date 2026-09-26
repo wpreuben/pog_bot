@@ -42,6 +42,11 @@ def _allowed_destination(state: FullGameState, unit_id: str, destination: str, *
         return False
     if unit["nation"] == "RU" and data.spaces[destination]["nation"] != "RU":
         return False
+    if state["events"].get("TREATY_OF_BREST_LITOVSK") and unit["side"] == "AP":
+        if any(other["location"] == destination and data.units[other_id]["side"] == "AP"
+               and (data.units[other_id]["nation"] == "RU") != (unit["nation"] == "RU")
+               for other_id, other in state["units"].items()):
+            return False
     if unit["type"] == "ARMY" and data.spaces[destination]["map"] == "neareast" and not unit["near_east"]:
         return False
     if unit["type"] == "ARMY" and state["players"]["AP"]["commitment"] != "TOTAL":

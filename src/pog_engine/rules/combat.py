@@ -55,6 +55,14 @@ def _valid_group(state: FullGameState, unit_ids: tuple[str, ...], destination: s
     from .forts import siege_survives_departure
 
     target = data.spaces[destination]
+    if state["events"].get("TREATY_OF_BREST_LITOVSK"):
+        if any(data.units[uid]["nation"] == "RU" for uid in unit_ids):
+            return False
+        defending_russians = any(unit["location"] == destination and data.units[uid]["nation"] == "RU"
+                                 for uid, unit in state["units"].items())
+        if defending_russians and not (target["map"] == "neareast" and
+                                       all(data.units[uid]["nation"] == "TU" for uid in unit_ids)):
+            return False
     intact_fort = target["fort"] and not state["spaces"][destination]["fort_destroyed"]
     if intact_fort and target["nation"] == "RU" and state["players"]["CP"]["war_status"] < 4:
         if not state["events"].get("OBEROST") and any(data.units[uid]["nation"] == "GE" for uid in unit_ids):

@@ -23,11 +23,14 @@ def legal_card_actions(state: FullGameState, side: str) -> list[Action]:
     for card_id in player["hand"]:
         card = data.cards[card_id]
         modes = []
-        if card["ops"]:
+        late_entry_only = (side == "AP" and card_id in {"ITALY", "ROMANIA"}
+                           and state["players"]["CP"]["commitment"] == "TOTAL"
+                           and state["players"]["AP"]["commitment"] != "TOTAL")
+        if card["ops"] and not late_entry_only:
             modes.append("OPS")
-        if card["sr"]:
+        if card["sr"] and not late_entry_only:
             modes.append("SR")
-        if card["rp"] and player.get("last_action_mode") != "RP":
+        if card["rp"] and player.get("last_action_mode") != "RP" and not late_entry_only:
             modes.append("RP")
         handler = EVENT_HANDLERS.get(card_id)
         if handler is not None and not card["combat_card"] and handler.can_play(state, card_id):
@@ -51,12 +54,6 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
         else:
             player["discard"].append(card_id)
         player["war_status"] += card["war_status"]
-        if card_id == "GUNS_OF_AUGUST":
-            state["events"]["GUNS_OF_AUGUST"] = state["turn"]
-            next_state = complete_action(state)
-            state.clear()
-            state.update(next_state)
-            return state
         handler = EVENT_HANDLERS[card_id]
         handler.apply(state, None)
         return state
@@ -71,14 +68,7 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
         state.clear()
         state.update(next_state)
     elif mode == "OPS":
-        from .ops import legal_ops_actions
-
-        state["ops_remaining"] = card["ops"]
-        state["activated"] = {"MOVE": [], "ATTACK": []}
-        state["activated_oos"] = []
-        state["phase"] = "OPS"
-        state["decision"] = {"kind": "OPS", "actor": side, "options": []}
-        state["decision"]["options"] = legal_ops_actions(state)
+        begin_ops(state, card["ops"])
     elif mode == "SR":
         from .sr import legal_sr_actions
 
@@ -87,6 +77,19 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
         state["phase"] = "SR"
         state["decision"] = {"kind": "SR", "actor": side, "options": []}
         state["decision"]["options"] = legal_sr_actions(state)
+    return state
+
+
+def begin_ops(state: FullGameState, points: int) -> FullGameState:
+    """카드 OPS 또는 5.7.4.7의 이벤트 이후 OPS를 연다."""
+    from .ops import legal_ops_actions
+
+    state["ops_remaining"] = points
+    state["activated"] = {"MOVE": [], "ATTACK": []}
+    state["activated_oos"] = []
+    state["phase"] = "OPS"
+    state["decision"] = {"kind": "OPS", "actor": state["active_side"], "options": []}
+    state["decision"]["options"] = legal_ops_actions(state)
     return state
 
 
@@ -129,5 +132,9 @@ def discard_combat_cards(state: FullGameState, side: str, card_ids: list[str]) -
 register_decision_handler("ACTION_PHASE", _apply_card)
 
 from .events.reinforcements import register_reinforcements
+from .events.entry import register_entry_events
+from .events.politics import register_political_events
 
 register_reinforcements(EVENT_HANDLERS)
+register_entry_events(EVENT_HANDLERS)
+register_political_events(EVENT_HANDLERS)

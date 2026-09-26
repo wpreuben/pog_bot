@@ -14,9 +14,10 @@ def rolled(state, value):
 
 def ap_action_state():
     state = rolled(rolled(create_game(seed=4), 1), 5)
-    return apply_action(
+    state = apply_action(
         state, {"type": "PLAY_CARD", "actor": "CP", "card_id": "GUNS_OF_AUGUST", "mode": "EVENT"}
     ).state
+    return apply_action(state, {"type": "END_COMBAT", "actor": "CP"}).state
 
 
 def test_first_event_removes_guns_and_passes_action_to_ap():

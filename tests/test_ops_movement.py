@@ -106,6 +106,7 @@ def test_ops_card_opens_activation_decision():
         purpose = state["decision"]["purpose"]
         state = apply_action(state, {"type": "RECORD_DIE_RESULT", "actor": "CHANCE", "purpose": purpose, "value": value}).state
     state = apply_action(state, {"type": "PLAY_CARD", "actor": "CP", "card_id": "GUNS_OF_AUGUST", "mode": "EVENT"}).state
+    state = apply_action(state, {"type": "END_COMBAT", "actor": "CP"}).state
     card_id = next(a["card_id"] for a in generate_legal_actions(state) if a["mode"] == "OPS")
     state = apply_action(state, {"type": "PLAY_CARD", "actor": "AP", "card_id": card_id, "mode": "OPS"}).state
     assert state["phase"] == "OPS"

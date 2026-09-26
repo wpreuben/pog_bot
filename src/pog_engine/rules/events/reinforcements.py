@@ -107,6 +107,10 @@ class ReinforcementHandler:
             return False
         if nation == "US" and state["us_entry"] < 3:
             return False
+        if nation == "US" and state["events"].get("U_BOATS_UNLEASHED") and not state["events"].get("CONVOY"):
+            return False
+        if card_id == "MEF_BR_REINFORCEMENTS" and not state["war_nations"]["TU"]:
+            return False
         unit_ids = reinforcement_unit_ids(state, card_id)
         return bool(unit_ids) and _can_place_all(state, unit_ids)
 

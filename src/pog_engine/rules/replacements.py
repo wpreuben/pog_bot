@@ -90,6 +90,10 @@ def legal_replacement_actions(state: FullGameState, side: str) -> list[Action]:
             continue
         pool = definition["rp_type"]
         cost = 1 if definition["type"] == "ARMY" else 0.5
+        if nation == "RU" and state["events"].get("BOLSHEVIK_REVOLUTION"):
+            spent = state["flags"].get("ru_rp_spent", {})
+            if spent.get("turn") == state["turn"] and spent.get("amount", 0) + cost > 1:
+                continue
         if pool is None or points.get(pool, 0) < cost:
             continue
         if unit["eliminated"] and unit["location"] is None:
@@ -167,6 +171,11 @@ def apply_replacement_action(state: FullGameState, action: Action) -> FullGameSt
     pool = definition["rp_type"]
     cost = 1 if definition["type"] == "ARMY" else 0.5
     state["players"][side]["replacement_points"][pool] -= cost
+    if definition["nation"] == "RU" and state["events"].get("BOLSHEVIK_REVOLUTION"):
+        spent = state["flags"].setdefault("ru_rp_spent", {"turn": state["turn"], "amount": 0})
+        if spent["turn"] != state["turn"]:
+            spent.update({"turn": state["turn"], "amount": 0})
+        spent["amount"] += cost
     state["decision"]["options"] = legal_replacement_actions(state, side)
     return state
 
