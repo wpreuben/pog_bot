@@ -3,6 +3,7 @@
 from pog_engine.data import load_data
 from pog_engine.engine import register_decision_handler
 from pog_engine.model import Action, FullGameState, IllegalActionError
+from itertools import combinations
 
 
 def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
@@ -21,6 +22,17 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
         return False
     if destination in state["activated"]["ATTACK"]:
         return False
+    from .forts import siege_survives_departure
+
+    if not siege_survives_departure(state, state["units"][unit_id]["location"], (unit_id,)):
+        return False
+    if space["fort"] and not state["spaces"][destination]["fort_destroyed"] and space["side"] != side:
+        from .forts import can_besiege, fort_status
+
+        if not fort_status(state, destination).besieged and not can_besiege(state, destination, side, (unit_id,)):
+            return False
+        if state["turn"] == 1 and nation == "RU" and space["nation"] == "GE":
+            return False
     if side == "CP" and destination in {"AMIENS", "CALAIS", "OSTEND"}:
         if not state["events"].get("RACE_TO_THE_SEA") and state["players"]["CP"]["war_status"] < 4:
             return False
@@ -64,6 +76,31 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
         for destination in sorted(data.neighbors(unit["location"], definition["nation"])):
             if _can_enter(state, unit_id, destination):
                 actions.append({"type": "MOVE", "actor": side, "unit_id": unit_id, "to": destination})
+    if not moving:
+        from .forts import siege_survives_departure
+
+        corps = sorted(uid for uid in candidates if data.units[uid]["type"] == "CORPS"
+                       and uid not in state.get("activated_oos", []) and supply_status(state, uid).supplied)
+        for destination, target in sorted(data.spaces.items()):
+            if target["fort"] < 2 or target["side"] == side or target["fort"] > 3:
+                continue
+            if state["spaces"][destination]["fort_destroyed"] or state["spaces"][destination]["fort_besieged"]:
+                continue
+            if not state["war_nations"].get(target["nation"], True) or destination in state["activated"]["ATTACK"]:
+                continue
+            if any(unit["location"] == destination and data.units[uid]["side"] != side
+                   for uid, unit in state["units"].items()):
+                continue
+            if sum(unit["location"] == destination for unit in state["units"].values()) + target["fort"] > 3:
+                continue
+            eligible = [uid for uid in corps if destination in data.neighbors(
+                state["units"][uid]["location"], data.units[uid]["nation"])]
+            for group in combinations(eligible, target["fort"]):
+                sources = {state["units"][uid]["location"] for uid in group}
+                if all(siege_survives_departure(state, source, tuple(uid for uid in group
+                                                                     if state["units"][uid]["location"] == source))
+                       for source in sources):
+                    actions.append({"type": "MOVE_STACK", "actor": side, "unit_ids": list(group), "to": destination})
     if moving:
         actions.append({"type": "STOP_MOVING_UNIT", "actor": side})
     else:
@@ -79,9 +116,26 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
         raise IllegalActionError("이동할 수 없는 경로입니다")
     context = state["movement"]
     kind = action["type"]
-    if kind == "MOVE":
+    if kind == "MOVE_STACK":
+        from .forts import update_siege_status
+
+        destination = action["to"]
+        sources = {state["units"][uid]["location"] for uid in action["unit_ids"]}
+        for uid in action["unit_ids"]:
+            state["units"][uid]["location"] = destination
+            state["flags"].get("failed_entrench", {}).pop(uid, None)
+            context["done"].append(uid)
+        for source in sources:
+            update_siege_status(state, source)
+        update_siege_status(state, destination)
+    elif kind == "MOVE":
+        from .forts import update_siege_status
+
         unit_id, destination = action["unit_id"], action["to"]
+        source = state["units"][unit_id]["location"]
         state["units"][unit_id]["location"] = destination
+        update_siege_status(state, source)
+        update_siege_status(state, destination)
         state["flags"].get("failed_entrench", {}).pop(unit_id, None)
         space = state["spaces"][destination]
         enemy = "AP" if state["active_side"] == "CP" else "CP"

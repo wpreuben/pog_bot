@@ -101,6 +101,10 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         from .supply import resolve_attrition
 
         next_state = resolve_attrition(next_state)
+    if phase == "SIEGE":
+        from .forts import begin_siege_phase
+
+        return begin_siege_phase(next_state)
     if phase in _AFTER_ACTIONS:
         next_state["phase"] = _AFTER_ACTIONS[phase]
         next_state["active_side"] = "AP" if next_state["phase"] == "REPLACEMENT_AP" else (

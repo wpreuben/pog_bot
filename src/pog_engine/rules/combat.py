@@ -52,7 +52,28 @@ def _can_target(state: FullGameState, destination: str, side: str) -> bool:
 
 def _valid_group(state: FullGameState, unit_ids: tuple[str, ...], destination: str) -> bool:
     data = load_data()
+    from .forts import siege_survives_departure
+
+    target = data.spaces[destination]
+    intact_fort = target["fort"] and not state["spaces"][destination]["fort_destroyed"]
+    if intact_fort and target["nation"] == "RU" and state["players"]["CP"]["war_status"] < 4:
+        if not state["events"].get("OBEROST") and any(data.units[uid]["nation"] == "GE" for uid in unit_ids):
+            return False
+    if intact_fort and target["nation"] == "GE" and state["turn"] == 1:
+        if any(data.units[uid]["nation"] == "RU" for uid in unit_ids):
+            return False
     places = {state["units"][uid]["location"] for uid in unit_ids}
+    if any(not siege_survives_departure(state, place, tuple(uid for uid in unit_ids
+                                                        if state["units"][uid]["location"] == place))
+           for place in places if place != destination):
+        return False
+    for place in places - {destination}:
+        if state["spaces"][place]["fort_besieged"]:
+            remaining = [uid for uid, unit in state["units"].items()
+                         if unit["location"] == place and data.units[uid]["side"] == state["active_side"]
+                         and uid not in unit_ids]
+            if not remaining:
+                return False
     if "LONDON" in places and not any(data.spaces[place]["nation"] in {"FR", "BE"} for place in places):
         return False
     nations = {_nation(data.units[uid]) for uid in unit_ids}
@@ -86,7 +107,10 @@ def legal_attack_declarations(state: FullGameState) -> list[Action]:
             continue
         if unit_id in state.get("activated_oos", []) or not supply_status(state, unit_id).supplied:
             continue
-        for destination in data.neighbors(start, definition["nation"]):
+        destinations = set(data.neighbors(start, definition["nation"]))
+        if data.spaces[start]["fort"] and state["spaces"][start]["fort_besieged"]:
+            destinations.add(start)
+        for destination in destinations:
             if _can_target(state, destination, side):
                 targets.setdefault(destination, []).append(unit_id)
     actions = []
@@ -332,6 +356,12 @@ def _advance_options(state: FullGameState) -> list[Action]:
         if unit["location"] is None or unit["reduced"] or uid in context["advanced"]:
             continue
         if target in data.neighbors(unit["location"], data.units[uid]["nation"]):
+            target_data = data.spaces[target]
+            if target_data["fort"] and not state["spaces"][target]["fort_destroyed"] and target_data["side"] != side:
+                from .forts import can_besiege
+
+                if not state["spaces"][target]["fort_besieged"] and not can_besiege(state, target, side, (uid,)):
+                    continue
             actions.append({"type": "ADVANCE_UNIT", "actor": side, "unit_id": uid})
     return actions
 
@@ -413,6 +443,13 @@ def _finish_combat(state: FullGameState) -> None:
 
 def _after_losses(state: FullGameState) -> None:
     context = state["combat_context"]
+    if context["stage"] == "LOSSES" and context["loss_side"] == context["defender"]:
+        from .forts import resolve_fort_combat
+
+        result = resolve_fort_combat(state, context)
+        state.clear()
+        state.update(result)
+        context = state["combat_context"]
     if context["loss_queue"]:
         context["loss_side"] = context["loss_queue"].pop(0)
         enemy = context["defender"] if context["loss_side"] == context["attacker"] else context["attacker"]
@@ -441,6 +478,7 @@ def _after_losses(state: FullGameState) -> None:
 def _apply_step_loss(state: FullGameState, uid: str, replacement: str | None = None) -> int:
     unit = state["units"][uid]
     definition = load_data().units[uid]
+    old_place = unit["location"]
     lf = definition["reduced_lf"] if unit["reduced"] else definition["lf"]
     if unit["reduced"]:
         old_place = unit["location"]
@@ -450,6 +488,10 @@ def _apply_step_loss(state: FullGameState, uid: str, replacement: str | None = N
             state["units"][replacement]["location"] = old_place
     else:
         unit["reduced"] = True
+    if old_place:
+        from .forts import update_siege_status
+
+        update_siege_status(state, old_place)
     return lf
 
 
@@ -536,6 +578,8 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             if context["retreat_remaining"] == 0:
                 context["stage"] = "ADVANCE"
         elif kind == "ADVANCE_UNIT":
+            from .forts import update_siege_status
+
             uid = action["unit_id"]
             target = context["defender_space"]
             state["units"][uid]["location"] = target
@@ -546,7 +590,7 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
                     state["vp"] += 1 if context["attacker"] == "CP" else -1
                 space["control"] = context["attacker"]
             else:
-                space["fort_besieged"] = True
+                update_siege_status(state, target)
         elif kind == "END_ADVANCE":
             _finish_combat(state)
     _refresh(state)
