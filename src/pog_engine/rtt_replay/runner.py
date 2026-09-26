@@ -143,6 +143,12 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
                 return ReplayReport(False, intent.end_index + 1, tuple(records), initial, state,
                                     difference, tuple(adjudications), checked_steps)
     final = observations[-1]
+    if final["state"] != "game_over":
+        difference = ReplayDifference(len(source.actions) - 1, ".final", "$.final.state",
+                                      "game_over", final["state"], state["phase"],
+                                      tuple(generate_legal_actions(state)[:20]))
+        return ReplayReport(False, len(source.actions), tuple(records), initial, state,
+                            difference, tuple(adjudications), checked_steps)
     if (state["turn"], state["vp"]) != (final["turn"], final["vp"]):
         difference = ReplayDifference(len(source.actions) - 1, ".final", "$.final",
                                       (final["turn"], final["vp"]), (state["turn"], state["vp"]),

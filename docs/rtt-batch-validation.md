@@ -2,7 +2,7 @@
 
 ## 실행
 
-프로젝트 루트에서 실행한다. `replays/`에는 RTT에서 내려받은 `replay-*.json`을 둔다.
+프로젝트 루트에서 실행한다. `replays/`에는 RTT에서 내려받은 `<게임 ID>.json` 또는 `replay-<게임 ID>.json`을 둔다. `:Zone.Identifier` 파일은 무시한다.
 
 ```bash
 UV_CACHE_DIR=.uv-cache uv run python -m pog_engine.rtt_replay.batch \
@@ -12,7 +12,7 @@ UV_CACHE_DIR=.uv-cache uv run python -m pog_engine.rtt_replay.batch \
   --report /home/pc/project/pog_bot/replays/validation-report.json
 ```
 
-다른 PC에서는 경로를 실제 위치로 바꾼다. 다시 실행하면 입력 파일, Python 엔진·변환 코드, RTT 규칙 파일의 내용이 같을 때 이전 `verified`·`mismatch` 결과를 재사용한다. 전체를 다시 검사하려면 `--refresh`를 붙인다. 다운로드 중인 파일은 `invalid`로 표시될 수 있으며, 파일 내용이 바뀐 뒤 다시 실행하면 재검사한다.
+다른 PC에서는 경로를 실제 위치로 바꾼다. 10개마다 보고서를 저장하므로 중단 후 재실행하면 이전 결과를 재사용한다. 입력 파일, Python 코드·규칙 데이터 JSON, RTT `rules.js`·`data.js`·`lz4.js`, 정규화 결과의 SHA-256이 같을 때 `verified` 결과를 재사용한다. 전체를 다시 검사하려면 `--refresh`를 붙인다. 다운로드 중인 파일은 `invalid`로 표시될 수 있으며, 파일 내용이 바뀐 뒤 다시 실행하면 재검사한다. 입력은 읽은 직후 임시 스냅샷으로 고정해 검사한다.
 
 보고서 `games`에는 게임 ID, 원본 파일명, SHA-256, 행동 수, 검사 상태가 들어간다. `mismatch`는 첫 원본 행동 인덱스와 상태 경로·기대값·실제값을 기록한다. 상태는 다음과 같다.
 
@@ -30,4 +30,17 @@ UV_CACHE_DIR=.uv-cache uv run python -m pog_engine.rtt_replay.batch \
 
 ## 초기 입력 점검
 
-2026-09-27에 내려받은 12개 기보에서는 `verified` 1개, `mismatch` 9개, `unsupported` 2개로 분류됐다. `unsupported`는 Valiant 옵션 1개와 `.timeout` 종료 1개다. 첫 불일치는 주로 이동 중 유닛 선택, 후퇴 취소·선택, 전투 카드·손실 선택에서 발생했다. 한 게임은 아라비아 지배권의 룰북·RTT 차이에서 멈췄다. 입력이 계속 추가되고 있으므로 이 수치는 고정된 완료 지표가 아니다. 보고서의 첫 불일치가 이후 엔진·변환기 개선 순서를 정하는 근거다.
+2026-09-27에 총 3,687개를 검사했다. 결과는 다음과 같다.
+
+| 상태 | 게임 수 |
+| --- | ---: |
+| `verified` | 17 |
+| `mismatch` | 2,705 |
+| `error` | 857 |
+| `unsupported` | 101 |
+| `duplicate` | 4 |
+| `incomplete` | 3 |
+
+`unsupported`는 `.timeout` 종료 100개와 Valiant 옵션 1개다. `error`의 대부분은 RTT 참조 엔진이 기록된 `done`(455개)·`card`(314개) 행동을 거부한 경우다. `mismatch`의 가장 흔한 첫 행동은 `piece`(804개), `retreat`(715개), `flag_supply_warnings`(234개)다. 이는 현재 RTT 관측기·행동 번역기와 여러 시기의 기보가 맞지 않음을 보여준다. 분류만으로 특정 규칙 오류의 원인을 단정하지 않는다.
+
+정규화 파일 17개의 SHA-256은 보고서와 일치했고 누락·초과 파일이 없었다. 현재 검증된 게임만으로 DL policy 학습을 시작하면 표본이 지나치게 적다. 다음 작업은 첫 실패가 많은 행동 형식과 RTT 버전 차이를 조사해 검증 게임 수를 늘리는 것이다. 원본 기보와 전체 파일별 결과는 Git에서 제외된 `replays/validation-report.json`에 둔다.

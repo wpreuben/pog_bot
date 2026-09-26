@@ -38,4 +38,4 @@ visible = get_player_view(state, "AP")
 
 258629번 Historical 게임의 익명화된 JSON 기보를 RTT 참고 엔진과 함께 재현하는 검증기가 있다. `RTT_RULES_PATH`에 별도로 보관한 RTT `rules.js` 경로를 지정하고 `uv run pytest tests/test_rtt_runner.py -q`를 실행한다. 완료 기준은 1,447개 입력의 종료까지 합법 행동 적용, 8턴·VP 7·AP 승리, 그리고 Python 전이 기록의 결정적 재생이다. 실행 방법과 판정 차이는 [RTT 검증 기록](docs/rtt-validation.md)에 정리했다.
 
-여러 RTT JSON 기보는 `python -m pog_engine.rtt_replay.batch`로 일괄 검사한다. 입력 폴더의 `replay-*.json`을 Historical 기본 캠페인 지원 범위에 따라 분류하고, 재현에 성공한 게임의 익명화된 엔진 초기 상태와 행동 기록을 저장한다. 실행 명령과 결과 형식은 [일괄 검증 안내](docs/rtt-batch-validation.md)에 정리했다.
+여러 RTT JSON 기보는 `python -m pog_engine.rtt_replay.batch`로 일괄 검사한다. 입력 폴더의 `<게임 ID>.json`과 `replay-*.json`을 Historical 기본 캠페인 지원 범위에 따라 분류하고, 재현에 성공한 게임의 익명화된 엔진 초기 상태와 행동 기록을 저장한다. 실행 명령과 결과 형식은 [일괄 검증 안내](docs/rtt-batch-validation.md)에 정리했다.
