@@ -62,6 +62,13 @@ def complete_action(state: FullGameState) -> FullGameState:
         raise InvalidStateError("행동 단계가 아닙니다")
     next_state = deepcopy(state)
     side = next_state["active_side"]
+    ordinal = (next_state["turn"] - 1) * 6 + next_state["players"][side]["actions_taken"]
+    failed = next_state["flags"].get("failed_entrench", {})
+    for unit_id, next_ordinal in list(failed.items()):
+        from pog_engine.data import load_data
+
+        if load_data().units[unit_id]["side"] == side and next_ordinal <= ordinal:
+            del failed[unit_id]
     next_state["players"][side]["actions_taken"] += 1
     if side == "CP":
         next_state["active_side"] = "AP"
@@ -106,6 +113,7 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         next_state["players"]["CP"]["actions_taken"] = 0
         next_state["players"]["AP"]["last_action_mode"] = None
         next_state["players"]["CP"]["last_action_mode"] = None
+        next_state["flags"].pop("near_east_sr", None)
         next_state["decision"] = _roll_decision("AP")
         return next_state
     raise InvalidStateError(f"자동으로 넘길 수 없는 단계: {phase}")

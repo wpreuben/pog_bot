@@ -59,6 +59,9 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
     if moving:
         actions.append({"type": "STOP_MOVING_UNIT", "actor": side})
     else:
+        from .trenches import legal_entrench_actions
+
+        actions.extend(legal_entrench_actions(state))
         actions.append({"type": "END_MOVEMENT", "actor": side})
     return actions
 
@@ -71,6 +74,7 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
     if kind == "MOVE":
         unit_id, destination = action["unit_id"], action["to"]
         state["units"][unit_id]["location"] = destination
+        state["flags"].get("failed_entrench", {}).pop(unit_id, None)
         space = state["spaces"][destination]
         enemy = "AP" if state["active_side"] == "CP" else "CP"
         enemy_fort = (
@@ -100,13 +104,14 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
         context["done"].append(context["unit"])
         context["unit"] = None
         context["spent"] = 0
+    elif kind == "ENTRENCH":
+        unit_id = action["unit_id"]
+        state.setdefault("entrench_pending", []).append(unit_id)
+        context["done"].append(unit_id)
     elif kind == "END_MOVEMENT":
-        from .turn import complete_action
+        from .trenches import entrench_decision
 
-        state["phase"] = "ACTION"
-        next_state = complete_action(state)
-        state.clear()
-        state.update(next_state)
+        entrench_decision(state)
         return state
     state["decision"]["options"] = legal_movement_actions(state)
     return state

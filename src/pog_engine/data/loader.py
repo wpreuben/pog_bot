@@ -1,6 +1,7 @@
 """정적 규칙 자료의 로딩과 참조 무결성 검사."""
 
 from dataclasses import dataclass
+from functools import lru_cache
 from importlib.resources import files
 import json
 
@@ -43,6 +44,7 @@ def _index(records: list[dict], label: str) -> dict[str, dict]:
     return result
 
 
+@lru_cache(maxsize=1)
 def load_data() -> RuleData:
     data = RuleData(
         cards=_index(_read_json("cards"), "카드"),

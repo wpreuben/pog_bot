@@ -78,9 +78,13 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
         state["decision"] = {"kind": "OPS", "actor": side, "options": []}
         state["decision"]["options"] = legal_ops_actions(state)
     elif mode == "SR":
+        from .sr import legal_sr_actions
+
         state["sr_remaining"] = card["sr"]
+        state["sr"] = {"unit": None, "done": [], "near_east_sea_used": False}
         state["phase"] = "SR"
         state["decision"] = {"kind": "SR", "actor": side, "options": []}
+        state["decision"]["options"] = legal_sr_actions(state)
     return state
 
 
