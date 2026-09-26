@@ -34,6 +34,8 @@
 
 `tests/cards/test_operational_events.py`는 참호·Landwehr·Salonika 선택, Moltke·Süd Army·11th Army·Everyone into Battle 활성화 비용, Yanks and Tanks·Kerensky·Brusilov 공세, Great Retreat의 전투 전 후퇴를 확인한다. `tests/test_view_replay.py`는 상대 손패·덱·RNG 비노출, 전투 카드 임의 버림, 기록 재생을 확인한다. `tests/test_full_game.py`는 Historical 초기 상태에서 합법 행동만 선택해 종료하고 같은 기록을 재생한다.
 
+사용자 제공 [LOG1 대조 검증](log1-validation.md)은 실제 기록의 전투 결과 60줄과 대표 전투·후퇴·진격 사례를 검사한다. 기록에 빠진 주사위 눈과 덱 순서 때문에 전체 기보의 상태 동일성 검사는 할 수 없다.
+
 | 진영 | 카드 ID | 이벤트 종류 | 기본 조항 | 검증 테스트 |
 | --- | --- | --- | --- | --- |
 | AP | `BRITISH_REINFORCEMENTS_BR_2` | 증원 | 9.5.3 | `tests/cards/test_reinforcements.py::test_all_reinforcement_cards_have_handler_and_unique_unused_units` |

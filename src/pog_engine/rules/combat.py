@@ -326,17 +326,22 @@ def _loss_options(state: FullGameState) -> list[Action]:
     return optimal
 
 
-def _retreat_destinations(state: FullGameState) -> list[str]:
+def _retreat_progress(state: FullGameState) -> dict[str, dict]:
     context = state["combat_context"]
-    side = context["defender"]
-    current = context["retreat_location"]
+    if "retreat_progress" in context:
+        return context["retreat_progress"]
+    return {
+        uid: {"current": context["defender_space"], "remaining": context["retreat_total"], "path": []}
+        for uid in context["defending_units"]
+        if state["units"][uid]["location"] == context["defender_space"]
+    }
+
+
+def _retreat_destinations(state: FullGameState, uid: str, progress: dict) -> list[str]:
+    context = state["combat_context"]
+    current = progress["current"]
     data = load_data()
-    units = _context_units(state, side)
-    if not units:
-        return []
-    neighbors = set(data.neighbors(current, data.units[units[0]]["nation"]))
-    for uid in units[1:]:
-        neighbors &= data.neighbors(current, data.units[uid]["nation"])
+    neighbors = data.neighbors(current, data.units[uid]["nation"])
     enemy = context["attacker"]
     destinations = []
     for place in neighbors:
@@ -348,12 +353,38 @@ def _retreat_destinations(state: FullGameState) -> list[str]:
             continue
         if data.spaces[place]["fort"] and state["spaces"][place]["control"] == enemy and not state["spaces"][place]["fort_destroyed"]:
             continue
-        if context["retreat_remaining"] == 1:
+        if progress["remaining"] == 1:
             occupied = sum(unit["location"] == place for unit in state["units"].values())
-            if occupied + len(units) > 3:
+            if occupied >= 3:
                 continue
         destinations.append(place)
     return sorted(destinations)
+
+
+def _cancel_retreat_options(state: FullGameState) -> list[Action]:
+    context = state["combat_context"]
+    side = context["defender"]
+    units = _context_units(state, side)
+    data = load_data()
+    actions = []
+    for uid in units:
+        unit = state["units"][uid]
+        base = {"type": "CANCEL_RETREAT", "actor": side, "unit_id": uid}
+        if not unit["reduced"]:
+            actions.append(base)
+            continue
+        definition = data.units[uid]
+        if definition["type"] == "ARMY":
+            corps = sorted(cid for cid, candidate in data.units.items()
+                           if candidate["side"] == side and candidate["nation"] == definition["nation"]
+                           and candidate["type"] == "CORPS"
+                           and state["units"][cid]["location"] == f"{side}_RESERVE_BOX")
+            actions.extend({**base, "replacement_unit_id": cid} for cid in corps)
+            if not corps and len(units) > 1:
+                actions.append(base)
+        elif len(units) > 1:
+            actions.append(base)
+    return actions
 
 
 def _advance_options(state: FullGameState) -> list[Action]:
@@ -362,15 +393,16 @@ def _advance_options(state: FullGameState) -> list[Action]:
     target = context["defender_space"]
     data = load_data()
     actions = [{"type": "END_ADVANCE", "actor": side}]
-    if any(unit["location"] == target and data.units[uid]["side"] != side for uid, unit in state["units"].items()):
-        return actions
-    if sum(unit["location"] == target for unit in state["units"].values()) >= 3:
-        return actions
+    target_open = not any(unit["location"] == target and data.units[uid]["side"] != side
+                          for uid, unit in state["units"].items())
+    target_room = sum(unit["location"] == target for unit in state["units"].values()) < 3
     for uid in context["attackers"]:
         unit = state["units"][uid]
-        if unit["location"] is None or unit["reduced"] or uid in context["advanced"]:
+        if unit["location"] is None or unit["reduced"]:
             continue
-        if target in data.neighbors(unit["location"], data.units[uid]["nation"]):
+        if uid not in context["advanced"] and target_open and target_room and target in data.neighbors(
+            unit["location"], data.units[uid]["nation"]
+        ):
             target_data = data.spaces[target]
             if target_data["fort"] and not state["spaces"][target]["fort_destroyed"] and target_data["side"] != side:
                 from .forts import can_besiege
@@ -378,6 +410,20 @@ def _advance_options(state: FullGameState) -> list[Action]:
                 if not state["spaces"][target]["fort_besieged"] and not can_besiege(state, target, side, (uid,)):
                     continue
             actions.append({"type": "ADVANCE_UNIT", "actor": side, "unit_id": uid})
+        elif (uid in context["advanced"] and unit["location"] == target
+              and context.get("retreat_total") == 2
+              and data.spaces[target]["terrain"] not in {"DESERT", "FOREST", "MOUNTAIN", "SWAMP"}
+              and not state["spaces"][target]["fort_besieged"]):
+            routes = context.get("retreat_progress", {}).values()
+            next_places = {entry["path"][0] for entry in routes if len(entry["path"]) >= 2}
+            if not next_places and len(context.get("retreat_path", [])) >= 2:
+                next_places = {context["retreat_path"][0]}
+            for next_place in sorted(next_places):
+                if (next_place in data.neighbors(target, data.units[uid]["nation"])
+                        and sum(other["location"] == next_place for other in state["units"].values()) < 3
+                        and not any(other["location"] == next_place and data.units[other_id]["side"] != side
+                                    for other_id, other in state["units"].items())):
+                    actions.append({"type": "ADVANCE_UNIT", "actor": side, "unit_id": uid, "to": next_place})
     return actions
 
 
@@ -503,17 +549,22 @@ def legal_combat_actions(state: FullGameState) -> list[Action]:
         return [{"type": "NEGATE_WITHDRAWAL_LOSS", "actor": defender,
                  "unit_id": entry["unit_id"]} for entry in choices]
     if stage == "RETREAT":
-        actions = [{"type": "RETREAT_TO", "actor": defender, "to": place} for place in _retreat_destinations(state)]
+        progress = _retreat_progress(state)
+        active = [uid for uid, entry in progress.items() if entry["remaining"] > 0]
+        actions = []
+        for uid in active:
+            fields = {"unit_id": uid} if len(progress) > 1 else {}
+            destinations = _retreat_destinations(state, uid, progress[uid])
+            actions.extend({"type": "RETREAT_TO", "actor": defender, **fields, "to": place}
+                           for place in destinations)
+            if not destinations:
+                actions.append({"type": "NO_RETREAT_ROUTE", "actor": defender, **fields})
         if context["retreat_remaining"] == context["retreat_total"] and not context.get("withdrawal"):
             terrain = load_data().spaces[context["defender_space"]]["terrain"]
-            trench = state["spaces"][context["defender_space"]]["trenches"][defender]
-            units = _context_units(state, defender)
+            trench = (state["spaces"][context["defender_space"]]["trenches"][defender]
+                      and not context.get("trench_negated"))
             if trench or terrain in {"FOREST", "DESERT", "MOUNTAIN", "SWAMP"}:
-                for uid in units:
-                    if not state["units"][uid]["reduced"] or len(units) > 1:
-                        actions.append({"type": "CANCEL_RETREAT", "actor": defender, "unit_id": uid})
-        if not actions:
-            actions.append({"type": "NO_RETREAT_ROUTE", "actor": defender})
+                actions.extend(_cancel_retreat_options(state))
         return actions
     if stage == "ADVANCE":
         return _advance_options(state)
@@ -591,6 +642,8 @@ def _after_losses(state: FullGameState) -> None:
         context["retreat_total"] = 1 if context.get("withdrawal") or difference <= 1 else 2
         context["retreat_remaining"] = context["retreat_total"]
         context["retreat_location"] = context["defender_space"]
+        context["retreat_path"] = []
+        context["retreat_progress"] = _retreat_progress(state)
     elif difference > 0 and not defenders and full_attackers:
         context["stage"] = "ADVANCE"
     else:
@@ -761,29 +814,40 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             context["withdrawal_negated"] = True
             _after_losses(state)
         elif kind == "CANCEL_RETREAT":
-            _apply_step_loss(state, action["unit_id"])
+            _apply_step_loss(state, action["unit_id"], action.get("replacement_unit_id"))
             _finish_combat(state)
         elif kind == "NO_RETREAT_ROUTE":
-            for uid in _context_units(state, context["defender"]):
-                state["units"][uid]["location"] = None
-                state["units"][uid]["eliminated"] = True
-                if load_data().units[uid]["type"] == "ARMY":
-                    state["units"][uid]["permanent"] = True
-            context["stage"] = "ADVANCE"
+            progress = _retreat_progress(state)
+            uid = action.get("unit_id") or next(iter(progress))
+            state["units"][uid]["location"] = None
+            state["units"][uid]["eliminated"] = True
+            if load_data().units[uid]["type"] == "ARMY":
+                state["units"][uid]["permanent"] = True
+            progress[uid]["remaining"] = 0
+            context["retreat_progress"] = progress
+            if all(entry["remaining"] == 0 for entry in progress.values()):
+                context["stage"] = "ADVANCE"
         elif kind == "RETREAT_TO":
-            for uid in _context_units(state, context["defender"]):
-                state["units"][uid]["location"] = action["to"]
+            progress = _retreat_progress(state)
+            uid = action.get("unit_id") or next(iter(progress))
+            state["units"][uid]["location"] = action["to"]
+            progress[uid]["current"] = action["to"]
+            progress[uid]["path"].append(action["to"])
+            progress[uid]["remaining"] -= 1
+            context["retreat_progress"] = progress
             context["retreat_location"] = action["to"]
-            context["retreat_remaining"] -= 1
-            if context["retreat_remaining"] == 0:
+            context["retreat_path"] = progress[uid]["path"]
+            context["retreat_remaining"] = min(entry["remaining"] for entry in progress.values())
+            if all(entry["remaining"] == 0 for entry in progress.values()):
                 context["stage"] = "ADVANCE"
         elif kind == "ADVANCE_UNIT":
             from .forts import update_siege_status
 
             uid = action["unit_id"]
-            target = context["defender_space"]
+            target = action.get("to", context["defender_space"])
             state["units"][uid]["location"] = target
-            context["advanced"].append(uid)
+            if uid not in context["advanced"]:
+                context["advanced"].append(uid)
             space = state["spaces"][target]
             if not load_data().spaces[target]["fort"] or space["fort_destroyed"] or space["control"] == context["attacker"]:
                 if space["control"] != context["attacker"] and space["vp"]:
