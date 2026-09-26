@@ -49,7 +49,7 @@ def mandatory_offensive(state: dict, side: str, die: int) -> str | None:
             return None
         if _all_capitals_occupied(state, "TU"):
             result = "GE"
-    if result == "GE" and (_all_capitals_occupied(state, "GE") or state["events"].get("H_L_TAKES_COMMAND")):
+    if result == "GE" and (_all_capitals_occupied(state, "GE") or state["events"].get("H_L_TAKE_COMMAND")):
         return None
     return result
 

@@ -1,8 +1,16 @@
 from pog_engine import apply_action, create_game, generate_legal_actions
 from pog_engine.rules.replacements import (
-    apply_replacement_action, begin_replacement_phase,
+    _army_spaces, apply_replacement_action, begin_replacement_phase,
     close_replacement_phase, legal_replacement_actions,
 )
+
+
+def test_greece_entry_allows_serbian_army_rebuild_at_allied_salonika():
+    state = create_game(seed=4)
+    state["events"]["GREECE"] = 3
+    state["war_nations"]["GR"] = True
+    state["spaces"]["SALONIKA"]["control"] = "AP"
+    assert "SALONIKA" in _army_spaces(state, "SB_1_ARMY_1")
 
 
 def rp_state(side="CP"):

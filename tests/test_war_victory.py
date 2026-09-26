@@ -49,6 +49,14 @@ def test_mandatory_offensive_penalties_and_blockade():
     assert result["players"]["CP"]["mandatory_offensive"] is None
 
 
+def test_h_l_take_command_suppresses_german_mandatory_offensive():
+    from pog_engine.rules.war import mandatory_offensive
+
+    state = create_game(seed=2)
+    state["events"]["H_L_TAKE_COMMAND"] = 3
+    assert mandatory_offensive(state, "CP", 4) is None
+
+
 def test_vp_bounds_only_win_in_war_status_phase():
     state = at_war_status()
     state["vp"] = 19

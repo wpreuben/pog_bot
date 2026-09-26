@@ -49,6 +49,11 @@ def test_recorded_die_and_automatic_phase_replay_exact_state():
     transition = apply_action(initial, action)
     records = [json.loads(json.dumps(transition.record))]
     assert replay(initial, records) == transition.state
+    assert records[0]["random_input"] == 4
+    forged = json.loads(json.dumps(records))
+    forged[0]["random_input"] = 1
+    with pytest.raises(InvalidStateError):
+        replay(initial, forged)
     with pytest.raises(InvalidStateError):
         replay(initial, [{"action": {"type": "FORGED", "actor": "CHANCE"}, "random_input": None}])
 

@@ -69,7 +69,7 @@ def _army_spaces(state: FullGameState, unit_id: str) -> list[str]:
     if nation == "SB":
         if state["spaces"]["NIS"]["control"] == "CP":
             possible = [place for place in possible if place != "BELGRADE"]
-        if state["events"].get("SALONIKA") or state["events"].get("GREECE_NEUTRAL_ENTRY"):
+        if state["events"].get("SALONIKA") or state["events"].get("GREECE"):
             if _can_place(state, unit_id, "SALONIKA"):
                 possible.append("SALONIKA")
     return sorted(set(possible))

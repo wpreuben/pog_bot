@@ -9,6 +9,8 @@ from .model import Action, FullGameState, IllegalActionError, InvalidStateError,
 
 Handler = Callable[[FullGameState, Action, object | None], None]
 _HANDLERS: dict[str, Handler] = {}
+_AUTOMATIC_PHASES = {"ATTRITION", "SIEGE", "WAR_STATUS", "DRAW", "END_TURN"}
+_ADVANCE_ACTION: Action = {"type": "ADVANCE_AUTOMATIC_PHASE", "actor": "CHANCE"}
 
 
 def register_decision_handler(kind: str, handler: Handler) -> None:
@@ -46,7 +48,7 @@ def _decision(state: FullGameState) -> Mapping[str, object] | None:
 def generate_legal_actions(state: FullGameState) -> list[Action]:
     decision = _decision(state)
     if decision is None:
-        return []
+        return [deepcopy(_ADVANCE_ACTION)] if state["phase"] in _AUTOMATIC_PHASES else []
     actions: list[Action] = []
     seen: set[str] = set()
     for option in decision["options"]:
@@ -63,14 +65,21 @@ def apply_action(state: FullGameState, action: Action, random_input: object | No
     wanted = _canonical_action(action)
     if wanted not in {_canonical_action(legal) for legal in generate_legal_actions(state)}:
         raise IllegalActionError("현재 선택 창에서 합법적인 행동이 아닙니다")
+    if random_input is not None and (action.get("actor") != "CHANCE" or action.get("value") != random_input):
+        raise IllegalActionError("무작위 입력과 선택한 주사위 결과가 다릅니다")
+    consumed = deepcopy(action.get("value")) if action.get("actor") == "CHANCE" else None
     next_state = deepcopy(state)
     decision = _decision(next_state)
-    assert decision is not None
+    if decision is None:
+        from .rules.turn import advance_automatic_phases
+
+        next_state = advance_automatic_phases(next_state)
+        return Transition(next_state, {"action": deepcopy(action), "random_input": None})
     handler = _HANDLERS.get(decision["kind"])
     if handler is None:
         raise InvalidStateError(f"처리기가 없는 선택 창: {decision['kind']}")
     handler(next_state, deepcopy(action), random_input)
-    return Transition(next_state, {"action": deepcopy(action), "random_input": deepcopy(random_input)})
+    return Transition(next_state, {"action": deepcopy(action), "random_input": consumed})
 
 
 def _confirm(state: FullGameState, action: Action, random_input: object | None) -> None:

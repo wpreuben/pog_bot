@@ -2,7 +2,6 @@ import json
 
 from pog_engine import apply_action, create_game, generate_legal_actions, game_result
 from pog_engine.replay import replay
-from pog_engine.rules.turn import advance_automatic_phases
 
 
 def choose_action(actions):
@@ -26,15 +25,11 @@ def test_historical_game_can_reach_turn_limit_and_replay():
         if state["phase"] == "GAME_OVER":
             break
         actions = generate_legal_actions(state)
-        if actions:
-            action = choose_action(actions)
-            transition = apply_action(state, action)
-            state = transition.state
-            records.append(transition.record)
-        else:
-            state = advance_automatic_phases(state)
-            records.append({"action": {"type": "ADVANCE_AUTOMATIC_PHASE", "actor": "SYSTEM"},
-                            "random_input": None})
+        assert actions, f"공개 API로 진행할 수 없는 단계: {state['phase']}"
+        action = choose_action(actions)
+        transition = apply_action(state, action)
+        state = transition.state
+        records.append(transition.record)
     assert state["phase"] == "GAME_OVER"
     assert game_result(state) == state["result"]
     assert generate_legal_actions(state) == []
