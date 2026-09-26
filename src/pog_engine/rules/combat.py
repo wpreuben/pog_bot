@@ -55,6 +55,13 @@ def _valid_group(state: FullGameState, unit_ids: tuple[str, ...], destination: s
     from .forts import siege_survives_departure
 
     target = data.spaces[destination]
+    if (state["events"].get("LLOYD_GEORGE") == state["turn"]
+            and not state["flags"].get("lloyd_george_canceled")
+            and any(data.units[uid]["nation"] == "BR" for uid in unit_ids)
+            and state["spaces"][destination]["trenches"]["CP"] == 2
+            and any(unit["location"] == destination and data.units[uid]["nation"] == "GE"
+                    for uid, unit in state["units"].items())):
+        return False
     if state["events"].get("TREATY_OF_BREST_LITOVSK"):
         if any(data.units[uid]["nation"] == "RU" for uid in unit_ids):
             return False
@@ -176,10 +183,10 @@ def combat_snapshot(state: FullGameState, context: dict) -> dict:
         "tables": {
             attacker: "ARMY" if any(data.units[uid]["type"] == "ARMY" and state["units"][uid]["location"] is not None
                                     for uid in context["attackers"]) else "CORPS",
-            defender: "ARMY" if any(data.units[uid]["type"] == "ARMY" for uid in defenders) else "CORPS",
+            defender: "ARMY" if context.get("defender_army_table") or any(data.units[uid]["type"] == "ARMY" for uid in defenders) else "CORPS",
         },
         "shifts": {
-            attacker: -(0 if unoccupied_fort else trench) - (1 if terrain in {"MOUNTAIN", "SWAMP"} else 0),
+            attacker: -(0 if unoccupied_fort or context.get("trench_shift_canceled") else trench) - (1 if terrain in {"MOUNTAIN", "SWAMP"} else 0),
             defender: 1 if trench else 0,
         },
     }
@@ -382,8 +389,27 @@ def legal_combat_actions(state: FullGameState) -> list[Action]:
         return legal_attack_declarations(state) + [{"type": "END_COMBAT", "actor": state["active_side"]}]
     stage = context["stage"]
     attacker, defender = context["attacker"], context["defender"]
+    from .events.combat import combat_card_eligible
+
+    def card_options(side: str) -> list[Action]:
+        used = state["flags"].get("combat_card_used_round", {})
+        round_key = [state["turn"], state["action_round"]]
+        actions = [
+            {"type": "PLAY_COMBAT_CARD", "actor": side, "card_id": cid}
+            for cid in state["players"][side]["hand"]
+            if load_data().cards[cid]["combat_card"] and combat_card_eligible(state, cid, stage)
+        ]
+        actions.extend(
+            {"type": "USE_COMBAT_CARD", "actor": side, "card_id": cid}
+            for cid in state["players"][side].get("in_play", [])
+            if used.get(cid) != round_key and combat_card_eligible(state, cid, stage)
+        )
+        return actions
+
+    if stage == "TRENCH_CARDS":
+        return card_options(attacker) + [{"type": "PASS_TRENCH_CARDS", "actor": attacker}]
     if stage == "FLANK":
-        actions = [{"type": "SKIP_FLANK", "actor": attacker}]
+        actions = card_options(attacker) + [{"type": "SKIP_FLANK", "actor": attacker}]
         for place in sorted({state["units"][uid]["location"] for uid in context["attackers"]}):
             if flank_modifier(state, {**context, "pinning_space": place}) is not None:
                 actions.append({"type": "ATTEMPT_FLANK", "actor": attacker, "pinning_space": place})
@@ -392,19 +418,22 @@ def legal_combat_actions(state: FullGameState) -> list[Action]:
         return [{"type": "RECORD_FLANK_DIE", "actor": "CHANCE", "value": die} for die in range(1, 7)]
     if stage in {"ATTACKER_CARDS", "DEFENDER_CARDS"}:
         side = attacker if stage == "ATTACKER_CARDS" else defender
-        actions = [
-            {"type": "PLAY_COMBAT_CARD", "actor": side, "card_id": cid}
-            for cid in state["players"][side]["hand"] if load_data().cards[cid]["combat_card"]
-        ]
+        actions = card_options(side)
         return actions + [{"type": "PASS_COMBAT_CARDS", "actor": side}]
     if stage == "FIRE":
         side = context["fire_order"][context["fire_index"]]
         return [{"type": "RECORD_COMBAT_DIE", "actor": "CHANCE", "side": side, "value": die} for die in range(1, 7)]
     if stage == "LOSSES":
         return _loss_options(state)
+    if stage == "WITHDRAWAL_NEGATE":
+        history = context.get("loss_history", [])
+        corps = [entry for entry in history if load_data().units[entry["unit_id"]]["type"] == "CORPS"]
+        choices = corps or history
+        return [{"type": "NEGATE_WITHDRAWAL_LOSS", "actor": defender,
+                 "unit_id": entry["unit_id"]} for entry in choices]
     if stage == "RETREAT":
         actions = [{"type": "RETREAT_TO", "actor": defender, "to": place} for place in _retreat_destinations(state)]
-        if context["retreat_remaining"] == context["retreat_total"]:
+        if context["retreat_remaining"] == context["retreat_total"] and not context.get("withdrawal"):
             terrain = load_data().spaces[context["defender_space"]]["terrain"]
             trench = state["spaces"][context["defender_space"]]["trenches"][defender]
             units = _context_units(state, defender)
@@ -442,8 +471,17 @@ def _finish_combat(state: FullGameState) -> None:
     )
     for side in (attacker, defender):
         cards = context["cards"][side]
-        zone = "in_play" if side == winner else "discard"
-        state["players"][side].setdefault(zone, []).extend(cards)
+        from .events.combat import SINGLE_COMBAT_CARDS
+
+        for card_id in cards:
+            player = state["players"][side]
+            if card_id in player.get("in_play", []):
+                player["in_play"].remove(card_id)
+            retain_tie = card_id == "THEY_SHALL_NOT_PASS" and winner is None
+            zone = "removed" if load_data().cards[card_id]["remove"] else (
+                "discard" if (side != winner and not retain_tie) or card_id in SINGLE_COMBAT_CARDS else "in_play"
+            )
+            player.setdefault(zone, []).append(card_id)
     state["attacked_units"].extend(context["attackers"])
     state["attacked_spaces"].append(context["defender_space"])
     state["combat_context"] = None
@@ -468,13 +506,18 @@ def _after_losses(state: FullGameState) -> None:
         context["fire_index"] += 1
         context["stage"] = "FIRE"
         return
+    if context.get("withdrawal") and not context.get("withdrawal_negated") and context.get("loss_history"):
+        context["stage"] = "WITHDRAWAL_NEGATE"
+        return
     attacker, defender = context["attacker"], context["defender"]
     full_attackers = any(state["units"][uid]["location"] is not None and not state["units"][uid]["reduced"] for uid in context["attackers"])
     defenders = _context_units(state, defender)
     difference = context["results"].get(attacker, 0) - context["results"].get(defender, 0)
-    if difference > 0 and defenders and full_attackers:
+    if context.get("retreat_canceled") and difference > 0 and defenders:
+        _finish_combat(state)
+    elif (difference > 0 or context.get("withdrawal")) and defenders and full_attackers:
         context["stage"] = "RETREAT"
-        context["retreat_total"] = 1 if difference == 1 else 2
+        context["retreat_total"] = 1 if context.get("withdrawal") or difference <= 1 else 2
         context["retreat_remaining"] = context["retreat_total"]
         context["retreat_location"] = context["defender_space"]
     elif difference > 0 and not defenders and full_attackers:
@@ -546,9 +589,19 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             "fire_order": [attacker, defender], "fire_index": 0,
             "loss_queue": [], "loss_side": None, "loss_remaining": 0, "advanced": [],
         }
+        from .events.combat import TRENCH_CARDS, combat_card_eligible
+
+        context = state["combat_context"]
+        context["stage"] = "TRENCH_CARDS"
+        if not any(combat_card_eligible(state, card_id, "TRENCH_CARDS") for card_id in
+                   state["players"][attacker]["hand"] + state["players"][attacker].get("in_play", [])
+                   if card_id in TRENCH_CARDS):
+            context["stage"] = "FLANK"
     else:
         context = state["combat_context"]
-        if kind == "SKIP_FLANK":
+        if kind == "PASS_TRENCH_CARDS":
+            context["stage"] = "FLANK"
+        elif kind == "SKIP_FLANK":
             context["stage"] = "ATTACKER_CARDS"
         elif kind == "ATTEMPT_FLANK":
             context["pinning_space"] = action["pinning_space"]
@@ -559,17 +612,29 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             context["flank_success"] = success
             context["fire_order"] = [context["attacker"], context["defender"]] if success else [context["defender"], context["attacker"]]
             context["stage"] = "ATTACKER_CARDS"
-        elif kind == "PLAY_COMBAT_CARD":
+        elif kind in {"PLAY_COMBAT_CARD", "USE_COMBAT_CARD"}:
             side = action["actor"]
-            state["players"][side]["hand"].remove(action["card_id"])
-            context["cards"][side].append(action["card_id"])
+            card_id = action["card_id"]
+            if kind == "PLAY_COMBAT_CARD":
+                state["players"][side]["hand"].remove(card_id)
+            context["cards"][side].append(card_id)
+            state["flags"].setdefault("combat_card_used_round", {})[card_id] = [state["turn"], state["action_round"]]
+            from .events.combat import COMBAT_HANDLERS
+
+            COMBAT_HANDLERS[card_id].apply(state, action)
+            if context["stage"] == "FLANK" and card_id == "WIRELESS_INTERCEPTS":
+                context["stage"] = "ATTACKER_CARDS"
         elif kind == "PASS_COMBAT_CARDS":
             context["stage"] = "DEFENDER_CARDS" if context["stage"] == "ATTACKER_CARDS" else "FIRE"
         elif kind == "RECORD_COMBAT_DIE":
             side = action["side"]
             snapshot = combat_snapshot(state, context)
             column = fire_column(snapshot, side)
-            result = crt_result(snapshot["tables"][side], column, action["value"])
+            drm = context.get("drm", {}).get(side, 0)
+            if side == context["attacker"] and all(state["units"][uid]["location"] == "SINAI"
+                                                    for uid in context["attackers"]):
+                drm -= 3
+            result = crt_result(snapshot["tables"][side], column, action["value"] + drm)
             context["rolls"][side] = action["value"]
             context["results"][side] = result
             if "flank_success" in context:
@@ -582,10 +647,24 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             else:
                 context["fire_index"] += 1
         elif kind == "TAKE_LOSS":
+            if context.get("withdrawal") and context["loss_side"] == context["defender"]:
+                uid = action["unit_id"]
+                context.setdefault("loss_history", []).append({
+                    "unit_id": uid, "location": state["units"][uid]["location"],
+                    "was_reduced": state["units"][uid]["reduced"],
+                })
             context["loss_remaining"] -= _apply_step_loss(state, action["unit_id"], action.get("replacement_unit_id"))
             if action.get("replacement_unit_id"):
                 context["defending_units" if context["loss_side"] == context["defender"] else "attackers"].append(action["replacement_unit_id"])
         elif kind == "END_LOSSES":
+            _after_losses(state)
+        elif kind == "NEGATE_WITHDRAWAL_LOSS":
+            entry = next(item for item in context["loss_history"] if item["unit_id"] == action["unit_id"])
+            unit = state["units"][entry["unit_id"]]
+            unit["location"] = entry["location"]
+            unit["reduced"] = entry["was_reduced"]
+            unit["eliminated"] = False
+            context["withdrawal_negated"] = True
             _after_losses(state)
         elif kind == "CANCEL_RETREAT":
             _apply_step_loss(state, action["unit_id"])

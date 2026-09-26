@@ -30,6 +30,8 @@
 
 `tests/cards/test_persistent_events.py`는 Blockade·Lusitania·Rape of Belgium·14 Points·Reichstag Truce의 VP, U-boats·Convoy·Zeppelin Raids·Walter Rathenau·Independent Air Force의 RP, High Seas Fleet·Grand Fleet 대응, French Mutiny 공격 벌점, War in Africa 선택, 카드 보충 및 마지막 턴 종료를 검증한다.
 
+`tests/cards/test_combat_events.py`는 기본 전투 카드 27장의 등록, 국적·진영·계절·참호·선행 이벤트 조건, 전투 순서, DRM·CRT 반영, 측면 공격, Withdrawal, 단일 전투 사용 및 카드 영역 이동을 검증한다. 전투 카드의 개별 사용 조건은 `rules/events/combat.py`에서 카드 ID별로 판정한다.
+
 | 진영 | 카드 ID | 이벤트 종류 | 기본 조항 |
 | --- | --- | --- | --- |
 | AP | `BRITISH_REINFORCEMENTS_BR_2` | 증원 | 9.5.3 |

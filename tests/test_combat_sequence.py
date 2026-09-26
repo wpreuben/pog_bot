@@ -36,12 +36,15 @@ def test_movement_with_attack_activation_enters_combat_window():
 
 def test_combat_cards_and_chance_rolls_switch_actor():
     state = combat_state()
+    state["units"]["SB_1_ARMY_1"]["location"] = "LIEGE"
     state = choose(state, "DECLARE_ATTACK", unit_ids=["GE_1_ARMY_1"], defender_space="LIEGE")
     state = choose(state, "SKIP_FLANK")
     assert state["decision"]["actor"] == "CP"
-    assert any(a.get("card_id") == "WIRELESS_INTERCEPTS" for a in generate_legal_actions(state))
-    state = choose(state, "PLAY_COMBAT_CARD", card_id="WIRELESS_INTERCEPTS")
-    assert "WIRELESS_INTERCEPTS" not in state["players"]["CP"]["hand"]
+    state["players"]["CP"]["hand"].append("CHLORINE_GAS")
+    state["decision"]["options"] = legal_combat_actions(state)
+    assert any(a.get("card_id") == "CHLORINE_GAS" for a in generate_legal_actions(state))
+    state = choose(state, "PLAY_COMBAT_CARD", card_id="CHLORINE_GAS")
+    assert "CHLORINE_GAS" not in state["players"]["CP"]["hand"]
     state = choose(state, "PASS_COMBAT_CARDS")
     assert state["decision"]["actor"] == "AP"
     state = choose(state, "PASS_COMBAT_CARDS")
@@ -105,16 +108,15 @@ def test_loss_choices_preserve_maximum_payable_loss_number():
 
 def test_combat_cards_are_discarded_on_tie():
     state = combat_state()
-    state = choose(state, "DECLARE_ATTACK", unit_ids=["GE_1_ARMY_1"], defender_space="LIEGE")
-    state = choose(state, "SKIP_FLANK")
-    state = choose(state, "PLAY_COMBAT_CARD", card_id="WIRELESS_INTERCEPTS")
-    state = choose(state, "PASS_COMBAT_CARDS")
-    state = choose(state, "PLAY_COMBAT_CARD", card_id="PUTNIK")
-    state = choose(state, "PASS_COMBAT_CARDS")
-    state = choose(state, "RECORD_COMBAT_DIE", side="CP", value=1)
-    state = choose(state, "RECORD_COMBAT_DIE", side="AP", value=1)
-    state = choose(choose(state, "END_LOSSES"), "END_LOSSES")
-    assert "WIRELESS_INTERCEPTS" in state["players"]["CP"]["discard"]
+    from pog_engine.rules.combat import _finish_combat
+
+    state["combat_context"] = {
+        "attacker": "CP", "defender": "AP", "attackers": ["GE_1_ARMY_1"],
+        "defender_space": "LIEGE", "cards": {"CP": ["VON_FRANCOIS"], "AP": ["PUTNIK"]},
+        "results": {"CP": 2, "AP": 2},
+    }
+    _finish_combat(state)
+    assert "VON_FRANCOIS" in state["players"]["CP"]["discard"]
     assert "PUTNIK" in state["players"]["AP"]["discard"]
 
 
