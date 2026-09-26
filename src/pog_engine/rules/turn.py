@@ -97,6 +97,10 @@ _AFTER_ACTIONS = {
 def advance_automatic_phases(state: FullGameState) -> FullGameState:
     next_state = deepcopy(state)
     phase = next_state["phase"]
+    if phase == "ATTRITION":
+        from .supply import resolve_attrition
+
+        next_state = resolve_attrition(next_state)
     if phase in _AFTER_ACTIONS:
         next_state["phase"] = _AFTER_ACTIONS[phase]
         next_state["active_side"] = "AP" if next_state["phase"] == "REPLACEMENT_AP" else (

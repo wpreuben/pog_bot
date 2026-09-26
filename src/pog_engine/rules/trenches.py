@@ -12,6 +12,7 @@ def legal_entrench_actions(state: FullGameState) -> list[Action]:
     if state["movement"]["unit"]:
         return []
     data = load_data()
+    from .supply import supply_status
     actions = []
     chosen_spaces = {state["units"][uid]["location"] for uid in state.get("entrench_pending", [])}
     for unit_id, unit in state["units"].items():
@@ -19,6 +20,10 @@ def legal_entrench_actions(state: FullGameState) -> list[Action]:
         if place not in state["activated"]["MOVE"] or unit_id in state["movement"]["done"]:
             continue
         if data.units[unit_id]["side"] != side or data.units[unit_id]["type"] != "ARMY":
+            continue
+        if not state["war_nations"].get(data.units[unit_id]["nation"], True):
+            continue
+        if unit_id in state.get("activated_oos", []) or not supply_status(state, unit_id).supplied:
             continue
         if place in chosen_spaces or state["spaces"][place]["trenches"][side] >= 2:
             continue

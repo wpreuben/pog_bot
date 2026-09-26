@@ -20,6 +20,8 @@ def activation_cost(state: FullGameState, space_id: str, kind: str) -> int:
         if unit["location"] != space_id or data.units[unit_id]["side"] != side:
             continue
         nation = data.units[unit_id]["nation"]
+        if not state["war_nations"].get(nation, True):
+            continue
         if nation in _BRITISH or (nation == "BE" and space_id in {"ANTWERP", "OSTEND", "CALAIS", "AMIENS"}):
             nation = "BR"
         elif nation == "US" and data.spaces[space_id]["nation"] in {"FR", "GE"}:
@@ -49,12 +51,19 @@ def legal_ops_actions(state: FullGameState) -> list[Action]:
 
 def _apply_ops(state: FullGameState, action: Action, random_input: object | None) -> None:
     if action["type"] == "ACTIVATE_SPACE":
+        from .supply import supply_status
+
         space_id, kind = action["space_id"], action["kind"]
         cost = activation_cost(state, space_id, kind)
         if cost == 0 or cost > state["ops_remaining"]:
             raise IllegalActionError("활성화 비용이 부족합니다")
         state["ops_remaining"] -= cost
         state["activated"][kind].append(space_id)
+        state.setdefault("activated_oos", []).extend(
+            uid for uid, unit in state["units"].items()
+            if unit["location"] == space_id and not supply_status(state, uid).supplied
+            and uid not in state.get("activated_oos", [])
+        )
         state["decision"]["options"] = legal_ops_actions(state)
         return
     if action["type"] == "FINISH_ACTIVATION":

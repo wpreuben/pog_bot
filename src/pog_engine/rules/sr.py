@@ -11,6 +11,18 @@ def _sr_cost(unit: dict) -> int:
     return 4 if unit["type"] == "ARMY" else 1
 
 
+def _reserve_sources(nation: str) -> tuple[str, ...] | None:
+    if nation in {"GE", "AH"}:
+        return ("ESSEN", "BRESLAU")
+    if nation == "TU":
+        return ("CONSTANTINOPLE",)
+    if nation == "BU":
+        return ("SOFIA",)
+    if nation in {"RU", "RO"}:
+        return ("PETROGRAD", "MOSCOW", "KHARKOV", "CAUCASUS")
+    return None
+
+
 def _friendly(state: FullGameState, space_id: str, side: str) -> bool:
     data = load_data()
     return state["spaces"][space_id]["control"] == side and not any(
@@ -68,6 +80,8 @@ def _overland_reachable(state: FullGameState, unit_id: str, destination: str) ->
 
 
 def _destinations(state: FullGameState, unit_id: str) -> list[str]:
+    from .supply import supply_status
+
     data = load_data()
     unit = data.units[unit_id]
     start = state["units"][unit_id]["location"]
@@ -140,7 +154,17 @@ def _destinations(state: FullGameState, unit_id: str) -> list[str]:
             elif nation == "BR" and (unit["name"].startswith(("BR BEF", "CND", "PT")) or restrictions.get("BR", 0) >= 1):
                 found.discard(destination)
     found.discard(start)
-    return sorted(found)
+    if start == reserve:
+        return sorted(
+            place for place in found
+            if supply_status(state, unit_id, location=place, purpose="RESERVE_SR",
+                             allowed_sources=_reserve_sources(nation)).supplied
+        )
+    if reserve in found and not supply_status(
+        state, unit_id, purpose="RESERVE_SR", allowed_sources=_reserve_sources(nation)
+    ).supplied:
+        found.remove(reserve)
+    return sorted(place for place in found if place == reserve or supply_status(state, unit_id, location=place).supplied)
 
 
 def legal_sr_actions(state: FullGameState) -> list[Action]:
@@ -153,6 +177,7 @@ def legal_sr_actions(state: FullGameState) -> list[Action]:
         actions.append({"type": "SKIP_SR_UNIT", "actor": side})
         return actions
     data = load_data()
+    from .supply import supply_status
     actions = []
     for unit_id, unit in state["units"].items():
         definition = data.units[unit_id]
@@ -161,6 +186,8 @@ def legal_sr_actions(state: FullGameState) -> list[Action]:
         if _sr_cost(definition) > state["sr_remaining"]:
             continue
         if definition["nation"] in state["war_nations"] and not state["war_nations"][definition["nation"]]:
+            continue
+        if not supply_status(state, unit_id).supplied:
             continue
         actions.append({"type": "SELECT_SR_UNIT", "actor": side, "unit_id": unit_id})
     actions.append({"type": "END_SR", "actor": side})

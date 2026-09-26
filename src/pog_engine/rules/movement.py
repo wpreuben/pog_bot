@@ -36,6 +36,8 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
     if state["phase"] != "MOVEMENT":
         return []
     data = load_data()
+    from .supply import supply_status
+
     side = state["active_side"]
     context = state["movement"]
     moving = context["unit"]
@@ -48,6 +50,12 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
     for unit_id in candidates:
         unit = state["units"][unit_id]
         if unit["location"] is None:
+            continue
+        if unit_id in state.get("activated_oos", []):
+            continue
+        if not state["war_nations"].get(data.units[unit_id]["nation"], True):
+            continue
+        if not moving and not supply_status(state, unit_id).supplied:
             continue
         definition = data.units[unit_id]
         mf = definition["reduced_mf"] if unit["reduced"] else definition["mf"]

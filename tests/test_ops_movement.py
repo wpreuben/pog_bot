@@ -69,6 +69,7 @@ def test_stack_limit_enemy_occupation_and_repeat_move():
 def test_reduced_movement_factor_and_nationality_restricted_edge():
     state = ops_state()
     state["spaces"]["LIEGE"]["fort_destroyed"] = True
+    state["war_nations"]["TU"] = True
     state["units"]["TU_YLD_ARMY_1"]["location"] = "AACHEN"
     state["units"]["TU_YLD_ARMY_1"]["reduced"] = True
     state["units"]["GE_1_ARMY_1"]["location"] = "LONDON"

@@ -55,14 +55,13 @@ def test_corps_can_sr_by_sea_between_friendly_ports():
     assert any(a.get("to") == "CALAIS" for a in generate_legal_actions(state))
 
 
-def test_sr_respects_nationality_restricted_connection():
+def test_sr_rejects_isolated_army_at_nationality_restricted_connection():
     state = sr_state()
     state["units"]["GE_1_ARMY_1"]["location"] = "LONDON"
     state["spaces"]["LONDON"]["control"] = "CP"
     state["spaces"]["CALAIS"]["control"] = "CP"
     state["decision"]["options"] = legal_sr_actions(state)
-    state = choose(state, "SELECT_SR_UNIT", unit_id="GE_1_ARMY_1")
-    assert not any(a.get("to") == "CALAIS" for a in generate_legal_actions(state))
+    assert not any(a.get("unit_id") == "GE_1_ARMY_1" for a in generate_legal_actions(state))
 
 
 def test_russian_army_cannot_cross_near_east_boundary_by_sr():

@@ -74,6 +74,7 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
 
         state["ops_remaining"] = card["ops"]
         state["activated"] = {"MOVE": [], "ATTACK": []}
+        state["activated_oos"] = []
         state["phase"] = "OPS"
         state["decision"] = {"kind": "OPS", "actor": side, "options": []}
         state["decision"]["options"] = legal_ops_actions(state)
