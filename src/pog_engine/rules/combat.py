@@ -392,10 +392,11 @@ def _great_retreat_options(state: FullGameState) -> list[Action]:
         for place in sorted(data.neighbors(destination, "RU")):
             if data.spaces[place]["kind"] != "BOARD" or not state["war_nations"].get(data.spaces[place]["nation"], True):
                 continue
-            if state["spaces"][place]["control"] != "AP":
-                continue
             if any(other["location"] == place and data.units[other_id]["side"] == "CP"
                    for other_id, other in state["units"].items()):
+                continue
+            if (data.spaces[place]["fort"] and state["spaces"][place]["control"] == "CP"
+                    and not state["spaces"][place]["fort_destroyed"]):
                 continue
             if sum(other["location"] == place for other in state["units"].values()) >= 3:
                 continue
@@ -405,6 +406,19 @@ def _great_retreat_options(state: FullGameState) -> list[Action]:
 
 def _after_precombat_retreat(state: FullGameState) -> None:
     context = state["combat_context"]
+    data = load_data()
+    destination = context["defender_space"]
+    defenders = [uid for uid, unit in state["units"].items()
+                 if unit["location"] == destination and data.units[uid]["side"] == context["defender"]]
+    fort = (data.spaces[destination]["fort"] and not state["spaces"][destination]["fort_destroyed"]
+            and state["spaces"][destination]["control"] == context["defender"])
+    if not defenders and not fort:
+        if any(state["units"][uid]["location"] is not None and not state["units"][uid]["reduced"]
+               for uid in context["attackers"]):
+            context["stage"] = "ADVANCE"
+        else:
+            _finish_combat(state)
+        return
     from .events.combat import TRENCH_CARDS, combat_card_eligible
 
     attacker = context["attacker"]
@@ -666,6 +680,8 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
         context = state["combat_context"]
         if kind == "RETREAT_RUSSIAN_UNIT":
             state["units"][action["unit_id"]]["location"] = action["to"]
+            if state["spaces"][action["to"]]["control"] != "AP":
+                state["spaces"][action["to"]]["control"] = "AP"
             if not any(option["type"] == "RETREAT_RUSSIAN_UNIT" for option in _great_retreat_options(state)):
                 _after_precombat_retreat(state)
         elif kind == "PASS_GREAT_RETREAT":

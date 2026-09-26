@@ -167,6 +167,7 @@ def test_draw_step_refills_hands_before_next_turn():
     state["decision"] = None
     state["players"]["AP"]["hand"] = []
     state["players"]["AP"]["deck"] = ["BLOCKADE", "LUSITANIA"]
+    state["players"]["CP"]["hand"] = []
     state = advance_automatic_phases(state)
     assert state["phase"] == "END_TURN"
     assert state["players"]["AP"]["hand"] == ["LUSITANIA", "BLOCKADE"]

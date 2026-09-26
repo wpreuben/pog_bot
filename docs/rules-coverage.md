@@ -22,7 +22,7 @@
 | 16 | 전쟁·평화 | 13, 15–16 |
 | 17 | 보충 | 12, 14 |
 
-아래 분류는 카드의 인쇄 속성과 룰북 9.5절을 기준으로 한다. 카드별 합법 조건·효과·회귀 테스트는 작업 14–18에서 검증표에 추가한다.
+아래 분류는 카드의 인쇄 속성과 룰북 9.5절을 기준으로 한다. 카드별 등록 검사는 110장 전체에 적용하고, 각 계열의 사용 조건과 전이는 본문에 적힌 테스트에서 확인한다. 표의 검증 테스트 열에서 등록 검사만 적힌 행은 개별 효과를 독립적으로 검증했다는 뜻이 아니다.
 
 증원 카드 36장의 인쇄된 유닛 이름·수량·진영은 `tests/cards/test_reinforcements.py::test_all_reinforcement_cards_have_handler_and_unique_unused_units`에서 카드별로 검증한다. 같은 파일은 9.5.3의 첫 턴 금지, 국가별 턴당 1장, 미군 참전, 군/군단 배치와 특수 배치 장소를 검증한다. 다른 종류의 카드는 작업 15–18에서 효과를 확인한다.
 
@@ -31,6 +31,8 @@
 `tests/cards/test_persistent_events.py`는 Blockade·Lusitania·Rape of Belgium·14 Points·Reichstag Truce의 VP, U-boats·Convoy·Zeppelin Raids·Walter Rathenau·Independent Air Force의 RP, High Seas Fleet·Grand Fleet 대응, French Mutiny 공격 벌점, War in Africa 선택, 카드 보충 및 마지막 턴 종료를 검증한다.
 
 `tests/cards/test_combat_events.py`는 기본 전투 카드 27장의 등록, 국적·진영·계절·참호·선행 이벤트 조건, 전투 순서, DRM·CRT 반영, 측면 공격, Withdrawal, 단일 전투 사용 및 카드 영역 이동을 검증한다. 전투 카드의 개별 사용 조건은 `rules/events/combat.py`에서 카드 ID별로 판정한다.
+
+`tests/cards/test_operational_events.py`는 참호·Landwehr·Salonika 선택, Moltke·Süd Army·11th Army·Everyone into Battle 활성화 비용, Yanks and Tanks·Kerensky·Brusilov 공세, Great Retreat의 전투 전 후퇴를 확인한다. `tests/test_view_replay.py`는 상대 손패·덱·RNG 비노출, 전투 카드 임의 버림, 기록 재생을 확인한다. `tests/test_full_game.py`는 Historical 초기 상태에서 합법 행동만 선택해 종료하고 같은 기록을 재생한다.
 
 | 진영 | 카드 ID | 이벤트 종류 | 기본 조항 | 검증 테스트 |
 | --- | --- | --- | --- | --- |

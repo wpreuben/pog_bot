@@ -28,6 +28,57 @@ def _action_decision(state: dict) -> dict:
     return {"kind": "ACTION_PHASE", "actor": side, "options": options}
 
 
+def _draw_discard_options(state: FullGameState, side: str) -> list[Action]:
+    from pog_engine.data import load_data
+
+    player = state["players"][side]
+    late_entry = (side == "AP" and state["players"]["CP"]["commitment"] == "TOTAL"
+                  and state["players"]["AP"]["commitment"] != "TOTAL")
+    cards = load_data().cards
+    actions = [
+        {"type": "DISCARD_DRAW_CARD", "actor": side, "card_id": card_id}
+        for card_id in player["hand"]
+        if cards[card_id]["combat_card"] or (late_entry and card_id in {"ITALY", "ROMANIA"})
+    ]
+    return actions + [{"type": "END_DRAW_DISCARD", "actor": side}]
+
+
+def _start_draw_discard(state: FullGameState, side: str) -> bool:
+    from .cards import draw_to_hand
+
+    state["active_side"] = side
+    if state["players"][side]["hand"]:
+        state["decision"] = {"kind": "DRAW_DISCARD", "actor": side,
+                             "options": _draw_discard_options(state, side)}
+        return True
+    refreshed = draw_to_hand(state, side)
+    state.clear()
+    state.update(refreshed)
+    return False
+
+
+def _apply_draw_discard(state: FullGameState, action: Action, random_input: object | None) -> None:
+    from .cards import draw_to_hand
+
+    side = state["active_side"]
+    if action not in _draw_discard_options(state, side):
+        raise IllegalActionError("카드 보충 전 버림 선택이 잘못되었습니다")
+    if action["type"] == "DISCARD_DRAW_CARD":
+        card_id = action["card_id"]
+        state["players"][side]["hand"].remove(card_id)
+        state["players"][side]["discard"].append(card_id)
+        state["decision"]["options"] = _draw_discard_options(state, side)
+        return
+    refreshed = draw_to_hand(state, side)
+    state.clear()
+    state.update(refreshed)
+    state["decision"] = None
+    if side == "AP" and _start_draw_discard(state, "CP"):
+        return
+    state["phase"] = "END_TURN"
+    state["active_side"] = "CHANCE"
+
+
 def legal_turn_actions(state: FullGameState) -> list[Action]:
     if state["phase"] not in ("MANDATORY_OFFENSIVE", "ACTION"):
         return []
@@ -131,14 +182,12 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
             return finish_game(next_state, victory)
         apply_replacement_phase_events(next_state)
     if phase == "DRAW":
-        from .cards import draw_to_hand
-
         for side in ("AP", "CP"):
             player = next_state["players"][side]
             player["discard"].extend(player.get("in_play", []))
             player["in_play"] = []
-        next_state = draw_to_hand(next_state, "AP")
-        next_state = draw_to_hand(next_state, "CP")
+        if _start_draw_discard(next_state, "AP") or _start_draw_discard(next_state, "CP"):
+            return next_state
     if phase in _AFTER_ACTIONS:
         next_state["phase"] = _AFTER_ACTIONS[phase]
         if next_state["phase"] in {"REPLACEMENT_AP", "REPLACEMENT_CP"}:
@@ -177,3 +226,4 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
 
 
 register_decision_handler("MANDATORY_OFFENSIVE_ROLL", _apply_mandatory_roll)
+register_decision_handler("DRAW_DISCARD", _apply_draw_discard)

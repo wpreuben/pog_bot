@@ -56,6 +56,9 @@ def test_post_action_phases_follow_rulebook_order():
     phases = [state["phase"]]
     for _ in range(7):
         state = advance_automatic_phases(state)
+        while state["phase"] == "DRAW" and state["decision"] is not None:
+            state = apply_action(state, {"type": "END_DRAW_DISCARD",
+                                         "actor": state["decision"]["actor"]}).state
         phases.append(state["phase"])
 
     assert phases == [
