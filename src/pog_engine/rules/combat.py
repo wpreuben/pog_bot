@@ -419,6 +419,13 @@ def _advance_options(state: FullGameState) -> list[Action]:
             if not next_places and len(context.get("retreat_path", [])) >= 2:
                 next_places = {context["retreat_path"][0]}
             for next_place in sorted(next_places):
+                next_data = data.spaces[next_place]
+                if (next_data["fort"] and not state["spaces"][next_place]["fort_destroyed"]
+                        and state["spaces"][next_place]["control"] != side):
+                    from .forts import can_besiege
+
+                    if not can_besiege(state, next_place, side, (uid,)):
+                        continue
                 if (next_place in data.neighbors(target, data.units[uid]["nation"])
                         and sum(other["location"] == next_place for other in state["units"].values()) < 3
                         and not any(other["location"] == next_place and data.units[other_id]["side"] != side

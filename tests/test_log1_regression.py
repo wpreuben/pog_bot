@@ -4,10 +4,44 @@ from pathlib import Path
 import re
 
 from pog_engine import apply_action, create_game, generate_legal_actions
+from pog_engine.data import load_data
 from pog_engine.rules.combat import crt_result
+from pog_engine.rules.cards import EVENT_HANDLERS
 
 
 LOG1 = Path(__file__).parent / "fixtures" / "LOG1.txt"
+
+
+def test_log1_card_actions_match_historical_card_side_and_printed_mode():
+    lines = LOG1.read_text(encoding="utf-8").splitlines()
+    cards = load_data().cards
+    previous = None
+    checked = 0
+    for index, line in enumerate(lines):
+        match = re.fullmatch(r"Turn (\d+) – Action (\d+)", line)
+        if match is None:
+            continue
+        turn_round = (int(match[1]), int(match[2]))
+        side = "AP" if turn_round == previous else "CP"
+        previous = turn_round
+        entry = lines[index + 1]
+        if entry.startswith("Rolled back"):
+            continue
+        name, mode = entry.split(" – ", 1)
+        candidates = [(cid, card) for cid, card in cards.items()
+                      if card["name"] == name and card["side"] == side]
+        assert candidates, (index + 2, entry, side)
+        if mode.startswith("Operations"):
+            assert any(card["ops"] for _, card in candidates)
+        elif mode.startswith("Strategic Redeployment"):
+            assert any(card["sr"] for _, card in candidates)
+        elif mode.startswith("Replacement Points"):
+            assert any(card["rp"] for _, card in candidates)
+        else:
+            assert mode in {"Event", "Reinforcement Event"}
+            assert any(cid in EVENT_HANDLERS for cid, _ in candidates)
+        checked += 1
+    assert checked == 54
 
 
 def test_log1_all_recorded_fire_results_are_possible_on_crt():
@@ -98,6 +132,40 @@ def test_log1_russian_armies_can_follow_two_space_retreat_to_lemberg():
     assert state["spaces"]["LEMBERG"]["control"] == "AP"
 
 
+def test_log1_tarnopol_battle_records_retreat_path_for_advance():
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "AP"
+    state["activated"]["ATTACK"] = ["DUBNO", "KAMENETS_PODOLSKI"]
+    state["decision"] = {"kind": "COMBAT", "actor": "AP", "options": []}
+    from pog_engine.rules.combat import legal_combat_actions
+
+    state["decision"]["options"] = legal_combat_actions(state)
+    steps = [
+        ("DECLARE_ATTACK", {"unit_ids": ["RU_3_ARMY_1", "RU_8_ARMY_1"], "defender_space": "TARNOPOL"}),
+        ("ATTEMPT_FLANK", {"pinning_space": "KAMENETS_PODOLSKI"}),
+        ("RECORD_FLANK_DIE", {"value": 3}),
+        ("PASS_COMBAT_CARDS", {}), ("PASS_COMBAT_CARDS", {}),
+        ("RECORD_COMBAT_DIE", {"side": "AP", "value": 1}),
+        ("TAKE_LOSS", {"unit_id": "AH_3_ARMY_1"}),
+        ("END_LOSSES", {}),
+        ("RECORD_COMBAT_DIE", {"side": "CP", "value": 2}),
+        ("END_LOSSES", {}),
+        ("RETREAT_TO", {"to": "LEMBERG"}),
+        ("RETREAT_TO", {"to": "PRZEMYSL"}),
+    ]
+    for kind, fields in steps:
+        state = choose(state, kind, **fields)
+    assert state["combat_context"]["retreat_progress"]["AH_3_ARMY_1"]["path"] == [
+        "LEMBERG", "PRZEMYSL"
+    ]
+    for uid in ("RU_3_ARMY_1", "RU_8_ARMY_1"):
+        state = choose(state, "ADVANCE_UNIT", unit_id=uid)
+        state = choose(state, "ADVANCE_UNIT", unit_id=uid, to="LEMBERG")
+    assert all(state["units"][uid]["location"] == "LEMBERG"
+               for uid in ("RU_3_ARMY_1", "RU_8_ARMY_1"))
+
+
 def test_log1_withdrawal_allows_russian_units_to_split_retreat():
     log = LOG1.read_text(encoding="utf-8")
     assert "RU 1 → Grodno" in log
@@ -124,3 +192,23 @@ def test_log1_withdrawal_allows_russian_units_to_split_retreat():
     state = choose(state, "RETREAT_TO", unit_id="RUC_CORPS_1", to="VILNA")
     assert state["units"]["RU_1_ARMY_1"]["location"] == "GRODNO"
     assert state["units"]["RUC_CORPS_1"]["location"] == "VILNA"
+
+
+def test_second_advance_cannot_enter_fort_without_siege_force():
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "CP"
+    state["units"]["GEC_CORPS_1"]["location"] = "LODZ"
+    state["units"]["GEC_CORPS_1"]["reduced"] = False
+    state["combat_context"] = {
+        "attacker": "CP", "defender": "AP", "defender_space": "LODZ",
+        "attackers": ["GEC_CORPS_1"], "stage": "ADVANCE", "advanced": ["GEC_CORPS_1"],
+        "retreat_total": 2, "retreat_path": ["WARSAW", "IVANGOROD"],
+        "cards": {"AP": [], "CP": []}, "results": {"CP": 3, "AP": 1},
+    }
+    state["decision"] = {"kind": "COMBAT", "actor": "CP", "options": []}
+    from pog_engine.rules.combat import legal_combat_actions
+
+    options = legal_combat_actions(state)
+    assert not any(action["type"] == "ADVANCE_UNIT" and action.get("to") == "WARSAW"
+                   for action in options)
