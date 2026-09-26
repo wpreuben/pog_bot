@@ -1,0 +1,13 @@
+# Locally supplied reference materials and third-party assets
+Rally the Troops_paths-of-glory-master/
+cardImage_ko/
+*.pdf
+*:Zone.Identifier
+
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
