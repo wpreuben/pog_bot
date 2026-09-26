@@ -25,6 +25,7 @@ class FullGameState(TypedDict):
     active_side: str
     decision: Decision | None
     vp: int
+    hand_size: int
     players: dict
     units: dict
     spaces: dict

@@ -22,9 +22,9 @@ def _roll_decision(side: str) -> dict:
 
 def _action_decision(state: dict) -> dict:
     side = state["active_side"]
-    options = []
-    if state["turn"] == 1 and state["action_round"] == 1 and side == "CP":
-        options.append({"type": "PLAY_CARD", "actor": "CP", "card_id": "GUNS_OF_AUGUST", "mode": "EVENT"})
+    from .cards import legal_card_actions
+
+    options = legal_card_actions(state, side)
     return {"kind": "ACTION_PHASE", "actor": side, "options": options}
 
 
@@ -104,6 +104,8 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         next_state["active_side"] = "CHANCE"
         next_state["players"]["AP"]["actions_taken"] = 0
         next_state["players"]["CP"]["actions_taken"] = 0
+        next_state["players"]["AP"]["last_action_mode"] = None
+        next_state["players"]["CP"]["last_action_mode"] = None
         next_state["decision"] = _roll_decision("AP")
         return next_state
     raise InvalidStateError(f"자동으로 넘길 수 없는 단계: {phase}")

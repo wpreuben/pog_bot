@@ -26,6 +26,8 @@ def _side_cards(data, side: str, seed: int) -> tuple[dict, int]:
         "mandatory_offensive": None,
         "replacement_points": {},
         "actions_taken": 0,
+        "last_action_mode": None,
+        "shuffle_pending": False,
     }, seed
 
 
@@ -88,6 +90,7 @@ def create_game(scenario: str = "HISTORICAL", seed: int = 0) -> FullGameState:
         "active_side": "CHANCE",
         "decision": decision,
         "vp": initial["vp"],
+        "hand_size": initial["hand_size"],
         "players": {"AP": ap, "CP": cp},
         "units": units,
         "spaces": spaces,
