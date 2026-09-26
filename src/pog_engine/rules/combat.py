@@ -512,6 +512,12 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
         defender = "AP" if attacker == "CP" else "CP"
         defending_units = [uid for uid, unit in state["units"].items()
                            if unit["location"] == action["defender_space"] and load_data().units[uid]["side"] == defender]
+        from .war import satisfies_mandatory_offensive
+
+        if satisfies_mandatory_offensive(
+            state, attacker, action["unit_ids"], defending_units, action["defender_space"]
+        ):
+            state["players"][attacker]["mandatory_offensive"] = None
         state["combat_context"] = {
             "attacker": attacker, "defender": defender, "attackers": action["unit_ids"],
             "defender_space": action["defender_space"], "defending_units": defending_units, "stage": "FLANK",

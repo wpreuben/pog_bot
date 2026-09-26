@@ -107,7 +107,7 @@ def legal_replacement_actions(state: FullGameState, side: str) -> list[Action]:
 def _award_sedan_bonus(state: FullGameState) -> None:
     if state["flags"].get("sedan_bonus_awarded_turn") == state["turn"]:
         return
-    if state["players"]["CP"]["commitment"] != "TOTAL" or state["flags"].get("cp_first_total_war_turn"):
+    if state["players"]["CP"]["commitment"] != "TOTAL" or state["flags"].get("cp_first_total_war_turn") == state["turn"]:
         return
     if state["spaces"]["SEDAN"]["control"] != "CP":
         return

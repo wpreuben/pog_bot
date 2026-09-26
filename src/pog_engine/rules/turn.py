@@ -107,6 +107,12 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         from .forts import begin_siege_phase
 
         return begin_siege_phase(next_state)
+    if phase == "WAR_STATUS":
+        from .war import resolve_war_status
+
+        next_state = resolve_war_status(next_state)
+        if next_state["phase"] == "GAME_OVER":
+            return next_state
     if phase in _AFTER_ACTIONS:
         next_state["phase"] = _AFTER_ACTIONS[phase]
         if next_state["phase"] in {"REPLACEMENT_AP", "REPLACEMENT_CP"}:
@@ -119,6 +125,11 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         next_state["decision"] = None
         return next_state
     if phase == "END_TURN":
+        from .victory import finish_game, game_result
+
+        victory = game_result(next_state)
+        if victory is not None:
+            return finish_game(next_state, victory)
         for side in ("AP", "CP"):
             player = next_state["players"][side]
             player["discard"].extend(player.get("in_play", []))
