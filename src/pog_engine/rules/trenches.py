@@ -36,6 +36,11 @@ def legal_entrench_actions(state: FullGameState) -> list[Action]:
 def entrench_decision(state: FullGameState) -> None:
     pending = state.get("entrench_pending", [])
     if not pending:
+        if state["activated"]["ATTACK"]:
+            from .combat import enter_combat
+
+            enter_combat(state)
+            return
         from .turn import complete_action
 
         state["phase"] = "ACTION"

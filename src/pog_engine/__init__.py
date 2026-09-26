@@ -9,6 +9,7 @@ from .rules import ops as _ops  # OPS 처리기 등록
 from .rules import movement as _movement  # 이동 처리기 등록
 from .rules import trenches as _trenches  # 참호 처리기 등록
 from .rules import sr as _sr  # 전략 재배치 처리기 등록
+from .rules import combat as _combat  # 전투 처리기 등록
 
 __all__ = [
     "Action",

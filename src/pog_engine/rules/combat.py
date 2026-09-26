@@ -6,7 +6,8 @@ from itertools import combinations
 import json
 
 from pog_engine.data import load_data
-from pog_engine.model import Action, FullGameState
+from pog_engine.engine import register_decision_handler
+from pog_engine.model import Action, FullGameState, IllegalActionError
 from .supply import supply_status
 
 
@@ -105,7 +106,7 @@ def combat_strength(state: FullGameState, context: dict, side: str) -> int:
     data = load_data()
     attacker = context["attacker"]
     if side == attacker:
-        units = context["attackers"]
+        units = [uid for uid in context["attackers"] if state["units"][uid]["location"] is not None]
     else:
         destination = context["defender_space"]
         units = [uid for uid, unit in state["units"].items()
@@ -141,7 +142,8 @@ def combat_snapshot(state: FullGameState, context: dict) -> dict:
             defender: combat_strength(state, context, defender),
         },
         "tables": {
-            attacker: "ARMY" if any(data.units[uid]["type"] == "ARMY" for uid in context["attackers"]) else "CORPS",
+            attacker: "ARMY" if any(data.units[uid]["type"] == "ARMY" and state["units"][uid]["location"] is not None
+                                    for uid in context["attackers"]) else "CORPS",
             defender: "ARMY" if any(data.units[uid]["type"] == "ARMY" for uid in defenders) else "CORPS",
         },
         "shifts": {
@@ -199,3 +201,360 @@ def flank_modifier(state: FullGameState, context: dict) -> int | None:
         if not adjacent_enemy:
             modifier += 1
     return modifier
+
+
+def _context_units(state: FullGameState, side: str) -> list[str]:
+    context = state["combat_context"]
+    if side == context["attacker"]:
+        return [uid for uid in context["attackers"] if state["units"][uid]["location"] is not None]
+    place = context.get("retreat_location", context["defender_space"])
+    return [uid for uid in context["defending_units"] if state["units"][uid]["location"] == place]
+
+
+def _loss_options(state: FullGameState) -> list[Action]:
+    context = state["combat_context"]
+    side = context["loss_side"]
+    remaining = context["loss_remaining"]
+    data = load_data()
+    actions: list[Action] = []
+    for uid in _context_units(state, side):
+        unit = state["units"][uid]
+        definition = data.units[uid]
+        lf = definition["reduced_lf"] if unit["reduced"] else definition["lf"]
+        if lf > remaining:
+            continue
+        base = {"type": "TAKE_LOSS", "actor": side, "unit_id": uid}
+        if unit["reduced"] and definition["type"] == "ARMY":
+            reserve = f"{side}_RESERVE_BOX"
+            corps = [cid for cid, candidate in data.units.items()
+                     if candidate["side"] == side and candidate["nation"] == definition["nation"]
+                     and candidate["type"] == "CORPS" and state["units"][cid]["location"] == reserve]
+            if corps:
+                actions.extend({**base, "replacement_unit_id": cid} for cid in sorted(corps))
+            else:
+                actions.append({**base, "replacement_unit_id": None})
+        else:
+            actions.append(base)
+    active = tuple(sorted((uid, state["units"][uid]["reduced"]) for uid in _context_units(state, side)))
+    reserve = tuple(sorted(
+        cid for cid, candidate in data.units.items()
+        if candidate["side"] == side and candidate["type"] == "CORPS"
+        and state["units"][cid]["location"] == f"{side}_RESERVE_BOX"
+    ))
+
+    def after(active_units, reserve_units, uid, replacement):
+        updated = list(active_units)
+        index = next(i for i, (candidate, _) in enumerate(updated) if candidate == uid)
+        was_reduced = updated[index][1]
+        if was_reduced:
+            updated.pop(index)
+            if replacement:
+                updated.append((replacement, False))
+        else:
+            updated[index] = (uid, True)
+        updated_reserve = tuple(cid for cid in reserve_units if cid != replacement)
+        return tuple(sorted(updated)), updated_reserve
+
+    @lru_cache(maxsize=None)
+    def payable(active_units, reserve_units, budget):
+        best = 0
+        for uid, reduced in active_units:
+            definition = data.units[uid]
+            lf = definition["reduced_lf"] if reduced else definition["lf"]
+            if lf > budget:
+                continue
+            replacements = [None]
+            if reduced and definition["type"] == "ARMY":
+                replacements = [cid for cid in reserve_units
+                                if data.units[cid]["nation"] == definition["nation"]] or [None]
+            for replacement in replacements:
+                following, remaining_reserve = after(active_units, reserve_units, uid, replacement)
+                best = max(best, lf + payable(following, remaining_reserve, budget - lf))
+        return best
+
+    maximum = payable(active, reserve, remaining)
+    if maximum == 0:
+        return [{"type": "END_LOSSES", "actor": side}]
+    optimal = []
+    for action in actions:
+        uid = action["unit_id"]
+        reduced = state["units"][uid]["reduced"]
+        definition = data.units[uid]
+        lf = definition["reduced_lf"] if reduced else definition["lf"]
+        following, remaining_reserve = after(active, reserve, uid, action.get("replacement_unit_id"))
+        if lf + payable(following, remaining_reserve, remaining - lf) == maximum:
+            optimal.append(action)
+    return optimal
+
+
+def _retreat_destinations(state: FullGameState) -> list[str]:
+    context = state["combat_context"]
+    side = context["defender"]
+    current = context["retreat_location"]
+    data = load_data()
+    units = _context_units(state, side)
+    if not units:
+        return []
+    neighbors = set(data.neighbors(current, data.units[units[0]]["nation"]))
+    for uid in units[1:]:
+        neighbors &= data.neighbors(current, data.units[uid]["nation"])
+    enemy = context["attacker"]
+    destinations = []
+    for place in neighbors:
+        if place == context["defender_space"] or data.spaces[place]["kind"] != "BOARD":
+            continue
+        if not state["war_nations"].get(data.spaces[place]["nation"], True):
+            continue
+        if any(unit["location"] == place and data.units[uid]["side"] == enemy for uid, unit in state["units"].items()):
+            continue
+        if data.spaces[place]["fort"] and state["spaces"][place]["control"] == enemy and not state["spaces"][place]["fort_destroyed"]:
+            continue
+        if context["retreat_remaining"] == 1:
+            occupied = sum(unit["location"] == place for unit in state["units"].values())
+            if occupied + len(units) > 3:
+                continue
+        destinations.append(place)
+    return sorted(destinations)
+
+
+def _advance_options(state: FullGameState) -> list[Action]:
+    context = state["combat_context"]
+    side = context["attacker"]
+    target = context["defender_space"]
+    data = load_data()
+    actions = [{"type": "END_ADVANCE", "actor": side}]
+    if any(unit["location"] == target and data.units[uid]["side"] != side for uid, unit in state["units"].items()):
+        return actions
+    if sum(unit["location"] == target for unit in state["units"].values()) >= 3:
+        return actions
+    for uid in context["attackers"]:
+        unit = state["units"][uid]
+        if unit["location"] is None or unit["reduced"] or uid in context["advanced"]:
+            continue
+        if target in data.neighbors(unit["location"], data.units[uid]["nation"]):
+            actions.append({"type": "ADVANCE_UNIT", "actor": side, "unit_id": uid})
+    return actions
+
+
+def legal_combat_actions(state: FullGameState) -> list[Action]:
+    if state["phase"] != "COMBAT":
+        return []
+    context = state["combat_context"]
+    if context is None:
+        return legal_attack_declarations(state) + [{"type": "END_COMBAT", "actor": state["active_side"]}]
+    stage = context["stage"]
+    attacker, defender = context["attacker"], context["defender"]
+    if stage == "FLANK":
+        actions = [{"type": "SKIP_FLANK", "actor": attacker}]
+        for place in sorted({state["units"][uid]["location"] for uid in context["attackers"]}):
+            if flank_modifier(state, {**context, "pinning_space": place}) is not None:
+                actions.append({"type": "ATTEMPT_FLANK", "actor": attacker, "pinning_space": place})
+        return actions
+    if stage == "FLANK_ROLL":
+        return [{"type": "RECORD_FLANK_DIE", "actor": "CHANCE", "value": die} for die in range(1, 7)]
+    if stage in {"ATTACKER_CARDS", "DEFENDER_CARDS"}:
+        side = attacker if stage == "ATTACKER_CARDS" else defender
+        actions = [
+            {"type": "PLAY_COMBAT_CARD", "actor": side, "card_id": cid}
+            for cid in state["players"][side]["hand"] if load_data().cards[cid]["combat_card"]
+        ]
+        return actions + [{"type": "PASS_COMBAT_CARDS", "actor": side}]
+    if stage == "FIRE":
+        side = context["fire_order"][context["fire_index"]]
+        return [{"type": "RECORD_COMBAT_DIE", "actor": "CHANCE", "side": side, "value": die} for die in range(1, 7)]
+    if stage == "LOSSES":
+        return _loss_options(state)
+    if stage == "RETREAT":
+        actions = [{"type": "RETREAT_TO", "actor": defender, "to": place} for place in _retreat_destinations(state)]
+        if context["retreat_remaining"] == context["retreat_total"]:
+            terrain = load_data().spaces[context["defender_space"]]["terrain"]
+            trench = state["spaces"][context["defender_space"]]["trenches"][defender]
+            units = _context_units(state, defender)
+            if trench or terrain in {"FOREST", "DESERT", "MOUNTAIN", "SWAMP"}:
+                for uid in units:
+                    if not state["units"][uid]["reduced"] or len(units) > 1:
+                        actions.append({"type": "CANCEL_RETREAT", "actor": defender, "unit_id": uid})
+        if not actions:
+            actions.append({"type": "NO_RETREAT_ROUTE", "actor": defender})
+        return actions
+    if stage == "ADVANCE":
+        return _advance_options(state)
+    raise ValueError(f"알 수 없는 전투 단계: {stage}")
+
+
+def _refresh(state: FullGameState) -> None:
+    options = legal_combat_actions(state)
+    state["decision"] = {"kind": "COMBAT", "actor": options[0]["actor"] if options else state["active_side"], "options": options}
+
+
+def enter_combat(state: FullGameState) -> FullGameState:
+    state["phase"] = "COMBAT"
+    state["combat_context"] = None
+    state["attacked_units"] = []
+    state["attacked_spaces"] = []
+    _refresh(state)
+    return state
+
+
+def _finish_combat(state: FullGameState) -> None:
+    context = state["combat_context"]
+    attacker, defender = context["attacker"], context["defender"]
+    winner = attacker if context["results"].get(attacker, 0) > context["results"].get(defender, 0) else (
+        defender if context["results"].get(defender, 0) > context["results"].get(attacker, 0) else None
+    )
+    for side in (attacker, defender):
+        cards = context["cards"][side]
+        zone = "in_play" if side == winner else "discard"
+        state["players"][side].setdefault(zone, []).extend(cards)
+    state["attacked_units"].extend(context["attackers"])
+    state["attacked_spaces"].append(context["defender_space"])
+    state["combat_context"] = None
+
+
+def _after_losses(state: FullGameState) -> None:
+    context = state["combat_context"]
+    if context["loss_queue"]:
+        context["loss_side"] = context["loss_queue"].pop(0)
+        enemy = context["defender"] if context["loss_side"] == context["attacker"] else context["attacker"]
+        context["loss_remaining"] = context["results"][enemy]
+        context["stage"] = "LOSSES"
+        return
+    if context["fire_index"] + 1 < len(context["fire_order"]):
+        context["fire_index"] += 1
+        context["stage"] = "FIRE"
+        return
+    attacker, defender = context["attacker"], context["defender"]
+    full_attackers = any(state["units"][uid]["location"] is not None and not state["units"][uid]["reduced"] for uid in context["attackers"])
+    defenders = _context_units(state, defender)
+    difference = context["results"].get(attacker, 0) - context["results"].get(defender, 0)
+    if difference > 0 and defenders and full_attackers:
+        context["stage"] = "RETREAT"
+        context["retreat_total"] = 1 if difference == 1 else 2
+        context["retreat_remaining"] = context["retreat_total"]
+        context["retreat_location"] = context["defender_space"]
+    elif difference > 0 and not defenders and full_attackers:
+        context["stage"] = "ADVANCE"
+    else:
+        _finish_combat(state)
+
+
+def _apply_step_loss(state: FullGameState, uid: str, replacement: str | None = None) -> int:
+    unit = state["units"][uid]
+    definition = load_data().units[uid]
+    lf = definition["reduced_lf"] if unit["reduced"] else definition["lf"]
+    if unit["reduced"]:
+        old_place = unit["location"]
+        unit["location"] = None
+        unit["eliminated"] = True
+        if replacement:
+            state["units"][replacement]["location"] = old_place
+    else:
+        unit["reduced"] = True
+    return lf
+
+
+def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
+    if action not in legal_combat_actions(state):
+        raise IllegalActionError("전투 창에서 합법적인 행동이 아닙니다")
+    kind = action["type"]
+    if kind == "END_COMBAT":
+        from .turn import complete_action
+
+        state["phase"] = "ACTION"
+        next_state = complete_action(state)
+        state.clear()
+        state.update(next_state)
+        return state
+    if kind == "DECLARE_ATTACK":
+        attacker = state["active_side"]
+        defender = "AP" if attacker == "CP" else "CP"
+        defending_units = [uid for uid, unit in state["units"].items()
+                           if unit["location"] == action["defender_space"] and load_data().units[uid]["side"] == defender]
+        state["combat_context"] = {
+            "attacker": attacker, "defender": defender, "attackers": action["unit_ids"],
+            "defender_space": action["defender_space"], "defending_units": defending_units, "stage": "FLANK",
+            "cards": {"AP": [], "CP": []}, "results": {}, "rolls": {},
+            "fire_order": [attacker, defender], "fire_index": 0,
+            "loss_queue": [], "loss_side": None, "loss_remaining": 0, "advanced": [],
+        }
+    else:
+        context = state["combat_context"]
+        if kind == "SKIP_FLANK":
+            context["stage"] = "ATTACKER_CARDS"
+        elif kind == "ATTEMPT_FLANK":
+            context["pinning_space"] = action["pinning_space"]
+            context["flank_modifier"] = flank_modifier(state, context)
+            context["stage"] = "FLANK_ROLL"
+        elif kind == "RECORD_FLANK_DIE":
+            success = action["value"] + context["flank_modifier"] >= 4
+            context["flank_success"] = success
+            context["fire_order"] = [context["attacker"], context["defender"]] if success else [context["defender"], context["attacker"]]
+            context["stage"] = "ATTACKER_CARDS"
+        elif kind == "PLAY_COMBAT_CARD":
+            side = action["actor"]
+            state["players"][side]["hand"].remove(action["card_id"])
+            context["cards"][side].append(action["card_id"])
+        elif kind == "PASS_COMBAT_CARDS":
+            context["stage"] = "DEFENDER_CARDS" if context["stage"] == "ATTACKER_CARDS" else "FIRE"
+        elif kind == "RECORD_COMBAT_DIE":
+            side = action["side"]
+            snapshot = combat_snapshot(state, context)
+            column = fire_column(snapshot, side)
+            result = crt_result(snapshot["tables"][side], column, action["value"])
+            context["rolls"][side] = action["value"]
+            context["results"][side] = result
+            if "flank_success" in context:
+                opponent = context["defender"] if side == context["attacker"] else context["attacker"]
+                context["loss_queue"] = [opponent]
+                _after_losses(state)
+            elif len(context["rolls"]) == 2:
+                context["loss_queue"] = [context["defender"], context["attacker"]]
+                _after_losses(state)
+            else:
+                context["fire_index"] += 1
+        elif kind == "TAKE_LOSS":
+            context["loss_remaining"] -= _apply_step_loss(state, action["unit_id"], action.get("replacement_unit_id"))
+            if action.get("replacement_unit_id"):
+                context["defending_units" if context["loss_side"] == context["defender"] else "attackers"].append(action["replacement_unit_id"])
+        elif kind == "END_LOSSES":
+            _after_losses(state)
+        elif kind == "CANCEL_RETREAT":
+            _apply_step_loss(state, action["unit_id"])
+            _finish_combat(state)
+        elif kind == "NO_RETREAT_ROUTE":
+            for uid in _context_units(state, context["defender"]):
+                state["units"][uid]["location"] = None
+                state["units"][uid]["eliminated"] = True
+                if load_data().units[uid]["type"] == "ARMY":
+                    state["units"][uid]["permanent"] = True
+            context["stage"] = "ADVANCE"
+        elif kind == "RETREAT_TO":
+            for uid in _context_units(state, context["defender"]):
+                state["units"][uid]["location"] = action["to"]
+            context["retreat_location"] = action["to"]
+            context["retreat_remaining"] -= 1
+            if context["retreat_remaining"] == 0:
+                context["stage"] = "ADVANCE"
+        elif kind == "ADVANCE_UNIT":
+            uid = action["unit_id"]
+            target = context["defender_space"]
+            state["units"][uid]["location"] = target
+            context["advanced"].append(uid)
+            space = state["spaces"][target]
+            if not load_data().spaces[target]["fort"] or space["fort_destroyed"] or space["control"] == context["attacker"]:
+                if space["control"] != context["attacker"] and space["vp"]:
+                    state["vp"] += 1 if context["attacker"] == "CP" else -1
+                space["control"] = context["attacker"]
+            else:
+                space["fort_besieged"] = True
+        elif kind == "END_ADVANCE":
+            _finish_combat(state)
+    _refresh(state)
+    return state
+
+
+def _apply_combat(state: FullGameState, action: Action, random_input: object | None) -> None:
+    apply_combat_action(state, action)
+
+
+register_decision_handler("COMBAT", _apply_combat)

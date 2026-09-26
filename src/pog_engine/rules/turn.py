@@ -109,6 +109,10 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
         next_state["decision"] = None
         return next_state
     if phase == "END_TURN":
+        for side in ("AP", "CP"):
+            player = next_state["players"][side]
+            player["discard"].extend(player.get("in_play", []))
+            player["in_play"] = []
         next_state["turn"] += 1
         next_state["action_round"] = 1
         next_state["phase"] = "MANDATORY_OFFENSIVE"
