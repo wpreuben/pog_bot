@@ -1,70 +1,6 @@
-"""사용자가 제공한 LOG1 첫 전투의 규칙 재현."""
-
-from pathlib import Path
-import re
+"""Historical 캠페인에서 발견한 전투·후퇴 규칙 회귀 사례."""
 
 from pog_engine import apply_action, create_game, generate_legal_actions
-from pog_engine.data import load_data
-from pog_engine.rules.combat import crt_result
-from pog_engine.rules.cards import EVENT_HANDLERS
-
-
-LOG1 = Path(__file__).parent / "fixtures" / "LOG1.txt"
-
-
-def test_log1_card_actions_match_historical_card_side_and_printed_mode():
-    lines = LOG1.read_text(encoding="utf-8").splitlines()
-    cards = load_data().cards
-    previous = None
-    checked = 0
-    for index, line in enumerate(lines):
-        match = re.fullmatch(r"Turn (\d+) – Action (\d+)", line)
-        if match is None:
-            continue
-        turn_round = (int(match[1]), int(match[2]))
-        side = "AP" if turn_round == previous else "CP"
-        previous = turn_round
-        entry = lines[index + 1]
-        if entry.startswith("Rolled back"):
-            continue
-        name, mode = entry.split(" – ", 1)
-        candidates = [(cid, card) for cid, card in cards.items()
-                      if card["name"] == name and card["side"] == side]
-        assert candidates, (index + 2, entry, side)
-        if mode.startswith("Operations"):
-            assert any(card["ops"] for _, card in candidates)
-        elif mode.startswith("Strategic Redeployment"):
-            assert any(card["sr"] for _, card in candidates)
-        elif mode.startswith("Replacement Points"):
-            assert any(card["rp"] for _, card in candidates)
-        else:
-            assert mode in {"Event", "Reinforcement Event"}
-            assert any(cid in EVENT_HANDLERS for cid, _ in candidates)
-        checked += 1
-    assert checked == 54
-
-
-def test_log1_all_recorded_fire_results_are_possible_on_crt():
-    """기록에 주사위 눈이 없으므로 각 결과를 낼 수 있는 눈의 존재를 확인한다."""
-    lines = LOG1.read_text(encoding="utf-8").splitlines()
-    checked = 0
-    for index, line in enumerate(lines):
-        match = re.search(r"×\s*(\d+)\s*\((Army|Corps)\)\s*=\s*(\d+)", line)
-        if match is None:
-            continue
-        column, table, result = int(match[1]), match[2].upper(), int(match[3])
-        modifier = 0
-        for earlier in lines[max(0, index - 3):index]:
-            drm = re.match(r"\s*([+-]\d+)\s+(?!VP)", earlier)
-            if drm:
-                modifier += int(drm[1])
-        assert any(crt_result(table, column, die + modifier) == result for die in range(1, 7)), (
-            index + 1, line
-        )
-        checked += 1
-    assert checked == 60
-
-
 def choose(state, action_type, **fields):
     action = next(action for action in generate_legal_actions(state)
                   if action["type"] == action_type
@@ -72,10 +8,7 @@ def choose(state, action_type, **fields):
     return apply_action(state, action).state
 
 
-def test_log1_guns_of_august_sedan_retreat_canceled_with_french_corps():
-    log = LOG1.read_text(encoding="utf-8")
-    assert "(FR 5) in Sedan broke to FRc(6,0)" in log
-
+def test_guns_of_august_sedan_retreat_canceled_with_french_corps():
     state = create_game(seed=4)
     state = choose(state, "RECORD_DIE_RESULT", value=5)
     state = choose(state, "RECORD_DIE_RESULT", value=5)
@@ -104,11 +37,7 @@ def test_log1_guns_of_august_sedan_retreat_canceled_with_french_corps():
     assert state["units"][replacement]["location"] == "SEDAN"
 
 
-def test_log1_russian_armies_can_follow_two_space_retreat_to_lemberg():
-    log = LOG1.read_text(encoding="utf-8")
-    assert "(AH 3) → Lemberg, Przemysl" in log
-    assert "RU 3, RU 8 → Lemberg" in log
-
+def test_russian_armies_can_follow_two_space_retreat_to_lemberg():
     state = create_game(seed=4)
     state["phase"] = "COMBAT"
     state["active_side"] = "AP"
@@ -132,7 +61,7 @@ def test_log1_russian_armies_can_follow_two_space_retreat_to_lemberg():
     assert state["spaces"]["LEMBERG"]["control"] == "AP"
 
 
-def test_log1_tarnopol_battle_records_retreat_path_for_advance():
+def test_tarnopol_battle_records_retreat_path_for_advance():
     state = create_game(seed=4)
     state["phase"] = "COMBAT"
     state["active_side"] = "AP"
@@ -166,11 +95,7 @@ def test_log1_tarnopol_battle_records_retreat_path_for_advance():
                for uid in ("RU_3_ARMY_1", "RU_8_ARMY_1"))
 
 
-def test_log1_withdrawal_allows_russian_units_to_split_retreat():
-    log = LOG1.read_text(encoding="utf-8")
-    assert "RU 1 → Grodno" in log
-    assert "RUc → Vilna" in log
-
+def test_withdrawal_allows_russian_units_to_split_retreat():
     state = create_game(seed=4)
     state["phase"] = "COMBAT"
     state["active_side"] = "CP"

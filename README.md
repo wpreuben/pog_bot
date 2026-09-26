@@ -33,3 +33,7 @@ visible = get_player_view(state, "AP")
 자동 단계에도 `ADVANCE_AUTOMATIC_PHASE`라는 합법 행동이 주어진다. `CHANCE` 행위자의 주사위 행동은 1~6 중 하나를 선택하며, 선택한 값이 기록의 `random_input`에 저장된다. `get_player_view`는 자기 손패와 공개 정보만 제공하고 상대 손패, 덱 순서, RNG 상태를 숨긴다.
 
 현재 지원 범위는 Historical 기본 캠페인과 기본 카드 110장이다. 추가 시나리오와 Valiant 덱은 포함하지 않는다. 규칙 범위와 자료 출처는 [검증표](docs/rules-coverage.md), 영문 룰북과 RTT 구현의 확인된 차이는 [차이 기록](docs/rule-differences.md)에 정리했다.
+
+## RTT JSON 기보 재현
+
+258629번 Historical 게임의 익명화된 JSON 기보를 RTT 참고 엔진과 함께 재현하는 검증기가 있다. `RTT_RULES_PATH`에 별도로 보관한 RTT `rules.js` 경로를 지정하고 `uv run pytest tests/test_rtt_runner.py -q`를 실행한다. 완료 기준은 1,447개 입력의 종료까지 합법 행동 적용, 8턴·VP 7·AP 승리, 그리고 Python 전이 기록의 결정적 재생이다. 실행 방법과 판정 차이는 [RTT 검증 기록](docs/rtt-validation.md)에 정리했다.

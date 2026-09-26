@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import subprocess
 
+from rtt_test_support import rules_path
+
 import pytest
 
 from pog_engine.rtt_replay.input import ReplayStep, load_replay
@@ -12,7 +14,7 @@ from pog_engine.rtt_replay.projection import first_difference, project_engine, p
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RULES = Path("/home/pc/project/pog_bot/Rally the Troops_paths-of-glory-master/rules.js")
+RULES = rules_path(__file__)
 FIXTURE = ROOT / "tests/fixtures/replay-258629.json"
 
 

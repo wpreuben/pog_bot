@@ -3,6 +3,8 @@
 from copy import deepcopy
 from pathlib import Path
 import subprocess
+
+from rtt_test_support import rules_path
 import json
 
 from pog_engine.replay import replay
@@ -20,7 +22,7 @@ from pog_engine.rtt_replay.projection import project_engine, project_rtt
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests/fixtures/replay-258629.json"
-RULES = Path("/home/pc/project/pog_bot/Rally the Troops_paths-of-glory-master/rules.js")
+RULES = rules_path(__file__)
 
 
 def test_changed_vp_reports_first_path_and_source_index():

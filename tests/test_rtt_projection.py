@@ -4,12 +4,14 @@ import json
 from pathlib import Path
 import subprocess
 
+from rtt_test_support import rules_path
+
 import pytest
 
 from pog_engine import create_game
 
 
-RULES = Path("/home/pc/project/pog_bot/Rally the Troops_paths-of-glory-master/rules.js")
+RULES = rules_path(__file__)
 
 
 def rtt_setup():

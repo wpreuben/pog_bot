@@ -5,6 +5,8 @@ from dataclasses import replace
 from pathlib import Path
 import subprocess
 
+from rtt_test_support import rules_path
+
 import pytest
 
 from pog_engine import apply_action, create_game, generate_legal_actions
@@ -17,7 +19,7 @@ from pog_engine.rtt_replay.translate import TranslationError, translate_intent
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests/fixtures/replay-258629.json"
-RULES = Path("/home/pc/project/pog_bot/Rally the Troops_paths-of-glory-master/rules.js")
+RULES = rules_path(__file__)
 
 
 @pytest.fixture(scope="module")

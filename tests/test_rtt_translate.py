@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import subprocess
 
+from rtt_test_support import rules_path
+
 import pytest
 
 from pog_engine import apply_action, generate_legal_actions
@@ -16,7 +18,7 @@ from pog_engine.rules.cards import legal_card_actions
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests/fixtures/replay-258629.json"
-RULES = Path("/home/pc/project/pog_bot/Rally the Troops_paths-of-glory-master/rules.js")
+RULES = rules_path(__file__)
 
 
 @pytest.fixture(scope="module")
