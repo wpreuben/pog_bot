@@ -15,8 +15,29 @@ class Decision(TypedDict):
 
 class FullGameState(TypedDict):
     schema_version: int
+    scenario: str
+    data_version: str
+    seed: int
+    rng_state: int
+    turn: int
+    action_round: int
     phase: str
+    active_side: str
     decision: Decision | None
+    vp: int
+    players: dict
+    units: dict
+    spaces: dict
+    war_nations: dict
+    us_entry: int
+    russian_capitulation: int
+    events: dict
+    temporary_effects: dict
+    flags: dict
+    combat_context: dict | None
+    activated: dict
+    ops_remaining: int
+    result: dict | None
 
 
 @dataclass(frozen=True)

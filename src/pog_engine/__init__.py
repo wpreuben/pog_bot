@@ -2,6 +2,7 @@
 
 from .engine import apply_action, generate_legal_actions
 from .model import Action, FullGameState, IllegalActionError, InvalidStateError, Transition
+from .rules.setup import create_game
 
 __all__ = [
     "Action",
@@ -10,5 +11,6 @@ __all__ = [
     "InvalidStateError",
     "Transition",
     "apply_action",
+    "create_game",
     "generate_legal_actions",
 ]
