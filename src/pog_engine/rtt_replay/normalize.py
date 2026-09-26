@@ -20,6 +20,7 @@ class Intent:
     before: dict | None
     after: dict
     random_seeds: tuple[int, ...]
+    log_delta: tuple[str, ...] = ()
 
 
 def normalize_steps(steps: tuple[ReplayStep, ...],
@@ -46,5 +47,6 @@ def normalize_steps(steps: tuple[ReplayStep, ...],
             del committed[match:]
             continue
         committed.append(Intent(index, index, step.role, step.name, step.argument,
-                                before, after, tuple(random["seeds"])))
+                                before, after, tuple(random["seeds"]),
+                                tuple(observation.get("log_delta", []))))
     return tuple(committed)
