@@ -1,0 +1,2344 @@
+[
+  {
+    "id": "BRITISH_REINFORCEMENTS_BR_2",
+    "name": "British Reinforcements (BR 2)",
+    "side": "AP",
+    "number": 1,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR 2",
+      "BRc"
+    ]
+  },
+  {
+    "id": "BLOCKADE",
+    "name": "Blockade",
+    "side": "AP",
+    "number": 2,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "BLOCKADE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "RUSSIAN_REINFORCEMENTS_RU_11",
+    "name": "Russian Reinforcements (RU 11)",
+    "side": "AP",
+    "number": 3,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "RU",
+    "reinforcement_units": [
+      "RU 11",
+      "RUc"
+    ]
+  },
+  {
+    "id": "PLEVE",
+    "name": "Pleve",
+    "side": "AP",
+    "number": 4,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "PLEVE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "PUTNIK",
+    "name": "Putnik",
+    "side": "AP",
+    "number": 5,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "PUTNIK",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "WITHDRAWAL",
+    "name": "Withdrawal",
+    "side": "AP",
+    "number": 6,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "AP_WITHDRAWAL",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "SEVERE_WEATHER_AP",
+    "name": "Severe Weather",
+    "side": "AP",
+    "number": 7,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "AP_SEVERE_WEATHER",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "RUSSIAN_REINFORCEMENTS_2_CORPS",
+    "name": "Russian Reinforcements (2 corps)",
+    "side": "AP",
+    "number": 8,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "RU",
+    "reinforcement_units": [
+      "RUc",
+      "RUc"
+    ]
+  },
+  {
+    "id": "MOLTKE",
+    "name": "Moltke",
+    "side": "AP",
+    "number": 9,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": "MOLTKE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "FRENCH_REINFORCEMENTS_FR_10",
+    "name": "French Reinforcements (FR 10)",
+    "side": "AP",
+    "number": 10,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "FR",
+    "reinforcement_units": [
+      "FR 10"
+    ]
+  },
+  {
+    "id": "RUSSIAN_REINFORCEMENTS_RU_9_RU_10",
+    "name": "Russian Reinforcements (RU 9, RU 10)",
+    "side": "AP",
+    "number": 11,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "RU",
+    "reinforcement_units": [
+      "RU 9",
+      "RU 10"
+    ]
+  },
+  {
+    "id": "ENTRENCH_AP",
+    "name": "Entrench",
+    "side": "AP",
+    "number": 12,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": "AP_ENTRENCH",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "RAPE_OF_BELGIUM",
+    "name": "Rape of Belgium",
+    "side": "AP",
+    "number": 13,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "RAPE_OF_BELGIUM",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BRITISH_REINFORCEMENTS_BR_1",
+    "name": "British Reinforcements (BR 1)",
+    "side": "AP",
+    "number": 14,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR 1",
+      "BRc"
+    ]
+  },
+  {
+    "id": "BRITISH_REINFORCEMENTS_BR_4",
+    "name": "British Reinforcements (BR 4)",
+    "side": "AP",
+    "number": 15,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR 4",
+      "BRc"
+    ]
+  },
+  {
+    "id": "ROMANIA",
+    "name": "Romania",
+    "side": "AP",
+    "number": 16,
+    "commitment": "LIMITED",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 3,
+      "FR": 3,
+      "IT": 2,
+      "RU": 4
+    },
+    "combat_card": false,
+    "event_id": "ROMANIA_ENTRY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ITALY",
+    "name": "Italy",
+    "side": "AP",
+    "number": 17,
+    "commitment": "LIMITED",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "A": 1,
+      "BR": 3,
+      "FR": 3,
+      "RU": 4
+    },
+    "combat_card": false,
+    "event_id": "ITALY_ENTRY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "HURRICANE_BARRAGE",
+    "name": "Hurricane Barrage",
+    "side": "AP",
+    "number": 18,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "HURRICANE_BARRAGE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "AIR_SUPERIORITY_AP",
+    "name": "Air Superiority",
+    "side": "AP",
+    "number": 19,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "AP_AIR_SUPERIORITY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BRITISH_REINFORCEMENTS_AUS_CND",
+    "name": "British Reinforcements (AUS, CND)",
+    "side": "AP",
+    "number": 20,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "AUSc",
+      "CNDc"
+    ]
+  },
+  {
+    "id": "PHOSGENE_GAS",
+    "name": "Phosgene Gas",
+    "side": "AP",
+    "number": 21,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "PHOSGENE_GAS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ITALIAN_REINFORCEMENTS",
+    "name": "Italian Reinforcements",
+    "side": "AP",
+    "number": 22,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "IT",
+    "reinforcement_units": [
+      "IT 5"
+    ]
+  },
+  {
+    "id": "CLOAK_AND_DAGGER",
+    "name": "Cloak and Dagger",
+    "side": "AP",
+    "number": 23,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": "CLOAK_AND_DAGGER",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "FRENCH_REINFORCEMENTS_FR_7",
+    "name": "French Reinforcements (FR 7)",
+    "side": "AP",
+    "number": 24,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "FR",
+    "reinforcement_units": [
+      "FR 7"
+    ]
+  },
+  {
+    "id": "RUSSIAN_REINFORCEMENTS_RU_6_RU_7",
+    "name": "Russian Reinforcements (RU 6, RU 7)",
+    "side": "AP",
+    "number": 25,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "RU",
+    "reinforcement_units": [
+      "RU 6",
+      "RU 7",
+      "RUc",
+      "RUc"
+    ]
+  },
+  {
+    "id": "LUSITANIA",
+    "name": "Lusitania",
+    "side": "AP",
+    "number": 26,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": "LUSITANIA",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GREAT_RETREAT",
+    "name": "Great Retreat",
+    "side": "AP",
+    "number": 27,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": "GREAT_RETREAT",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "LANDSHIPS",
+    "name": "Landships",
+    "side": "AP",
+    "number": 28,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "LANDSHIPS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "YUDENITCH_RU_REINFORCEMENTS",
+    "name": "Yudenitch (RU Reinforcements)",
+    "side": "AP",
+    "number": 29,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "RU",
+    "reinforcement_units": [
+      "RU CAU"
+    ]
+  },
+  {
+    "id": "SALONIKA",
+    "name": "Salonika",
+    "side": "AP",
+    "number": 30,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "SALONIKA",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "MEF_BR_REINFORCEMENTS",
+    "name": "MEF (BR Reinforcements)",
+    "side": "AP",
+    "number": 31,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR MEF"
+    ]
+  },
+  {
+    "id": "RUSSIAN_REINFORCEMENTS_RU_12",
+    "name": "Russian Reinforcements (RU 12)",
+    "side": "AP",
+    "number": 32,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "RU",
+    "reinforcement_units": [
+      "RU 12"
+    ]
+  },
+  {
+    "id": "GRAND_FLEET",
+    "name": "Grand Fleet",
+    "side": "AP",
+    "number": 33,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": "GRAND_FLEET",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BRITISH_REINFORCEMENTS_BR_3",
+    "name": "British Reinforcements (BR 3)",
+    "side": "AP",
+    "number": 34,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR 3",
+      "BRc",
+      "BRc"
+    ]
+  },
+  {
+    "id": "YANKS_AND_TANKS",
+    "name": "Yanks and Tanks",
+    "side": "AP",
+    "number": 35,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "YANKS_AND_TANKS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "MINE_ATTACK",
+    "name": "Mine Attack",
+    "side": "AP",
+    "number": 36,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "MINE_ATTACK",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "INDEPENDENT_AIR_FORCE",
+    "name": "Independent Air Force",
+    "side": "AP",
+    "number": 37,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": "INDEPENDENT_AIR_FORCE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "USA_REINFORCEMENTS_1_CORPS",
+    "name": "USA Reinforcements (1 corps)",
+    "side": "AP",
+    "number": 38,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "US",
+    "reinforcement_units": [
+      "USc"
+    ]
+  },
+  {
+    "id": "THEY_SHALL_NOT_PASS",
+    "name": "They Shall Not Pass",
+    "side": "AP",
+    "number": 39,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": true,
+    "event_id": "THEY_SHALL_NOT_PASS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "14_POINTS",
+    "name": "14 Points",
+    "side": "AP",
+    "number": 40,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "RU": 1
+    },
+    "combat_card": false,
+    "event_id": "FOURTEEN_POINTS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ARAB_NORTHERN_ARMY_BR_REINFORCEMENTS",
+    "name": "Arab Northern Army (BR Reinforcements)",
+    "side": "AP",
+    "number": 41,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR ANAc"
+    ]
+  },
+  {
+    "id": "BRITISH_REINFORCEMENTS_BR_5",
+    "name": "British Reinforcements (BR 5)",
+    "side": "AP",
+    "number": 42,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR 5",
+      "BRc",
+      "PTc"
+    ]
+  },
+  {
+    "id": "USA_REINFORCEMENTS_US_1",
+    "name": "USA Reinforcements (US 1)",
+    "side": "AP",
+    "number": 43,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "US",
+    "reinforcement_units": [
+      "US 1",
+      "USc",
+      "USc"
+    ]
+  },
+  {
+    "id": "GREECE",
+    "name": "Greece",
+    "side": "AP",
+    "number": 44,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": "GREECE_ENTRY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "KERENSKY_OFFENSIVE",
+    "name": "Kerensky Offensive",
+    "side": "AP",
+    "number": 45,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "BR": 1,
+      "FR": 1,
+      "IT": 1,
+      "RU": 2
+    },
+    "combat_card": false,
+    "event_id": "KERENSKY_OFFENSIVE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BRUSILOV_OFFENSIVE",
+    "name": "Brusilov Offensive",
+    "side": "AP",
+    "number": 46,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "BRUSILOV_OFFENSIVE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "USA_REINFORCEMENTS_US_2",
+    "name": "USA Reinforcements (US 2)",
+    "side": "AP",
+    "number": 47,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "US",
+    "reinforcement_units": [
+      "US 2",
+      "USc"
+    ]
+  },
+  {
+    "id": "ROYAL_TANK_CORPS",
+    "name": "Royal Tank Corps",
+    "side": "AP",
+    "number": 48,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": true,
+    "event_id": "ROYAL_TANK_CORPS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "SINAI_PIPELINE",
+    "name": "Sinai Pipeline",
+    "side": "AP",
+    "number": 49,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "SINAI_PIPELINE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ALLENBY_BR_REINFORCEMENTS",
+    "name": "Allenby (BR Reinforcements)",
+    "side": "AP",
+    "number": 50,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "BR",
+    "reinforcement_units": [
+      "BR NE"
+    ]
+  },
+  {
+    "id": "EVERYONE_INTO_BATTLE",
+    "name": "Everyone Into Battle",
+    "side": "AP",
+    "number": 51,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "EVERYONE_INTO_BATTLE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "CONVOY",
+    "name": "Convoy",
+    "side": "AP",
+    "number": 52,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 2,
+      "FR": 2,
+      "IT": 1,
+      "RU": 3
+    },
+    "combat_card": false,
+    "event_id": "CONVOY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ARMY_OF_THE_ORIENT_FR_REINFORCEMENTS",
+    "name": "Army of the Orient (FR Reinforcements)",
+    "side": "AP",
+    "number": 53,
+    "commitment": "TOTAL",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 3,
+      "FR": 3,
+      "IT": 2,
+      "RU": 4
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "FR",
+    "reinforcement_units": [
+      "FR Orient"
+    ]
+  },
+  {
+    "id": "ZIMMERMANN_TELEGRAM",
+    "name": "Zimmermann Telegram",
+    "side": "AP",
+    "number": 54,
+    "commitment": "TOTAL",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "A": 1,
+      "BR": 3,
+      "FR": 3,
+      "IT": 2,
+      "RU": 4
+    },
+    "combat_card": false,
+    "event_id": "ZIMMERMANN_TELEGRAM",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "OVER_THERE",
+    "name": "Over There",
+    "side": "AP",
+    "number": 55,
+    "commitment": "TOTAL",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "A": 1,
+      "BR": 3,
+      "FR": 3,
+      "IT": 2,
+      "RU": 4
+    },
+    "combat_card": false,
+    "event_id": "OVER_THERE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GUNS_OF_AUGUST",
+    "name": "Guns of August",
+    "side": "CP",
+    "number": 1,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "GUNS_OF_AUGUST",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "WIRELESS_INTERCEPTS",
+    "name": "Wireless Intercepts",
+    "side": "CP",
+    "number": 2,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "WIRELESS_INTERCEPTS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "VON_FRANCOIS",
+    "name": "Von Francois",
+    "side": "CP",
+    "number": 3,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "VON_FRANCOIS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "SEVERE_WEATHER_CP",
+    "name": "Severe Weather",
+    "side": "CP",
+    "number": 4,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "CP_SEVERE_WEATHER",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "LANDWEHR",
+    "name": "Landwehr",
+    "side": "CP",
+    "number": 5,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": "LANDWEHR",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ENTRENCH_CP",
+    "name": "Entrench",
+    "side": "CP",
+    "number": 6,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "CP_ENTRENCH",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_GE_9",
+    "name": "German Reinforcements (GE 9)",
+    "side": "CP",
+    "number": 7,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GE 9"
+    ]
+  },
+  {
+    "id": "RACE_TO_THE_SEA",
+    "name": "Race to the Sea",
+    "side": "CP",
+    "number": 8,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "RACE_TO_THE_SEA",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "REICHSTAG_TRUCE",
+    "name": "Reichstag Truce",
+    "side": "CP",
+    "number": 9,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "REICHSTAG_TRUCE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "SUD_ARMY",
+    "name": "SUD Army",
+    "side": "CP",
+    "number": 10,
+    "commitment": "MOBILIZATION",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "SUD_ARMY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "OBEROST",
+    "name": "Oberost",
+    "side": "CP",
+    "number": 11,
+    "commitment": "MOBILIZATION",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": "OBEROST",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_GE_10",
+    "name": "German Reinforcements (GE 10)",
+    "side": "CP",
+    "number": 12,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GE 10",
+      "GEc",
+      "GEc"
+    ]
+  },
+  {
+    "id": "FALKENHAYN",
+    "name": "Falkenhayn",
+    "side": "CP",
+    "number": 13,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "FALKENHAYN",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "AUSTRIA_HUNGARY_REINFORCEMENTS_AH_7",
+    "name": "Austria-Hungary Reinforcements (AH 7)",
+    "side": "CP",
+    "number": 14,
+    "commitment": "MOBILIZATION",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "AH",
+    "reinforcement_units": [
+      "AH 7",
+      "AHc",
+      "AHc"
+    ]
+  },
+  {
+    "id": "CHLORINE_GAS",
+    "name": "Chlorine Gas",
+    "side": "CP",
+    "number": 15,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "CHLORINE_GAS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "LIMAN_VON_SANDERS",
+    "name": "Liman Von Sanders",
+    "side": "CP",
+    "number": 16,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "LIMAN_VON_SANDERS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "MATA_HARI",
+    "name": "Mata Hari",
+    "side": "CP",
+    "number": 17,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": "MATA_HARI",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "FORTIFIED_MACHINE_GUNS",
+    "name": "Fortified Machine Guns",
+    "side": "CP",
+    "number": 18,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "FORTIFIED_MACHINE_GUNS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "FLAMETHROWERS",
+    "name": "Flamethrowers",
+    "side": "CP",
+    "number": 19,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "FLAMETHROWERS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "AUSTRIA_HUNGARY_REINFORCEMENTS_AH_10",
+    "name": "Austria-Hungary Reinforcements (AH 10)",
+    "side": "CP",
+    "number": 20,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "AH",
+    "reinforcement_units": [
+      "AH 10"
+    ]
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_GE_11",
+    "name": "German Reinforcements (GE 11)",
+    "side": "CP",
+    "number": 21,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GE 11",
+      "GEc"
+    ]
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_GE_12",
+    "name": "German Reinforcements (GE 12)",
+    "side": "CP",
+    "number": 22,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GE 12",
+      "GEc"
+    ]
+  },
+  {
+    "id": "AUSTRIA_HUNGARY_REINFORCEMENTS_AH_11",
+    "name": "Austria-Hungary Reinforcements (AH 11)",
+    "side": "CP",
+    "number": 23,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "AH",
+    "reinforcement_units": [
+      "AH 11"
+    ]
+  },
+  {
+    "id": "LIBYAN_REVOLT_TU_REINFORCEMENTS",
+    "name": "Libyan Revolt (TU Reinforcements)",
+    "side": "CP",
+    "number": 24,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "TU",
+    "reinforcement_units": [
+      "TU SNc"
+    ]
+  },
+  {
+    "id": "HIGH_SEAS_FLEET",
+    "name": "High Seas Fleet",
+    "side": "CP",
+    "number": 25,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "HIGH_SEAS_FLEET",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "PLACE_OF_EXECUTION",
+    "name": "Place of Execution",
+    "side": "CP",
+    "number": 26,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "PLACE_OF_EXECUTION",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ZEPPELIN_RAIDS",
+    "name": "Zeppelin Raids",
+    "side": "CP",
+    "number": 27,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "ZEPPELIN_RAIDS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "TSAR_TAKES_COMMAND",
+    "name": "Tsar Takes Command",
+    "side": "CP",
+    "number": 28,
+    "commitment": "LIMITED",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "TSAR_TAKES_COMMAND",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "11TH_ARMY",
+    "name": "11th Army",
+    "side": "CP",
+    "number": 29,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": "ELEVENTH_ARMY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "ALPENKORPS",
+    "name": "Alpenkorps",
+    "side": "CP",
+    "number": 30,
+    "commitment": "LIMITED",
+    "ops": 2,
+    "sr": 2,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "ALPENKORPS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "KEMAL",
+    "name": "Kemal",
+    "side": "CP",
+    "number": 31,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "KEMAL",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "WAR_IN_AFRICA",
+    "name": "War in Africa",
+    "side": "CP",
+    "number": 32,
+    "commitment": "LIMITED",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "WAR_IN_AFRICA",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "WALTER_RATHENAU",
+    "name": "Walter Rathenau",
+    "side": "CP",
+    "number": 33,
+    "commitment": "LIMITED",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "AH": 3,
+      "BU": 1,
+      "GE": 4,
+      "TU": 2
+    },
+    "combat_card": false,
+    "event_id": "WALTER_RATHENAU",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BULGARIA",
+    "name": "Bulgaria",
+    "side": "CP",
+    "number": 34,
+    "commitment": "LIMITED",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "AH": 3,
+      "GE": 4,
+      "TU": 2
+    },
+    "combat_card": false,
+    "event_id": "BULGARIA_ENTRY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "MUSTARD_GAS",
+    "name": "Mustard Gas",
+    "side": "CP",
+    "number": 35,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": true,
+    "event_id": "MUSTARD_GAS",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "U_BOATS_UNLEASHED",
+    "name": "U-Boats Unleashed",
+    "side": "CP",
+    "number": 36,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": "UBOATS_UNLEASHED",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "HOFFMANN",
+    "name": "Hoffmann",
+    "side": "CP",
+    "number": 37,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": "HOFFMANN",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_2_CORPS_CP_38",
+    "name": "German Reinforcements (2 corps)",
+    "side": "CP",
+    "number": 38,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GEc",
+      "GEc"
+    ]
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_2_CORPS_CP_39",
+    "name": "German Reinforcements (2 corps)",
+    "side": "CP",
+    "number": 39,
+    "commitment": "TOTAL",
+    "ops": 2,
+    "sr": 2,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "GE": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GEc",
+      "GEc"
+    ]
+  },
+  {
+    "id": "AIR_SUPERIORITY_CP",
+    "name": "Air Superiority",
+    "side": "CP",
+    "number": 40,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": false,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "CP_AIR_SUPERIORITY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_GE_14",
+    "name": "German Reinforcements (GE 14)",
+    "side": "CP",
+    "number": 41,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GE 14"
+    ]
+  },
+  {
+    "id": "TURKISH_REINFORCEMENTS_YLD",
+    "name": "Turkish Reinforcements (YLD)",
+    "side": "CP",
+    "number": 42,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "TU",
+    "reinforcement_units": [
+      "TU YLD"
+    ]
+  },
+  {
+    "id": "VON_BELOW",
+    "name": "Von Below",
+    "side": "CP",
+    "number": 43,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "VON_BELOW",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "VON_HUTIER",
+    "name": "Von Hutier",
+    "side": "CP",
+    "number": 44,
+    "commitment": "TOTAL",
+    "ops": 3,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 1,
+      "GE": 2,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "VON_HUTIER",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "TREATY_OF_BREST_LITOVSK",
+    "name": "Treaty of Brest Litovsk",
+    "side": "CP",
+    "number": 45,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "TREATY_OF_BREST_LITOVSK",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "GERMAN_REINFORCEMENTS_GE_17_GE_18",
+    "name": "German Reinforcements (GE 17, GE 18)",
+    "side": "CP",
+    "number": 46,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "GE",
+    "reinforcement_units": [
+      "GE 17",
+      "GE 18"
+    ]
+  },
+  {
+    "id": "FRENCH_MUTINY",
+    "name": "French Mutiny",
+    "side": "CP",
+    "number": 47,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "FRENCH_MUTINY",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "TURKISH_REINFORCEMENTS_AOI",
+    "name": "Turkish Reinforcements (AoI)",
+    "side": "CP",
+    "number": 48,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": null,
+    "reinforcement_nation": "TU",
+    "reinforcement_units": [
+      "TU AoI"
+    ]
+  },
+  {
+    "id": "MICHAEL",
+    "name": "Michael",
+    "side": "CP",
+    "number": 49,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 1,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "MICHAEL",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BLUCHER",
+    "name": "Blucher",
+    "side": "CP",
+    "number": 50,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "BLUCHER",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "PEACE_OFFENSIVE",
+    "name": "Peace Offensive",
+    "side": "CP",
+    "number": 51,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": true,
+    "event_id": "PEACE_OFFENSIVE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "FALL_OF_THE_TSAR",
+    "name": "Fall of the Tsar",
+    "side": "CP",
+    "number": 52,
+    "commitment": "TOTAL",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 3,
+      "BU": 1,
+      "GE": 4,
+      "TU": 2
+    },
+    "combat_card": false,
+    "event_id": "FALL_OF_THE_TSAR",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "BOLSHEVIK_REVOLUTION",
+    "name": "Bolshevik Revolution",
+    "side": "CP",
+    "number": 53,
+    "commitment": "TOTAL",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 3,
+      "BU": 1,
+      "GE": 4,
+      "TU": 2
+    },
+    "combat_card": false,
+    "event_id": "BOLSHEVIK_REVOLUTION",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "H_L_TAKE_COMMAND",
+    "name": "H-L Take Command",
+    "side": "CP",
+    "number": 54,
+    "commitment": "TOTAL",
+    "ops": 5,
+    "sr": 5,
+    "remove": true,
+    "war_status": 2,
+    "rp": {
+      "AH": 3,
+      "BU": 1,
+      "GE": 4,
+      "TU": 2
+    },
+    "combat_card": false,
+    "event_id": "H_L_TAKE_COMMAND",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  },
+  {
+    "id": "LLOYD_GEORGE",
+    "name": "Lloyd George",
+    "side": "CP",
+    "number": 55,
+    "commitment": "TOTAL",
+    "ops": 4,
+    "sr": 4,
+    "remove": true,
+    "war_status": 0,
+    "rp": {
+      "AH": 2,
+      "BU": 1,
+      "GE": 3,
+      "TU": 1
+    },
+    "combat_card": false,
+    "event_id": "LLOYD_GEORGE",
+    "reinforcement_nation": null,
+    "reinforcement_units": []
+  }
+]

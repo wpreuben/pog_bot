@@ -1,0 +1,2423 @@
+[
+  {
+    "a": "AACHEN",
+    "b": "ESSEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ADANA",
+    "b": "ALEPPO",
+    "allowed_nations": null
+  },
+  {
+    "a": "ADANA",
+    "b": "MEF4",
+    "allowed_nations": null
+  },
+  {
+    "a": "ADAPAZARI",
+    "b": "SINOPE",
+    "allowed_nations": null
+  },
+  {
+    "a": "ADRIANOPLE",
+    "b": "CONSTANTINOPLE",
+    "allowed_nations": null
+  },
+  {
+    "a": "ADRIANOPLE",
+    "b": "GALLIPOLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "ADRIANOPLE",
+    "b": "PHILIPPOLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "AHWAZ",
+    "b": "BASRA",
+    "allowed_nations": null
+  },
+  {
+    "a": "AHWAZ",
+    "b": "QURNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ALEPPO",
+    "b": "BEIRUT",
+    "allowed_nations": null
+  },
+  {
+    "a": "ALEPPO",
+    "b": "DAMASCUS",
+    "allowed_nations": null
+  },
+  {
+    "a": "ALEPPO",
+    "b": "URFA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ALEXANDRIA",
+    "b": "LIBYA",
+    "allowed_nations": null
+  },
+  {
+    "a": "AMIENS",
+    "b": "CALAIS",
+    "allowed_nations": null
+  },
+  {
+    "a": "AMIENS",
+    "b": "CAMBRAI",
+    "allowed_nations": null
+  },
+  {
+    "a": "AMMAN",
+    "b": "ARABIA",
+    "allowed_nations": [
+      "ANA"
+    ]
+  },
+  {
+    "a": "AMMAN",
+    "b": "JERUSALEM",
+    "allowed_nations": null
+  },
+  {
+    "a": "ANCONA",
+    "b": "RAVENNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ANKARA",
+    "b": "SAMSUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ANKARA",
+    "b": "SIVAS",
+    "allowed_nations": null
+  },
+  {
+    "a": "AQABA",
+    "b": "BEERSHEBA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ARABIA",
+    "b": "AQABA",
+    "allowed_nations": [
+      "ANA"
+    ]
+  },
+  {
+    "a": "ARABIA",
+    "b": "JERUSALEM",
+    "allowed_nations": [
+      "ANA"
+    ]
+  },
+  {
+    "a": "ARABIA",
+    "b": "MEDINA",
+    "allowed_nations": [
+      "ANA"
+    ]
+  },
+  {
+    "a": "ASIAGO",
+    "b": "MAGGIORE",
+    "allowed_nations": null
+  },
+  {
+    "a": "AUGSBURG",
+    "b": "INNSBRUCK",
+    "allowed_nations": null
+  },
+  {
+    "a": "AUGSBURG",
+    "b": "REGENSBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "AVIGNON",
+    "b": "MARSEILLES",
+    "allowed_nations": null
+  },
+  {
+    "a": "BAGHDAD",
+    "b": "KUT",
+    "allowed_nations": null
+  },
+  {
+    "a": "BAGHDAD",
+    "b": "SAMAWAH",
+    "allowed_nations": null
+  },
+  {
+    "a": "BALIKESIR",
+    "b": "BURSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "BALIKESIR",
+    "b": "IZMIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "BANJA_LUKA",
+    "b": "SARAJEVO",
+    "allowed_nations": null
+  },
+  {
+    "a": "BAR_LE_DUC",
+    "b": "NANCY",
+    "allowed_nations": null
+  },
+  {
+    "a": "BAR_LE_DUC",
+    "b": "VERDUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "BARANOVICHI",
+    "b": "GRODNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "BARLAD",
+    "b": "GALATZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "BARLAD",
+    "b": "KISHINEV",
+    "allowed_nations": null
+  },
+  {
+    "a": "BARLAD",
+    "b": "PLOESTI",
+    "allowed_nations": null
+  },
+  {
+    "a": "BATUM",
+    "b": "KARS",
+    "allowed_nations": null
+  },
+  {
+    "a": "BATUM",
+    "b": "POTI",
+    "allowed_nations": null
+  },
+  {
+    "a": "BEERSHEBA",
+    "b": "GAZA",
+    "allowed_nations": null
+  },
+  {
+    "a": "BEERSHEBA",
+    "b": "JERUSALEM",
+    "allowed_nations": null
+  },
+  {
+    "a": "BEERSHEBA",
+    "b": "SINAI",
+    "allowed_nations": null
+  },
+  {
+    "a": "BEIRUT",
+    "b": "NABLUS",
+    "allowed_nations": null
+  },
+  {
+    "a": "BELAYA_TSERKOV",
+    "b": "UMAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "BELFORT",
+    "b": "MULHOUSE",
+    "allowed_nations": null
+  },
+  {
+    "a": "BELGRADE",
+    "b": "NOVI_SAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "BELGRADE",
+    "b": "TIMISVAR",
+    "allowed_nations": null
+  },
+  {
+    "a": "BERLIN",
+    "b": "COTTBUS",
+    "allowed_nations": null
+  },
+  {
+    "a": "BERLIN",
+    "b": "ROSTOCK",
+    "allowed_nations": null
+  },
+  {
+    "a": "BERLIN",
+    "b": "STETTIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "BIALYSTOK",
+    "b": "BREST_LITOVSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "BITLIS",
+    "b": "DIYARBAKIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "BOLOGNA",
+    "b": "FLORENCE",
+    "allowed_nations": null
+  },
+  {
+    "a": "BOLOGNA",
+    "b": "VENICE",
+    "allowed_nations": null
+  },
+  {
+    "a": "BREMEN",
+    "b": "HAMBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "BREMEN",
+    "b": "HANNOVER",
+    "allowed_nations": null
+  },
+  {
+    "a": "BRESLAU",
+    "b": "LODZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "BRESLAU",
+    "b": "POSEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "BREST_LITOVSK",
+    "b": "KOVEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "BREST_LITOVSK",
+    "b": "LUBLIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "BREST_LITOVSK",
+    "b": "PINSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "BRUN",
+    "b": "OLMUTZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "BRUSSELS",
+    "b": "ANTWERP",
+    "allowed_nations": null
+  },
+  {
+    "a": "BRUSSELS",
+    "b": "LIEGE",
+    "allowed_nations": null
+  },
+  {
+    "a": "BUCHAREST",
+    "b": "PLEVNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "BUCHAREST",
+    "b": "VARNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "BUDAPEST",
+    "b": "MISKOLCZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "BUDAPEST",
+    "b": "PECS",
+    "allowed_nations": null
+  },
+  {
+    "a": "BUDAPEST",
+    "b": "SZEGED",
+    "allowed_nations": null
+  },
+  {
+    "a": "BURGAS",
+    "b": "ADRIANOPLE",
+    "allowed_nations": null
+  },
+  {
+    "a": "BURSA",
+    "b": "ESKIDOR",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAEN",
+    "b": "LE_MANS",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAEN",
+    "b": "ROUEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAIRO",
+    "b": "ALEXANDRIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAIRO",
+    "b": "PORT_SAID",
+    "allowed_nations": null
+  },
+  {
+    "a": "CALAIS",
+    "b": "CAMBRAI",
+    "allowed_nations": null
+  },
+  {
+    "a": "CALAIS",
+    "b": "OSTEND",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAMBRAI",
+    "b": "BRUSSELS",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAMBRAI",
+    "b": "CHATEAU_THIERRY",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAMBRAI",
+    "b": "SEDAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CANA_KALE",
+    "b": "BALIKESIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "CANA_KALE",
+    "b": "MEF2",
+    "allowed_nations": null
+  },
+  {
+    "a": "CARACAL",
+    "b": "BUCHAREST",
+    "allowed_nations": null
+  },
+  {
+    "a": "CARACAL",
+    "b": "PLEVNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "CARTE_DE_ARGES",
+    "b": "CARACAL",
+    "allowed_nations": null
+  },
+  {
+    "a": "CARTE_DE_ARGES",
+    "b": "PLOESTI",
+    "allowed_nations": null
+  },
+  {
+    "a": "CAUCASUS",
+    "b": "GROZNY",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "CAUCASUS",
+    "b": "ODESSA",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "CAUCASUS",
+    "b": "POTI",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "CAUCASUS",
+    "b": "UMAN",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "CETINJE",
+    "b": "TIRANA",
+    "allowed_nations": null
+  },
+  {
+    "a": "CHATEAU_THIERRY",
+    "b": "BAR_LE_DUC",
+    "allowed_nations": null
+  },
+  {
+    "a": "CHATEAU_THIERRY",
+    "b": "MELUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CHATEAU_THIERRY",
+    "b": "SEDAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CHATEAU_THIERRY",
+    "b": "VERDUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CHERBOURG",
+    "b": "CAEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CHERNIGOV",
+    "b": "KIEV",
+    "allowed_nations": null
+  },
+  {
+    "a": "CLUJ",
+    "b": "HERMANNSTADT",
+    "allowed_nations": null
+  },
+  {
+    "a": "CONSTANTA",
+    "b": "VARNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "CONSTANTINOPLE",
+    "b": "ADAPAZARI",
+    "allowed_nations": null
+  },
+  {
+    "a": "CONSTANTINOPLE",
+    "b": "BURSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "CONSTANTINOPLE",
+    "b": "ESKIDOR",
+    "allowed_nations": null
+  },
+  {
+    "a": "COTTBUS",
+    "b": "BRESLAU",
+    "allowed_nations": null
+  },
+  {
+    "a": "COTTBUS",
+    "b": "DRESDEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "COTTBUS",
+    "b": "POSEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CRACOW",
+    "b": "MARTIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "CRACOW",
+    "b": "TARNOW",
+    "allowed_nations": null
+  },
+  {
+    "a": "CZERNOWITZ",
+    "b": "KAMENETS_PODOLSKI",
+    "allowed_nations": null
+  },
+  {
+    "a": "CZESTOCHOWA",
+    "b": "CRACOW",
+    "allowed_nations": null
+  },
+  {
+    "a": "CZESTOCHOWA",
+    "b": "IVANGOROD",
+    "allowed_nations": null
+  },
+  {
+    "a": "DAMASCUS",
+    "b": "AMMAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "DAMASCUS",
+    "b": "NABLUS",
+    "allowed_nations": null
+  },
+  {
+    "a": "DANZIG",
+    "b": "TANNENBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "DEBRECEN",
+    "b": "CLUJ",
+    "allowed_nations": null
+  },
+  {
+    "a": "DEBRECEN",
+    "b": "MISKOLCZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "DIJON",
+    "b": "BAR_LE_DUC",
+    "allowed_nations": null
+  },
+  {
+    "a": "DIJON",
+    "b": "BELFORT",
+    "allowed_nations": null
+  },
+  {
+    "a": "DILMAN",
+    "b": "TABRIZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "DILMAN",
+    "b": "VAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "DIYARBAKIR",
+    "b": "KHARPUT",
+    "allowed_nations": null
+  },
+  {
+    "a": "DIYARBAKIR",
+    "b": "MARDIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "DRESDEN",
+    "b": "PRAGUE",
+    "allowed_nations": null
+  },
+  {
+    "a": "DUBNO",
+    "b": "KAMENETS_PODOLSKI",
+    "allowed_nations": null
+  },
+  {
+    "a": "DUBNO",
+    "b": "TARNOPOL",
+    "allowed_nations": null
+  },
+  {
+    "a": "DVINSK",
+    "b": "MOLDECHNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "DVINSK",
+    "b": "POLOTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "DVINSK",
+    "b": "VILNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ELESKIRT",
+    "b": "ERZERUM",
+    "allowed_nations": null
+  },
+  {
+    "a": "ELESKIRT",
+    "b": "VAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ELIZABETHPOL",
+    "b": "BAKU",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERFURT",
+    "b": "LEIPZIG",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERFURT",
+    "b": "NUREMBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERIVAN",
+    "b": "DILMAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERIVAN",
+    "b": "ELESKIRT",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERZERUM",
+    "b": "DIYARBAKIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERZINGAN",
+    "b": "ERZERUM",
+    "allowed_nations": null
+  },
+  {
+    "a": "ERZINGAN",
+    "b": "KHARPUT",
+    "allowed_nations": null
+  },
+  {
+    "a": "ESKIDOR",
+    "b": "ANKARA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ESKIDOR",
+    "b": "KONYA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ESSEN",
+    "b": "BREMEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ESSEN",
+    "b": "KASSEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "FLORENCE",
+    "b": "RAVENNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "FLORENCE",
+    "b": "VITERBO",
+    "allowed_nations": null
+  },
+  {
+    "a": "FLORINA",
+    "b": "LARISA",
+    "allowed_nations": null
+  },
+  {
+    "a": "FLORINA",
+    "b": "MONASTIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "FLORINA",
+    "b": "SALONIKA",
+    "allowed_nations": null
+  },
+  {
+    "a": "FOGGIA",
+    "b": "PESCARA",
+    "allowed_nations": null
+  },
+  {
+    "a": "FRANKFURT",
+    "b": "KASSEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "FRANKFURT",
+    "b": "MANNHEIM",
+    "allowed_nations": null
+  },
+  {
+    "a": "GALATZ",
+    "b": "BUCHAREST",
+    "allowed_nations": null
+  },
+  {
+    "a": "GALATZ",
+    "b": "CONSTANTA",
+    "allowed_nations": null
+  },
+  {
+    "a": "GALLIPOLI",
+    "b": "CONSTANTINOPLE",
+    "allowed_nations": null
+  },
+  {
+    "a": "GALLIPOLI",
+    "b": "MEF1",
+    "allowed_nations": null
+  },
+  {
+    "a": "GAZA",
+    "b": "SINAI",
+    "allowed_nations": null
+  },
+  {
+    "a": "GENOA",
+    "b": "BOLOGNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "GIRESUN",
+    "b": "TREBIZOND",
+    "allowed_nations": null
+  },
+  {
+    "a": "GOMEL",
+    "b": "CHERNIGOV",
+    "allowed_nations": null
+  },
+  {
+    "a": "GORLICE",
+    "b": "TARNOW",
+    "allowed_nations": null
+  },
+  {
+    "a": "GORLICE",
+    "b": "UZHGOROD",
+    "allowed_nations": null
+  },
+  {
+    "a": "GRAZ",
+    "b": "VIENNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "GRAZ",
+    "b": "ZAGREB",
+    "allowed_nations": null
+  },
+  {
+    "a": "GRENOBLE",
+    "b": "TURIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "GRODNO",
+    "b": "BIALYSTOK",
+    "allowed_nations": null
+  },
+  {
+    "a": "GROZNY",
+    "b": "PETROVSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "GROZNY",
+    "b": "TBILISI",
+    "allowed_nations": null
+  },
+  {
+    "a": "HAMADAN",
+    "b": "KERMANSHAH",
+    "allowed_nations": null
+  },
+  {
+    "a": "HAMADAN",
+    "b": "KHORRAMABAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "HAMBURG",
+    "b": "ROSTOCK",
+    "allowed_nations": null
+  },
+  {
+    "a": "HANNOVER",
+    "b": "BERLIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "HERMANNSTADT",
+    "b": "CARTE_DE_ARGES",
+    "allowed_nations": null
+  },
+  {
+    "a": "HERMANNSTADT",
+    "b": "KRONSTADT",
+    "allowed_nations": null
+  },
+  {
+    "a": "INNSBRUCK",
+    "b": "SPITTAL",
+    "allowed_nations": null
+  },
+  {
+    "a": "INNSBRUCK",
+    "b": "TRENT",
+    "allowed_nations": null
+  },
+  {
+    "a": "INSTERBERG",
+    "b": "GRODNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "INSTERBERG",
+    "b": "KOVNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "INSTERBERG",
+    "b": "MEMEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "ISMAIL",
+    "b": "GALATZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "IVANGOROD",
+    "b": "LUBLIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "IVANGOROD",
+    "b": "WARSAW",
+    "allowed_nations": null
+  },
+  {
+    "a": "IZMIR",
+    "b": "MEF3",
+    "allowed_nations": null
+  },
+  {
+    "a": "JASSY",
+    "b": "BARLAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAMENETS_PODOLSKI",
+    "b": "VINNITSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAMENETS_PODOLSKI",
+    "b": "ZHMERINKA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KARS",
+    "b": "ERZERUM",
+    "allowed_nations": null
+  },
+  {
+    "a": "KARS",
+    "b": "TBILISI",
+    "allowed_nations": null
+  },
+  {
+    "a": "KASSEL",
+    "b": "ERFURT",
+    "allowed_nations": null
+  },
+  {
+    "a": "KASSEL",
+    "b": "HANNOVER",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAVALA",
+    "b": "PHILIPPOLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAVALA",
+    "b": "STRUMITSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAYSERI",
+    "b": "ADANA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAZANLIK",
+    "b": "BURGAS",
+    "allowed_nations": null
+  },
+  {
+    "a": "KAZANLIK",
+    "b": "PHILIPPOLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "KERMANSHAH",
+    "b": "BAGHDAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "KERMANSHAH",
+    "b": "KHORRAMABAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "KHARKOV",
+    "b": "KIEV",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "KHARPUT",
+    "b": "KAYSERI",
+    "allowed_nations": null
+  },
+  {
+    "a": "KHARPUT",
+    "b": "URFA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KHORRAMABAD",
+    "b": "AHWAZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "KIEL",
+    "b": "HAMBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "KIEV",
+    "b": "BELAYA_TSERKOV",
+    "allowed_nations": null
+  },
+  {
+    "a": "KIEV",
+    "b": "ZHITOMIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "KIRKUK",
+    "b": "BAGHDAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "KISHINEV",
+    "b": "ISMAIL",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOBLENZ",
+    "b": "AACHEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOBLENZ",
+    "b": "FRANKFURT",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOLBERG",
+    "b": "DANZIG",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOLIN",
+    "b": "BRUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "KONIGSBERG",
+    "b": "INSTERBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "KONIGSBERG",
+    "b": "TANNENBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "KONYA",
+    "b": "ADANA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOVEL",
+    "b": "LUTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOVEL",
+    "b": "SARNY",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOVNO",
+    "b": "GRODNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "KOVNO",
+    "b": "VILNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "KRONSTADT",
+    "b": "PLOESTI",
+    "allowed_nations": null
+  },
+  {
+    "a": "KUT",
+    "b": "QURNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "LA_ROCHELLE",
+    "b": "BORDEAUX",
+    "allowed_nations": null
+  },
+  {
+    "a": "LA_ROCHELLE",
+    "b": "POITIERS",
+    "allowed_nations": null
+  },
+  {
+    "a": "LARISA",
+    "b": "ATHENS",
+    "allowed_nations": null
+  },
+  {
+    "a": "LE_HAVRE",
+    "b": "ROUEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "LE_MANS",
+    "b": "ORLEANS",
+    "allowed_nations": null
+  },
+  {
+    "a": "LE_MANS",
+    "b": "ROUEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "LEIPZIG",
+    "b": "BERLIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "LEIPZIG",
+    "b": "DRESDEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "LEMBERG",
+    "b": "STANISLAU",
+    "allowed_nations": null
+  },
+  {
+    "a": "LEMBERG",
+    "b": "TARNOPOL",
+    "allowed_nations": null
+  },
+  {
+    "a": "LIBAU",
+    "b": "SZAWLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "LIEGE",
+    "b": "AACHEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "LIEGE",
+    "b": "KOBLENZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "LINZ",
+    "b": "GRAZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "LINZ",
+    "b": "VIENNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "LODZ",
+    "b": "CZESTOCHOWA",
+    "allowed_nations": null
+  },
+  {
+    "a": "LODZ",
+    "b": "WARSAW",
+    "allowed_nations": null
+  },
+  {
+    "a": "LOMZA",
+    "b": "BIALYSTOK",
+    "allowed_nations": null
+  },
+  {
+    "a": "LONDON",
+    "b": "CALAIS",
+    "allowed_nations": [
+      "BR"
+    ]
+  },
+  {
+    "a": "LONDON",
+    "b": "CHERBOURG",
+    "allowed_nations": [
+      "BR"
+    ]
+  },
+  {
+    "a": "LONDON",
+    "b": "LE_HAVRE",
+    "allowed_nations": [
+      "BR"
+    ]
+  },
+  {
+    "a": "LUBLIN",
+    "b": "KOVEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "LUBLIN",
+    "b": "LUTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "LUBLIN",
+    "b": "PRZEMYSL",
+    "allowed_nations": null
+  },
+  {
+    "a": "LUTSK",
+    "b": "DUBNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "LUTSK",
+    "b": "LEMBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "LYON",
+    "b": "AVIGNON",
+    "allowed_nations": null
+  },
+  {
+    "a": "LYON",
+    "b": "GRENOBLE",
+    "allowed_nations": null
+  },
+  {
+    "a": "MAGGIORE",
+    "b": "VILLACH",
+    "allowed_nations": null
+  },
+  {
+    "a": "MANNHEIM",
+    "b": "STUTTGART",
+    "allowed_nations": null
+  },
+  {
+    "a": "MARDIN",
+    "b": "MOSUL",
+    "allowed_nations": null
+  },
+  {
+    "a": "MARSEILLES",
+    "b": "NICE",
+    "allowed_nations": null
+  },
+  {
+    "a": "MARTIN",
+    "b": "BUDAPEST",
+    "allowed_nations": null
+  },
+  {
+    "a": "MARTIN",
+    "b": "GORLICE",
+    "allowed_nations": null
+  },
+  {
+    "a": "MEDINA",
+    "b": "AQABA",
+    "allowed_nations": [
+      "ANA",
+      "TU"
+    ]
+  },
+  {
+    "a": "MELUN",
+    "b": "BAR_LE_DUC",
+    "allowed_nations": null
+  },
+  {
+    "a": "MELUN",
+    "b": "NEVERS",
+    "allowed_nations": null
+  },
+  {
+    "a": "MEMEL",
+    "b": "LIBAU",
+    "allowed_nations": null
+  },
+  {
+    "a": "MEMEL",
+    "b": "SZAWLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "METZ",
+    "b": "KOBLENZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "MILAN",
+    "b": "GENOA",
+    "allowed_nations": null
+  },
+  {
+    "a": "MILAN",
+    "b": "VERONA",
+    "allowed_nations": null
+  },
+  {
+    "a": "MINSK",
+    "b": "BARANOVICHI",
+    "allowed_nations": null
+  },
+  {
+    "a": "MINSK",
+    "b": "SLUTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "MISKOLCZ",
+    "b": "GORLICE",
+    "allowed_nations": null
+  },
+  {
+    "a": "MISKOLCZ",
+    "b": "UZHGOROD",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOGILEV",
+    "b": "GOMEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOGILEV",
+    "b": "SLUTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOLDECHNO",
+    "b": "MINSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOLDECHNO",
+    "b": "POLOTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "MONASTIR",
+    "b": "SKOPJE",
+    "allowed_nations": null
+  },
+  {
+    "a": "MONASTIR",
+    "b": "STRUMITSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOSCOW",
+    "b": "SMOLENSK",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "MOSTAR",
+    "b": "CETINJE",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOSTAR",
+    "b": "SARAJEVO",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOSUL",
+    "b": "KIRKUK",
+    "allowed_nations": null
+  },
+  {
+    "a": "MOZYR",
+    "b": "ZHITOMIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "MULHOUSE",
+    "b": "STRASBOURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "MUNICH",
+    "b": "REGENSBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "MUNKACS",
+    "b": "CLUJ",
+    "allowed_nations": null
+  },
+  {
+    "a": "MUNKACS",
+    "b": "CZERNOWITZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "NABLUS",
+    "b": "GAZA",
+    "allowed_nations": null
+  },
+  {
+    "a": "NABLUS",
+    "b": "JERUSALEM",
+    "allowed_nations": null
+  },
+  {
+    "a": "NANCY",
+    "b": "BELFORT",
+    "allowed_nations": null
+  },
+  {
+    "a": "NANCY",
+    "b": "METZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "NANCY",
+    "b": "STRASBOURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "NANTES",
+    "b": "LA_ROCHELLE",
+    "allowed_nations": null
+  },
+  {
+    "a": "NANTES",
+    "b": "LE_MANS",
+    "allowed_nations": null
+  },
+  {
+    "a": "NANTES",
+    "b": "TOURS",
+    "allowed_nations": null
+  },
+  {
+    "a": "NAPLES",
+    "b": "FOGGIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "NEVERS",
+    "b": "DIJON",
+    "allowed_nations": null
+  },
+  {
+    "a": "NEVERS",
+    "b": "LYON",
+    "allowed_nations": null
+  },
+  {
+    "a": "NICE",
+    "b": "TURIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "NIS",
+    "b": "BELGRADE",
+    "allowed_nations": null
+  },
+  {
+    "a": "NIS",
+    "b": "SOFIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "NIS",
+    "b": "VALJEVO",
+    "allowed_nations": null
+  },
+  {
+    "a": "NOVI_SAD",
+    "b": "SZEGED",
+    "allowed_nations": null
+  },
+  {
+    "a": "NUREMBERG",
+    "b": "AUGSBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "NUREMBERG",
+    "b": "REGENSBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "ODESSA",
+    "b": "ISMAIL",
+    "allowed_nations": null
+  },
+  {
+    "a": "OLMUTZ",
+    "b": "MARTIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "OLMUTZ",
+    "b": "OPPELN",
+    "allowed_nations": null
+  },
+  {
+    "a": "OPOCHKA",
+    "b": "DVINSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "OPOCHKA",
+    "b": "POLOTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "OPPELN",
+    "b": "BRESLAU",
+    "allowed_nations": null
+  },
+  {
+    "a": "OPPELN",
+    "b": "CRACOW",
+    "allowed_nations": null
+  },
+  {
+    "a": "OPPELN",
+    "b": "CZESTOCHOWA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ORLEANS",
+    "b": "MELUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ORLEANS",
+    "b": "PARIS",
+    "allowed_nations": null
+  },
+  {
+    "a": "ORLEANS",
+    "b": "ST_AMAND",
+    "allowed_nations": null
+  },
+  {
+    "a": "ORSHA",
+    "b": "MINSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "ORSHA",
+    "b": "MOGILEV",
+    "allowed_nations": null
+  },
+  {
+    "a": "OSTEND",
+    "b": "ANTWERP",
+    "allowed_nations": null
+  },
+  {
+    "a": "OSTEND",
+    "b": "BRUSSELS",
+    "allowed_nations": null
+  },
+  {
+    "a": "PARIS",
+    "b": "AMIENS",
+    "allowed_nations": null
+  },
+  {
+    "a": "PARIS",
+    "b": "CHATEAU_THIERRY",
+    "allowed_nations": null
+  },
+  {
+    "a": "PARIS",
+    "b": "MELUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "PECS",
+    "b": "NOVI_SAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "PECS",
+    "b": "SZEGED",
+    "allowed_nations": null
+  },
+  {
+    "a": "PECS",
+    "b": "ZAGREB",
+    "allowed_nations": null
+  },
+  {
+    "a": "PESCARA",
+    "b": "ANCONA",
+    "allowed_nations": null
+  },
+  {
+    "a": "PETROGRAD",
+    "b": "VELIKIYE_LUKI",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "PETROVSK",
+    "b": "TBILISI",
+    "allowed_nations": null
+  },
+  {
+    "a": "PINSK",
+    "b": "KOVEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "PINSK",
+    "b": "SARNY",
+    "allowed_nations": null
+  },
+  {
+    "a": "PLEVNA",
+    "b": "KAZANLIK",
+    "allowed_nations": null
+  },
+  {
+    "a": "PLOCK",
+    "b": "LODZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "PLOCK",
+    "b": "LOMZA",
+    "allowed_nations": null
+  },
+  {
+    "a": "PLOCK",
+    "b": "WARSAW",
+    "allowed_nations": null
+  },
+  {
+    "a": "PLOESTI",
+    "b": "BUCHAREST",
+    "allowed_nations": null
+  },
+  {
+    "a": "POITIERS",
+    "b": "TOURS",
+    "allowed_nations": null
+  },
+  {
+    "a": "POLOTSK",
+    "b": "ORSHA",
+    "allowed_nations": null
+  },
+  {
+    "a": "POLOTSK",
+    "b": "VITEBSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "PORT_SAID",
+    "b": "ALEXANDRIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "POSEN",
+    "b": "LODZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "POSEN",
+    "b": "THORN",
+    "allowed_nations": null
+  },
+  {
+    "a": "PRAGUE",
+    "b": "KOLIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "PRZEMYSL",
+    "b": "LEMBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "PRZEMYSL",
+    "b": "STANISLAU",
+    "allowed_nations": null
+  },
+  {
+    "a": "PRZEMYSL",
+    "b": "UZHGOROD",
+    "allowed_nations": null
+  },
+  {
+    "a": "PSKOV",
+    "b": "OPOCHKA",
+    "allowed_nations": null
+  },
+  {
+    "a": "PSKOV",
+    "b": "PETROGRAD",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "QURNA",
+    "b": "AN_NASIRIYA",
+    "allowed_nations": null
+  },
+  {
+    "a": "QURNA",
+    "b": "BASRA",
+    "allowed_nations": null
+  },
+  {
+    "a": "RAVENNA",
+    "b": "VENICE",
+    "allowed_nations": null
+  },
+  {
+    "a": "REGENSBURG",
+    "b": "LINZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "RENNES",
+    "b": "LE_MANS",
+    "allowed_nations": null
+  },
+  {
+    "a": "RENNES",
+    "b": "NANTES",
+    "allowed_nations": null
+  },
+  {
+    "a": "REVAL",
+    "b": "PETROGRAD",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "RIGA",
+    "b": "DVINSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "RIGA",
+    "b": "REVAL",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "RIZE",
+    "b": "BATUM",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROME",
+    "b": "NAPLES",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROSLAVL",
+    "b": "GOMEL",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROSLAVL",
+    "b": "MOGILEV",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROSTOCK",
+    "b": "STETTIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROUEN",
+    "b": "AMIENS",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROUEN",
+    "b": "PARIS",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROVNO",
+    "b": "DUBNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "ROVNO",
+    "b": "LUTSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "SALONIKA",
+    "b": "KAVALA",
+    "allowed_nations": null
+  },
+  {
+    "a": "SALONIKA",
+    "b": "MONASTIR",
+    "allowed_nations": null
+  },
+  {
+    "a": "SALONIKA",
+    "b": "STRUMITSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "SAMAWAH",
+    "b": "AN_NASIRIYA",
+    "allowed_nations": null
+  },
+  {
+    "a": "SAMSUN",
+    "b": "GIRESUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "SAMSUN",
+    "b": "SIVAS",
+    "allowed_nations": null
+  },
+  {
+    "a": "SARAJEVO",
+    "b": "NOVI_SAD",
+    "allowed_nations": null
+  },
+  {
+    "a": "SARNY",
+    "b": "ROVNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "SCHOSSBURG",
+    "b": "CLUJ",
+    "allowed_nations": null
+  },
+  {
+    "a": "SCHOSSBURG",
+    "b": "KRONSTADT",
+    "allowed_nations": null
+  },
+  {
+    "a": "SEDAN",
+    "b": "BRUSSELS",
+    "allowed_nations": null
+  },
+  {
+    "a": "SEDAN",
+    "b": "KOBLENZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "SEDAN",
+    "b": "LIEGE",
+    "allowed_nations": null
+  },
+  {
+    "a": "SEDAN",
+    "b": "METZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "SEDAN",
+    "b": "VERDUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "SINAI",
+    "b": "CAIRO",
+    "allowed_nations": null
+  },
+  {
+    "a": "SINAI",
+    "b": "PORT_SAID",
+    "allowed_nations": null
+  },
+  {
+    "a": "SINOPE",
+    "b": "SAMSUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "SIVAS",
+    "b": "ERZINGAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "SIVAS",
+    "b": "KAYSERI",
+    "allowed_nations": null
+  },
+  {
+    "a": "SKOPJE",
+    "b": "NIS",
+    "allowed_nations": null
+  },
+  {
+    "a": "SKOPJE",
+    "b": "SOFIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "SLUTSK",
+    "b": "BARANOVICHI",
+    "allowed_nations": null
+  },
+  {
+    "a": "SLUTSK",
+    "b": "MOZYR",
+    "allowed_nations": null
+  },
+  {
+    "a": "SMOLENSK",
+    "b": "ORSHA",
+    "allowed_nations": null
+  },
+  {
+    "a": "SMOLENSK",
+    "b": "ROSLAVL",
+    "allowed_nations": null
+  },
+  {
+    "a": "SOFIA",
+    "b": "KAZANLIK",
+    "allowed_nations": null
+  },
+  {
+    "a": "SPITTAL",
+    "b": "MUNICH",
+    "allowed_nations": null
+  },
+  {
+    "a": "SPITTAL",
+    "b": "VILLACH",
+    "allowed_nations": null
+  },
+  {
+    "a": "ST_AMAND",
+    "b": "NEVERS",
+    "allowed_nations": null
+  },
+  {
+    "a": "STANISLAU",
+    "b": "CZERNOWITZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "STANISLAU",
+    "b": "MUNKACS",
+    "allowed_nations": null
+  },
+  {
+    "a": "STANISLAU",
+    "b": "TARNOPOL",
+    "allowed_nations": null
+  },
+  {
+    "a": "STETTIN",
+    "b": "KOLBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "STRASBOURG",
+    "b": "MANNHEIM",
+    "allowed_nations": null
+  },
+  {
+    "a": "STRASBOURG",
+    "b": "METZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "STRUMITSA",
+    "b": "PHILIPPOLI",
+    "allowed_nations": null
+  },
+  {
+    "a": "STRUMITSA",
+    "b": "SOFIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "STUTTGART",
+    "b": "AUGSBURG",
+    "allowed_nations": null
+  },
+  {
+    "a": "SZAWLI",
+    "b": "DVINSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "SZAWLI",
+    "b": "KOVNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "SZAWLI",
+    "b": "RIGA",
+    "allowed_nations": null
+  },
+  {
+    "a": "SZEGED",
+    "b": "DEBRECEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "TABRIZ",
+    "b": "HAMADAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "TANNENBERG",
+    "b": "INSTERBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "TANNENBERG",
+    "b": "LOMZA",
+    "allowed_nations": null
+  },
+  {
+    "a": "TANNENBERG",
+    "b": "PLOCK",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARANTO",
+    "b": "FOGGIA",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARANTO",
+    "b": "VALONA",
+    "allowed_nations": [
+      "IT"
+    ]
+  },
+  {
+    "a": "TARGU_JIU",
+    "b": "CARACAL",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARGU_JIU",
+    "b": "CARTE_DE_ARGES",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARNOPOL",
+    "b": "CZERNOWITZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARNOPOL",
+    "b": "KAMENETS_PODOLSKI",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARNOW",
+    "b": "IVANGOROD",
+    "allowed_nations": null
+  },
+  {
+    "a": "TARNOW",
+    "b": "PRZEMYSL",
+    "allowed_nations": null
+  },
+  {
+    "a": "TBILISI",
+    "b": "ELIZABETHPOL",
+    "allowed_nations": null
+  },
+  {
+    "a": "TBILISI",
+    "b": "ERIVAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "THORN",
+    "b": "DANZIG",
+    "allowed_nations": null
+  },
+  {
+    "a": "THORN",
+    "b": "LODZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "THORN",
+    "b": "PLOCK",
+    "allowed_nations": null
+  },
+  {
+    "a": "THORN",
+    "b": "TANNENBERG",
+    "allowed_nations": null
+  },
+  {
+    "a": "TIMISVAR",
+    "b": "SZEGED",
+    "allowed_nations": null
+  },
+  {
+    "a": "TIMISVAR",
+    "b": "TARGU_JIU",
+    "allowed_nations": null
+  },
+  {
+    "a": "TIRANA",
+    "b": "SKOPJE",
+    "allowed_nations": null
+  },
+  {
+    "a": "TIRANA",
+    "b": "VALONA",
+    "allowed_nations": null
+  },
+  {
+    "a": "TOURS",
+    "b": "LE_MANS",
+    "allowed_nations": null
+  },
+  {
+    "a": "TOURS",
+    "b": "ORLEANS",
+    "allowed_nations": null
+  },
+  {
+    "a": "TOURS",
+    "b": "ST_AMAND",
+    "allowed_nations": null
+  },
+  {
+    "a": "TREBIZOND",
+    "b": "ERZINGAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "TREBIZOND",
+    "b": "RIZE",
+    "allowed_nations": null
+  },
+  {
+    "a": "TRENT",
+    "b": "ASIAGO",
+    "allowed_nations": null
+  },
+  {
+    "a": "TRENT",
+    "b": "VERONA",
+    "allowed_nations": null
+  },
+  {
+    "a": "TRIESTE",
+    "b": "ZAGREB",
+    "allowed_nations": null
+  },
+  {
+    "a": "TURIN",
+    "b": "GENOA",
+    "allowed_nations": null
+  },
+  {
+    "a": "TURIN",
+    "b": "MILAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "UDINE",
+    "b": "MAGGIORE",
+    "allowed_nations": null
+  },
+  {
+    "a": "UDINE",
+    "b": "TRIESTE",
+    "allowed_nations": null
+  },
+  {
+    "a": "UMAN",
+    "b": "ODESSA",
+    "allowed_nations": null
+  },
+  {
+    "a": "URFA",
+    "b": "MARDIN",
+    "allowed_nations": null
+  },
+  {
+    "a": "UZHGOROD",
+    "b": "MUNKACS",
+    "allowed_nations": null
+  },
+  {
+    "a": "UZHGOROD",
+    "b": "STANISLAU",
+    "allowed_nations": null
+  },
+  {
+    "a": "VALJEVO",
+    "b": "BELGRADE",
+    "allowed_nations": null
+  },
+  {
+    "a": "VALJEVO",
+    "b": "SARAJEVO",
+    "allowed_nations": null
+  },
+  {
+    "a": "VALONA",
+    "b": "FLORINA",
+    "allowed_nations": null
+  },
+  {
+    "a": "VAN",
+    "b": "BITLIS",
+    "allowed_nations": null
+  },
+  {
+    "a": "VARNA",
+    "b": "BURGAS",
+    "allowed_nations": null
+  },
+  {
+    "a": "VARNA",
+    "b": "KAZANLIK",
+    "allowed_nations": null
+  },
+  {
+    "a": "VARNA",
+    "b": "PLEVNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "VELIKIYE_LUKI",
+    "b": "MOSCOW",
+    "allowed_nations": [
+      "RU"
+    ]
+  },
+  {
+    "a": "VELIKIYE_LUKI",
+    "b": "OPOCHKA",
+    "allowed_nations": null
+  },
+  {
+    "a": "VELIKIYE_LUKI",
+    "b": "VITEBSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "VENICE",
+    "b": "ASIAGO",
+    "allowed_nations": null
+  },
+  {
+    "a": "VENICE",
+    "b": "UDINE",
+    "allowed_nations": null
+  },
+  {
+    "a": "VERDUN",
+    "b": "METZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "VERDUN",
+    "b": "NANCY",
+    "allowed_nations": null
+  },
+  {
+    "a": "VERONA",
+    "b": "BOLOGNA",
+    "allowed_nations": null
+  },
+  {
+    "a": "VERONA",
+    "b": "VENICE",
+    "allowed_nations": null
+  },
+  {
+    "a": "VIENNA",
+    "b": "BRUN",
+    "allowed_nations": null
+  },
+  {
+    "a": "VIENNA",
+    "b": "BUDAPEST",
+    "allowed_nations": null
+  },
+  {
+    "a": "VILLACH",
+    "b": "GRAZ",
+    "allowed_nations": null
+  },
+  {
+    "a": "VILLACH",
+    "b": "TRIESTE",
+    "allowed_nations": null
+  },
+  {
+    "a": "VILNA",
+    "b": "GRODNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "VILNA",
+    "b": "MOLDECHNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "VINNITSA",
+    "b": "BELAYA_TSERKOV",
+    "allowed_nations": null
+  },
+  {
+    "a": "VINNITSA",
+    "b": "UMAN",
+    "allowed_nations": null
+  },
+  {
+    "a": "VINNITSA",
+    "b": "ZHMERINKA",
+    "allowed_nations": null
+  },
+  {
+    "a": "VITEBSK",
+    "b": "ORSHA",
+    "allowed_nations": null
+  },
+  {
+    "a": "VITEBSK",
+    "b": "SMOLENSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "VITERBO",
+    "b": "ROME",
+    "allowed_nations": null
+  },
+  {
+    "a": "WARSAW",
+    "b": "BREST_LITOVSK",
+    "allowed_nations": null
+  },
+  {
+    "a": "WARSAW",
+    "b": "LOMZA",
+    "allowed_nations": null
+  },
+  {
+    "a": "WILHELMSHAVEN",
+    "b": "BREMEN",
+    "allowed_nations": null
+  },
+  {
+    "a": "ZAGREB",
+    "b": "BANJA_LUKA",
+    "allowed_nations": null
+  },
+  {
+    "a": "ZHITOMIR",
+    "b": "BELAYA_TSERKOV",
+    "allowed_nations": null
+  },
+  {
+    "a": "ZHITOMIR",
+    "b": "DUBNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "ZHITOMIR",
+    "b": "ROVNO",
+    "allowed_nations": null
+  },
+  {
+    "a": "ZHMERINKA",
+    "b": "JASSY",
+    "allowed_nations": null
+  },
+  {
+    "a": "ZHMERINKA",
+    "b": "KISHINEV",
+    "allowed_nations": null
+  }
+]

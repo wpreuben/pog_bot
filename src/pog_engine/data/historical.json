@@ -1,0 +1,626 @@
+{
+  "scenario": "HISTORICAL",
+  "turn": 1,
+  "vp": 10,
+  "hand_size": 8,
+  "placements": [
+    {
+      "unit_id": "GE_1_ARMY_1",
+      "space_id": "AACHEN",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_2_ARMY_1",
+      "space_id": "KOBLENZ",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_3_ARMY_1",
+      "space_id": "KOBLENZ",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_4_ARMY_1",
+      "space_id": "METZ",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_5_ARMY_1",
+      "space_id": "METZ",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_6_ARMY_1",
+      "space_id": "STRASBOURG",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_7_ARMY_1",
+      "space_id": "MULHOUSE",
+      "reduced": true
+    },
+    {
+      "unit_id": "GEC_CORPS_1",
+      "space_id": "BREMEN",
+      "reduced": true
+    },
+    {
+      "unit_id": "FR_1_ARMY_1",
+      "space_id": "NANCY",
+      "reduced": false
+    },
+    {
+      "unit_id": "FR_2_ARMY_1",
+      "space_id": "NANCY",
+      "reduced": false
+    },
+    {
+      "unit_id": "FR_3_ARMY_1",
+      "space_id": "VERDUN",
+      "reduced": false
+    },
+    {
+      "unit_id": "FR_4_ARMY_1",
+      "space_id": "VERDUN",
+      "reduced": false
+    },
+    {
+      "unit_id": "FR_5_ARMY_1",
+      "space_id": "SEDAN",
+      "reduced": false
+    },
+    {
+      "unit_id": "FR_6_ARMY_1",
+      "space_id": "PARIS",
+      "reduced": true
+    },
+    {
+      "unit_id": "FR_9_ARMY_1",
+      "space_id": "BAR_LE_DUC",
+      "reduced": true
+    },
+    {
+      "unit_id": "FRC_CORPS_1",
+      "space_id": "BELFORT",
+      "reduced": false
+    },
+    {
+      "unit_id": "FRC_CORPS_2",
+      "space_id": "BELFORT",
+      "reduced": false
+    },
+    {
+      "unit_id": "FRC_CORPS_3",
+      "space_id": "GRENOBLE",
+      "reduced": false
+    },
+    {
+      "unit_id": "BE_1_ARMY_1",
+      "space_id": "ANTWERP",
+      "reduced": false
+    },
+    {
+      "unit_id": "BR_BEF_ARMY_1",
+      "space_id": "BRUSSELS",
+      "reduced": false
+    },
+    {
+      "unit_id": "GE_8_ARMY_1",
+      "space_id": "INSTERBERG",
+      "reduced": false
+    },
+    {
+      "unit_id": "GEC_CORPS_2",
+      "space_id": "INSTERBERG",
+      "reduced": false
+    },
+    {
+      "unit_id": "GEC_CORPS_3",
+      "space_id": "OPPELN",
+      "reduced": true
+    },
+    {
+      "unit_id": "AHC_CORPS_1",
+      "space_id": "CRACOW",
+      "reduced": false
+    },
+    {
+      "unit_id": "AH_1_ARMY_1",
+      "space_id": "TARNOW",
+      "reduced": false
+    },
+    {
+      "unit_id": "AH_4_ARMY_1",
+      "space_id": "PRZEMYSL",
+      "reduced": false
+    },
+    {
+      "unit_id": "AHC_CORPS_2",
+      "space_id": "STANISLAU",
+      "reduced": false
+    },
+    {
+      "unit_id": "AH_2_ARMY_1",
+      "space_id": "MUNKACS",
+      "reduced": true
+    },
+    {
+      "unit_id": "AH_3_ARMY_1",
+      "space_id": "TARNOPOL",
+      "reduced": false
+    },
+    {
+      "unit_id": "AHC_CORPS_3",
+      "space_id": "CZERNOWITZ",
+      "reduced": false
+    },
+    {
+      "unit_id": "AHC_CORPS_4",
+      "space_id": "TIMISVAR",
+      "reduced": false
+    },
+    {
+      "unit_id": "AHC_CORPS_5",
+      "space_id": "VILLACH",
+      "reduced": false
+    },
+    {
+      "unit_id": "AH_6_ARMY_1",
+      "space_id": "SARAJEVO",
+      "reduced": false
+    },
+    {
+      "unit_id": "AH_5_ARMY_1",
+      "space_id": "NOVI_SAD",
+      "reduced": false
+    },
+    {
+      "unit_id": "MNC_CORPS_1",
+      "space_id": "CETINJE",
+      "reduced": false
+    },
+    {
+      "unit_id": "SB_2_ARMY_1",
+      "space_id": "VALJEVO",
+      "reduced": false
+    },
+    {
+      "unit_id": "SB_1_ARMY_1",
+      "space_id": "BELGRADE",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_1",
+      "space_id": "ODESSA",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_2",
+      "space_id": "LUTSK",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_3",
+      "space_id": "SZAWLI",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_4",
+      "space_id": "RIGA",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_5",
+      "space_id": "GRODNO",
+      "reduced": false
+    },
+    {
+      "unit_id": "RU_1_ARMY_1",
+      "space_id": "KOVNO",
+      "reduced": false
+    },
+    {
+      "unit_id": "RU_2_ARMY_1",
+      "space_id": "LOMZA",
+      "reduced": false
+    },
+    {
+      "unit_id": "RU_4_ARMY_1",
+      "space_id": "IVANGOROD",
+      "reduced": false
+    },
+    {
+      "unit_id": "RU_5_ARMY_1",
+      "space_id": "LUBLIN",
+      "reduced": false
+    },
+    {
+      "unit_id": "RU_3_ARMY_1",
+      "space_id": "DUBNO",
+      "reduced": false
+    },
+    {
+      "unit_id": "RU_8_ARMY_1",
+      "space_id": "KAMENETS_PODOLSKI",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_6",
+      "space_id": "KARS",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_7",
+      "space_id": "ERIVAN",
+      "reduced": false
+    },
+    {
+      "unit_id": "RUC_CORPS_8",
+      "space_id": "BATUM",
+      "reduced": false
+    },
+    {
+      "unit_id": "BRC_CORPS_1",
+      "space_id": "BASRA",
+      "reduced": true
+    },
+    {
+      "unit_id": "BRC_CORPS_2",
+      "space_id": "CAIRO",
+      "reduced": true
+    },
+    {
+      "unit_id": "BRC_CORPS_3",
+      "space_id": "PORT_SAID",
+      "reduced": true
+    },
+    {
+      "unit_id": "BR_BEFC_CORPS_1",
+      "space_id": "AP_RESERVE_BOX",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_1",
+      "space_id": "CONSTANTINOPLE",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_2",
+      "space_id": "BALIKESIR",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_3",
+      "space_id": "GALLIPOLI",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_4",
+      "space_id": "ANKARA",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_5",
+      "space_id": "ERZERUM",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_6",
+      "space_id": "RIZE",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_7",
+      "space_id": "VAN",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_8",
+      "space_id": "ADANA",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_9",
+      "space_id": "MOSUL",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_10",
+      "space_id": "DAMASCUS",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_11",
+      "space_id": "GAZA",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_12",
+      "space_id": "MEDINA",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_13",
+      "space_id": "BAGHDAD",
+      "reduced": false
+    },
+    {
+      "unit_id": "TUC_CORPS_14",
+      "space_id": "ADRIANOPLE",
+      "reduced": false
+    },
+    {
+      "unit_id": "ITC_CORPS_1",
+      "space_id": "ROME",
+      "reduced": false
+    },
+    {
+      "unit_id": "ITC_CORPS_2",
+      "space_id": "TURIN",
+      "reduced": false
+    },
+    {
+      "unit_id": "ITC_CORPS_3",
+      "space_id": "TARANTO",
+      "reduced": false
+    },
+    {
+      "unit_id": "IT_1_ARMY_1",
+      "space_id": "VERONA",
+      "reduced": true
+    },
+    {
+      "unit_id": "IT_2_ARMY_1",
+      "space_id": "UDINE",
+      "reduced": true
+    },
+    {
+      "unit_id": "IT_3_ARMY_1",
+      "space_id": "MAGGIORE",
+      "reduced": true
+    },
+    {
+      "unit_id": "IT_4_ARMY_1",
+      "space_id": "ASIAGO",
+      "reduced": true
+    },
+    {
+      "unit_id": "BUC_CORPS_1",
+      "space_id": "SOFIA",
+      "reduced": false
+    },
+    {
+      "unit_id": "BUC_CORPS_2",
+      "space_id": "SOFIA",
+      "reduced": false
+    },
+    {
+      "unit_id": "ROC_CORPS_1",
+      "space_id": "BUCHAREST",
+      "reduced": false
+    },
+    {
+      "unit_id": "ROC_CORPS_2",
+      "space_id": "BUCHAREST",
+      "reduced": false
+    }
+  ],
+  "reserve_corps": [
+    {
+      "nation": "IT",
+      "unit_ids": [
+        "ITC_CORPS_4",
+        "ITC_CORPS_5",
+        "ITC_CORPS_6",
+        "ITC_CORPS_7"
+      ],
+      "space_id": "AP_RESERVE_BOX"
+    },
+    {
+      "nation": "FR",
+      "unit_ids": [
+        "FRC_CORPS_4",
+        "FRC_CORPS_5",
+        "FRC_CORPS_6",
+        "FRC_CORPS_7",
+        "FRC_CORPS_8",
+        "FRC_CORPS_9",
+        "FRC_CORPS_10"
+      ],
+      "space_id": "AP_RESERVE_BOX"
+    },
+    {
+      "nation": "BR",
+      "unit_ids": [
+        "BRC_CORPS_4"
+      ],
+      "space_id": "AP_RESERVE_BOX"
+    },
+    {
+      "nation": "RU",
+      "unit_ids": [
+        "RUC_CORPS_9",
+        "RUC_CORPS_10",
+        "RUC_CORPS_11",
+        "RUC_CORPS_12",
+        "RUC_CORPS_13"
+      ],
+      "space_id": "AP_RESERVE_BOX"
+    },
+    {
+      "nation": "BE",
+      "unit_ids": [
+        "BEC_CORPS_1"
+      ],
+      "space_id": "AP_RESERVE_BOX"
+    },
+    {
+      "nation": "SB",
+      "unit_ids": [
+        "SBC_CORPS_1",
+        "SBC_CORPS_2"
+      ],
+      "space_id": "AP_RESERVE_BOX"
+    },
+    {
+      "nation": "AH",
+      "unit_ids": [
+        "AHC_CORPS_6",
+        "AHC_CORPS_7",
+        "AHC_CORPS_8",
+        "AHC_CORPS_9"
+      ],
+      "space_id": "CP_RESERVE_BOX"
+    },
+    {
+      "nation": "GE",
+      "unit_ids": [
+        "GEC_CORPS_4",
+        "GEC_CORPS_5",
+        "GEC_CORPS_6",
+        "GEC_CORPS_7",
+        "GEC_CORPS_8",
+        "GEC_CORPS_9",
+        "GEC_CORPS_10",
+        "GEC_CORPS_11"
+      ],
+      "space_id": "CP_RESERVE_BOX"
+    }
+  ],
+  "trenches": [
+    {
+      "space_id": "STRASBOURG",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "MULHOUSE",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "METZ",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "TRENT",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "TRIESTE",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "VILLACH",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "CRACOW",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "KONIGSBERG",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "GIRESUN",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "GAZA",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "BAGHDAD",
+      "level": 1,
+      "side": "CP"
+    },
+    {
+      "space_id": "VERONA",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "ASIAGO",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "MAGGIORE",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "UDINE",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "VERDUN",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "NANCY",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "PARIS",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "BELFORT",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "ODESSA",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "RIGA",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "PORT_SAID",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "CAIRO",
+      "level": 1,
+      "side": "AP"
+    },
+    {
+      "space_id": "BASRA",
+      "level": 1,
+      "side": "AP"
+    }
+  ],
+  "vp_excluded": [
+    "AHWAZ",
+    "VENICE",
+    "MINSK",
+    "JERUSALEM",
+    "KHARPUT"
+  ],
+  "vp_included": [
+    "KOVNO",
+    "SEDAN",
+    "AMIENS",
+    "KOBLENZ",
+    "AACHEN"
+  ]
+}
