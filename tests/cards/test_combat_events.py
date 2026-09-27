@@ -358,6 +358,31 @@ def test_failed_second_retreat_step_keeps_control_of_first_destination():
     assert state["spaces"]["TIMISVAR"]["control"] == "AP"
 
 
+@pytest.mark.parametrize("unit_id,placed_outside,can_enter", [
+    ("RU_3_ARMY_1", False, False),
+    ("RU_CAU_ARMY_1", False, True),
+    ("RU_CAU_ARMY_1", True, False),
+    ("RU_CAVC_CORPS_1", False, False),
+    ("RUC_CORPS_2", False, True),
+])
+def test_caucasus_retreat_obeys_near_east_unit_restrictions(unit_id, placed_outside, can_enter):
+    state = combat_state(defender_space="ODESSA", defender_ids=(unit_id,))
+    state["units"][unit_id]["location"] = "CAUCASUS"
+    state["units"]["GE_2_ARMY_1"]["location"] = "UMAN"
+    if placed_outside:
+        state["flags"]["ne_armies_placed_outside_neareast"] = [unit_id]
+    context = state["combat_context"]
+    context.update(stage="RETREAT", retreat_total=2, retreat_remaining=1,
+                   retreat_progress={unit_id: {
+                       "current": "CAUCASUS", "remaining": 1, "path": ["CAUCASUS"]}})
+    state["decision"] = {"kind": "COMBAT", "actor": "AP",
+                         "options": legal_combat_actions(state)}
+
+    actions = generate_legal_actions(state)
+    assert ({"type": "RETREAT_TO", "actor": "AP", "to": "GROZNY"} in actions) is can_enter
+    assert ({"type": "NO_RETREAT_ROUTE", "actor": "AP"} in actions) is not can_enter
+
+
 def test_retained_combat_card_can_be_used_once_per_round():
     state = combat_state(attacker="CP", defender_ids=("RU_1_ARMY_1",))
     state["players"]["CP"]["in_play"] = ["VON_FRANCOIS"]

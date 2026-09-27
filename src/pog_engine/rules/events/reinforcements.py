@@ -147,6 +147,13 @@ class ReinforcementHandler:
             state["units"][unit_id]["location"] = place
             state["units"][unit_id]["reduced"] = False
             state["reinforcements"]["pending"].pop(0)
+            definition = load_data().units[unit_id]
+            if (definition["type"] == "ARMY" and definition["near_east"]
+                    and load_data().spaces[place]["map"] != "neareast"
+                    and not place.startswith("MEF") and place != "SALONIKA"):
+                placed_outside = state["flags"].setdefault("ne_armies_placed_outside_neareast", [])
+                if unit_id not in placed_outside:
+                    placed_outside.append(unit_id)
             if place.startswith("MEF"):
                 state["flags"]["mef_beachhead"] = place
                 state["flags"]["mef_beachhead_captured"] = False

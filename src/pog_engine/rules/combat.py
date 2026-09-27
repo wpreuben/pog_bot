@@ -362,6 +362,14 @@ def _retreat_destinations(state: FullGameState, uid: str, progress: dict) -> lis
     for place in neighbors:
         if place == context["defender_space"] or data.spaces[place]["kind"] != "BOARD":
             continue
+        if data.spaces[place]["map"] == "neareast":
+            definition = data.units[uid]
+            if (definition["type"] == "ARMY"
+                    and (not definition["near_east"]
+                         or uid in state["flags"].get("ne_armies_placed_outside_neareast", []))):
+                continue
+            if definition["name"] == "RU CAVc":
+                continue
         if not state["war_nations"].get(data.spaces[place]["nation"], True):
             continue
         if any(unit["location"] == place and data.units[uid]["side"] == enemy for uid, unit in state["units"].items()):

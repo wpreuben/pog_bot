@@ -60,6 +60,38 @@ def test_event_opens_placement_window_and_places_army_and_corps():
     assert state["units"][reserve["unit_id"]]["location"] == "AP_RESERVE_BOX"
 
 
+def test_near_east_army_placed_in_europe_cannot_later_enter_near_east():
+    state = action_state("YUDENITCH_RU_REINFORCEMENTS")
+    state = apply_action(state, {"type": "PLAY_CARD", "actor": "AP",
+                                 "card_id": "YUDENITCH_RU_REINFORCEMENTS", "mode": "EVENT"}).state
+    placement = {"type": "PLACE_REINFORCEMENT", "actor": "AP",
+                 "unit_id": "RU_CAU_ARMY_1", "to": "PETROGRAD"}
+    assert placement in generate_legal_actions(state)
+    state = apply_action(state, placement).state
+
+    assert "RU_CAU_ARMY_1" in state["flags"].get("ne_armies_placed_outside_neareast", [])
+
+
+@pytest.mark.parametrize("card_id,unit_id,place", [
+    ("ARMY_OF_THE_ORIENT_FR_REINFORCEMENTS", "FR_ORIENT_ARMY_1", "SALONIKA"),
+    ("MEF_BR_REINFORCEMENTS", "BR_MEF_ARMY_1", "MEF1"),
+])
+def test_near_east_army_special_start_does_not_mark_it_as_placed_outside(card_id, unit_id, place):
+    state = action_state(card_id)
+    state["war_nations"]["TU"] = True
+    if place == "SALONIKA":
+        state["events"]["SALONIKA"] = 1
+    state["decision"]["options"] = legal_card_actions(state, "AP")
+    state = apply_action(state, {"type": "PLAY_CARD", "actor": "AP",
+                                 "card_id": card_id, "mode": "EVENT"}).state
+    placement = {"type": "PLACE_REINFORCEMENT", "actor": "AP", "unit_id": unit_id,
+                 "to": place}
+    assert placement in generate_legal_actions(state)
+    state = apply_action(state, placement).state
+
+    assert unit_id not in state["flags"].get("ne_armies_placed_outside_neareast", [])
+
+
 def test_second_reinforcement_for_same_nation_is_disallowed_this_turn():
     state = action_state("BRITISH_REINFORCEMENTS_BR_1")
     state["flags"]["reinforced_this_turn"] = {"BR": 2}
