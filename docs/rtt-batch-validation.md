@@ -30,7 +30,7 @@ UV_CACHE_DIR=.uv-cache uv run python -m pog_engine.rtt_replay.batch \
 
 ## 초기 입력 점검
 
-2026-09-27에 총 3,687개를 검사했다. 결과는 다음과 같다.
+2026-09-27에 총 3,687개를 검사했다. **3,687개 모두 JSON으로 정상 파싱됐다.** 아래의 `verified`는 파일 정상 여부가 아니라 현재 RTT 참조 코드와 Python 엔진을 모두 거쳐 최종 상태까지 일치한 게임 수다.
 
 | 상태 | 게임 수 |
 | --- | ---: |
@@ -41,6 +41,8 @@ UV_CACHE_DIR=.uv-cache uv run python -m pog_engine.rtt_replay.batch \
 | `duplicate` | 4 |
 | `incomplete` | 3 |
 
-`unsupported`는 `.timeout` 종료 100개와 Valiant 옵션 1개다. `error`의 대부분은 RTT 참조 엔진이 기록된 `done`(455개)·`card`(314개) 행동을 거부한 경우다. `mismatch`의 가장 흔한 첫 행동은 `piece`(804개), `retreat`(715개), `flag_supply_warnings`(234개)다. 이는 현재 RTT 관측기·행동 번역기와 여러 시기의 기보가 맞지 않음을 보여준다. 분류만으로 특정 규칙 오류의 원인을 단정하지 않는다.
+`unsupported`는 `.timeout` 종료 100개와 Valiant 옵션 1개다. `error` 857개는 모두 현재 보유한 RTT 참조 코드가 기보의 행동을 거부한 경우다. 가장 많은 행동은 `done`(455개)과 `card`(314개)다. 예를 들어 166206번 기보는 `flank` 뒤 Allied Powers의 `done`을 기록하지만, 현재 RTT 코드는 그 상태에서 `next`를 요구한다. 이는 JSON 손상이 아니라 **기보와 현재 RTT 코드의 행동 흐름 불일치**다. 과거 RTT 버전 변경이 원인일 가능성이 있지만, 버전별 코드를 확보해 확인하기 전에는 단정하지 않는다.
+
+`mismatch` 2,705개 중 2,565개는 상태 비교 전에 Python 행동 번역·합법 행동 연결에서 멈췄다. 이 중 1,588개는 해당 RTT 행동을 아직 번역하지 않은 경우다. 첫 행동은 `piece`(804개), `retreat`(715개), `flag_supply_warnings`(234개)가 많았다. 따라서 현재의 낮은 `verified` 수치는 주로 **재현 어댑터의 지원 범위**를 나타낸다. 이 수치만으로 원본 기보 3,687개 중 17개만 정상이라고 해석해서는 안 된다.
 
 정규화 파일 17개의 SHA-256은 보고서와 일치했고 누락·초과 파일이 없었다. 현재 검증된 게임만으로 DL policy 학습을 시작하면 표본이 지나치게 적다. 다음 작업은 첫 실패가 많은 행동 형식과 RTT 버전 차이를 조사해 검증 게임 수를 늘리는 것이다. 원본 기보와 전체 파일별 결과는 Git에서 제외된 `replays/validation-report.json`에 둔다.
