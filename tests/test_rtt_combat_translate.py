@@ -173,6 +173,46 @@ def test_attack_unit_order_uses_engine_canonical_legal_action(opening):
     assert result[0]["unit_ids"] == ["GE_1_ARMY_1", "GE_2_ARMY_1", "GE_3_ARMY_1"]
 
 
+def test_cancel_retreat_selects_observed_replacement_corps():
+    from pog_engine.rtt_replay.runner import build_draw_schedule
+
+    fixture = ROOT / "tests/fixtures/replay-173637-retreat-prefix.json"
+    replay = load_replay(fixture)
+    output = subprocess.run(["node", str(ROOT / "tools/rtt_trace.cjs"), str(fixture), str(RULES)],
+                            capture_output=True, text=True, check=True).stdout
+    rows = [json.loads(line) for line in output.splitlines()[:-1]]
+    intents = normalize_steps(replay.actions, rows)
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(replay.seed, rows[0]["after"], ids)
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(rows, ids)
+    for intent in intents[:14]:
+        for action in translate_intent(state, intent, ids):
+            state = apply_action(state, action).state
+    assert translate_intent(state, intents[14], ids) == (
+        {"type": "CANCEL_RETREAT", "actor": "AP", "unit_id": "FR_5_ARMY_1",
+         "replacement_unit_id": ids.lookup("units", 149)},)
+
+
+def test_combat_card_from_in_play_uses_existing_card():
+    from pog_engine.rtt_replay.runner import build_draw_schedule
+
+    fixture = ROOT / "tests/fixtures/replay-176760-combat-card-prefix.json"
+    replay = load_replay(fixture)
+    output = subprocess.run(["node", str(ROOT / "tools/rtt_trace.cjs"), str(fixture), str(RULES)],
+                            capture_output=True, text=True, check=True).stdout
+    rows = [json.loads(line) for line in output.splitlines()[:-1]]
+    intents = normalize_steps(replay.actions, rows)
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(replay.seed, rows[0]["after"], ids)
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(rows, ids)
+    for intent in (item for item in intents if item.start_index < 165):
+        for action in translate_intent(state, intent, ids):
+            state = apply_action(state, action).state
+    card_intent = next(item for item in intents if item.start_index == 165)
+    assert translate_intent(state, card_intent, ids) == (
+        {"type": "USE_COMBAT_CARD", "actor": "AP", "card_id": "PUTNIK"},)
+
+
 def test_wireless_intercepts_during_flank_is_translated(opening):
     rows, intents = opening
     from pog_engine.rtt_replay.runner import build_draw_schedule

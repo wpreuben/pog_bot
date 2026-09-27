@@ -88,6 +88,47 @@ def test_entire_historical_replay_matches_and_records_are_replayable():
     assert replay(report.initial_state, list(report.records)) == report.final_state
 
 
+def test_resignation_during_action_adjudicates_unfinished_action_count():
+    from pog_engine.rtt_replay.runner import run_replay
+
+    fixture = ROOT / "tests/fixtures/replay-251187-resign.json"
+    report = run_replay(fixture, RULES)
+    assert report.ok, report.first_difference
+    assert [(item.path, item.rule) for item in report.adjudicated_differences] == [
+        ("$.round.CP", "RTT_RESIGN_IN_PROGRESS_ACTION")]
+
+
+def test_resignation_round_difference_requires_pre_action_evidence():
+    from pog_engine.rtt_replay.runner import _trace, compare_checkpoint, run_replay
+
+    fixture = ROOT / "tests/fixtures/replay-251187-resign.json"
+    report = run_replay(fixture, RULES)
+    rtt_after = _trace(fixture, RULES)[-2]["after"]
+    adjudications = []
+    difference = compare_checkpoint(rtt_after, report.final_state, 9, ".resign",
+                                    SourceIds.from_data(), adjudications)
+    assert difference is not None
+    assert difference.path == "$.round.CP"
+    assert adjudications == []
+
+
+def test_resignation_round_difference_must_belong_to_active_action_side():
+    from pog_engine.rtt_replay.runner import _trace, compare_checkpoint, run_replay
+
+    fixture = ROOT / "tests/fixtures/replay-251187-resign.json"
+    report = run_replay(fixture, RULES)
+    resign = _trace(fixture, RULES)[-2]
+    before_engine = replay(report.initial_state, list(report.records[:-1]))
+    before_engine["active_side"] = "AP"
+    adjudications = []
+    difference = compare_checkpoint(resign["after"], report.final_state, 9, ".resign",
+                                    SourceIds.from_data(), adjudications,
+                                    resign["before"], before_engine)
+    assert difference is not None
+    assert difference.path == "$.round.CP"
+    assert adjudications == []
+
+
 def test_first_attrition_and_siege_reach_replacement_phase():
     output = subprocess.run(["node", str(ROOT / "tools/rtt_trace.cjs"), str(FIXTURE), str(RULES)],
                             capture_output=True, text=True, check=True).stdout

@@ -50,8 +50,8 @@ def generate_legal_actions(state: FullGameState) -> list[Action]:
     decision = _decision(state)
     if decision is None:
         actions = [deepcopy(_ADVANCE_ACTION)] if state["phase"] in _AUTOMATIC_PHASES else []
-        if state.get("scenario") == "HISTORICAL" and state.get("result") is None and state.get("active_side") in {"AP", "CP"}:
-            actions.append({"type": "RESIGN", "actor": state["active_side"]})
+        if state.get("scenario") == "HISTORICAL" and state.get("result") is None:
+            actions.extend({"type": "RESIGN", "actor": side} for side in ("AP", "CP"))
         return actions
     actions: list[Action] = []
     seen: set[str] = set()
@@ -62,8 +62,8 @@ def generate_legal_actions(state: FullGameState) -> list[Action]:
         if key not in seen:
             actions.append(deepcopy(option))
             seen.add(key)
-    if state.get("scenario") == "HISTORICAL" and state.get("result") is None and state.get("active_side") in {"AP", "CP"}:
-        actions.append({"type": "RESIGN", "actor": state["active_side"]})
+    if state.get("scenario") == "HISTORICAL" and state.get("result") is None:
+        actions.extend({"type": "RESIGN", "actor": side} for side in ("AP", "CP"))
     return actions
 
 

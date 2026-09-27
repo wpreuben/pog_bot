@@ -54,7 +54,9 @@ class ReplayReport:
 
 def compare_checkpoint(rtt_state: dict, engine_state: FullGameState,
                        index: int, action: str, ids: SourceIds,
-                       adjudications: list[AdjudicatedDifference] | None = None) -> ReplayDifference | None:
+                       adjudications: list[AdjudicatedDifference] | None = None,
+                       before_rtt_state: dict | None = None,
+                       before_engine_state: FullGameState | None = None) -> ReplayDifference | None:
     expected = project_rtt(rtt_state, ids)
     actual = project_engine(engine_state)
     if (adjudications is not None and index >= 168
@@ -69,6 +71,28 @@ def compare_checkpoint(rtt_state: dict, engine_state: FullGameState,
         adjudications.append(AdjudicatedDifference(index, "$.result", "CP", "AP",
                                                    "RTT_RESIGN_ROLE"))
         expected["result"] = "AP"
+    if (adjudications is not None and action == ".resign"
+            and engine_state.get("result", {}).get("reason") == "RESIGN"
+            and rtt_state.get("state") == "game_over"
+            and before_rtt_state is not None and before_engine_state is not None
+            and before_engine_state["phase"] in {"OPS", "MOVEMENT", "COMBAT"}
+            and before_rtt_state.get("state") not in {"action_phase", "game_over"}
+            and (expected["turn"], expected["vp"]) == (actual["turn"], actual["vp"])):
+        unfinished = [side for side in ("AP", "CP")
+                      if (expected["round"][side] == actual["round"][side] + 1
+                          and len(before_rtt_state[side.lower()]["actions"]) == expected["round"][side]
+                          and before_engine_state["players"][side]["actions_taken"] == actual["round"][side])]
+        if (len(unfinished) == 1 and before_engine_state["active_side"] == unfinished[0] and all(
+                expected["round"][side] == actual["round"][side]
+                == len(before_rtt_state[side.lower()]["actions"])
+                == before_engine_state["players"][side]["actions_taken"]
+                for side in ("AP", "CP") if side not in unfinished)):
+            side = unfinished[0]
+            path = f"$.round.{side}"
+            adjudications.append(AdjudicatedDifference(
+                index, path, expected["round"][side], actual["round"][side],
+                "RTT_RESIGN_IN_PROGRESS_ACTION"))
+            expected["round"][side] = actual["round"][side]
     difference = first_difference(expected, actual)
     if difference is None:
         return None
@@ -119,6 +143,7 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
     checked_steps = 0
     intents = normalize_steps(source.actions, observations[:-1])
     for intent in intents:
+        before_engine_state = state
         try:
             actions = translate_intent(state, intent, ids)
             for action in actions:
@@ -138,7 +163,7 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
         if boundary:
             checked_steps += 1
             difference = compare_checkpoint(intent.after, state, intent.end_index, intent.kind,
-                                            ids, adjudications)
+                                            ids, adjudications, intent.before, before_engine_state)
             if difference is not None:
                 return ReplayReport(False, intent.end_index + 1, tuple(records), initial, state,
                                     difference, tuple(adjudications), checked_steps)

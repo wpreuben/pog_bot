@@ -33,12 +33,13 @@ def test_first_event_removes_guns_and_passes_action_to_ap():
 def test_card_modes_require_ownership_and_combat_card_event_is_unavailable():
     state = ap_action_state()
     actions = legal_card_actions(state, "AP")
-    assert any(action["mode"] == "OPS" for action in actions)
-    assert any(action["mode"] == "SR" for action in actions)
-    assert any(action["mode"] == "RP" for action in actions)
-    assert all(action["card_id"] in state["players"]["AP"]["hand"] for action in actions)
+    assert any(action.get("mode") == "OPS" for action in actions)
+    assert any(action.get("mode") == "SR" for action in actions)
+    assert any(action.get("mode") == "RP" for action in actions)
+    assert all(action["card_id"] in state["players"]["AP"]["hand"]
+               for action in actions if action["type"] == "PLAY_CARD")
     assert all(not load_data().cards[action["card_id"]]["combat_card"]
-               for action in actions if action["mode"] == "EVENT")
+               for action in actions if action.get("mode") == "EVENT")
 
     before = copy.deepcopy(state)
     with pytest.raises(IllegalActionError):
@@ -60,7 +61,20 @@ def test_rp_card_adds_printed_points_and_cannot_repeat_next_action_round():
 
     result["players"]["AP"]["hand"] = ["PLEVE"]
     result = complete_action(result)
-    assert all(action["mode"] != "RP" for action in legal_card_actions(result, "AP"))
+    assert all(action.get("mode") != "RP" for action in legal_card_actions(result, "AP"))
+
+
+def test_single_operation_spends_one_ops_without_discarding_a_card():
+    state = ap_action_state()
+    before_hand = state["players"]["AP"]["hand"].copy()
+    action = {"type": "SINGLE_OP", "actor": "AP"}
+
+    assert action in generate_legal_actions(state)
+    result = apply_action(state, action).state
+
+    assert result["phase"] == "OPS"
+    assert result["ops_remaining"] == 1
+    assert result["players"]["AP"]["hand"] == before_hand
 
 
 def test_draw_respects_eight_card_limit_and_reshuffles_discard():

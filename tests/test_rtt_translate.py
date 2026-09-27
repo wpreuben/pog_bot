@@ -135,3 +135,141 @@ def test_unmatched_and_ambiguous_candidates_report_index(trace):
         translate_intent(state, Intent(777, 777, "Allied Powers", "space", 31,
                                        {"state": "bogus"}, {"state": "bogus"}, ()),
                          SourceIds.from_data())
+
+
+def test_accept_retreat_is_already_represented_by_combat_stage():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import TranslationError, translate_intent
+
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["combat_context"] = {"stage": "RETREAT"}
+    intent = Intent(15, 15, "Allied Powers", "retreat", None,
+                    {"state": "cancel_retreat"}, {"state": "defender_retreat"}, ())
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+    state["combat_context"]["stage"] = "LOSSES"
+    with pytest.raises(TranslationError, match="index 15.*retreat"):
+        translate_intent(state, intent, SourceIds.from_data())
+
+
+def test_supply_warning_ui_actions_leave_engine_state_unchanged():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+
+    state = create_game(seed=4)
+    ids = SourceIds.from_data()
+    for intent in (
+        Intent(27, 27, "Allied Powers", "flag_supply_warnings", None,
+               {"state": "end_operations"}, {"state": "flag_supply_warnings"}, ()),
+        Intent(28, 28, "Allied Powers", "space", 12,
+               {"state": "flag_supply_warnings"}, {"state": "flag_supply_warnings"}, ()),
+        Intent(29, 29, "Allied Powers", "done", None,
+               {"state": "flag_supply_warnings"}, {"state": "end_operations"}, ()),
+        Intent(30, 30, "Allied Powers", "done", None,
+               {"state": "review_supply_warnings"}, {"state": "action_phase"}, ()),
+    ):
+        assert translate_intent(state, intent, ids) == ()
+
+
+def test_dropping_only_piece_in_move_stack_stops_moving_unit():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.movement import legal_movement_actions
+
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["movement"] = {"unit": "SB_2_ARMY_1", "stack": None, "spent": 1, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+    ids = SourceIds.from_data()
+    piece_id = next(int(key) for key, value in ids.mappings["units"].items()
+                    if value == "SB_2_ARMY_1")
+    intent = Intent(60, 60, "Allied Powers", "piece", piece_id,
+                    {"state": "move_stack", "move": {"pieces": [piece_id]}},
+                    {"state": "choose_move_space", "move": {"pieces": []}}, ())
+    assert translate_intent(state, intent, ids) == (
+        {"type": "STOP_MOVING_UNIT", "actor": "AP"},)
+
+
+def test_landwehr_piece_and_finish_use_engine_actions():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.events.operations import _LANDWEHR
+
+    state = create_game(seed=4)
+    state["phase"] = "LANDWEHR"
+    state["active_side"] = "CP"
+    state["landwehr"] = {"spent": 0}
+    state["units"]["GE_1_ARMY_1"]["reduced"] = True
+    state["decision"] = {"kind": "LANDWEHR", "actor": "CP",
+                         "options": _LANDWEHR.legal_choices(state)}
+    ids = SourceIds.from_data()
+    piece_id = next(int(key) for key, value in ids.mappings["units"].items()
+                    if value == "GE_1_ARMY_1")
+    flip = Intent(47, 47, "Central Powers", "piece", piece_id,
+                  {"state": "landwehr"}, {"state": "landwehr"}, ())
+    assert translate_intent(state, flip, ids) == (
+        {"type": "LANDWEHR_FLIP", "actor": "CP", "unit_id": "GE_1_ARMY_1"},)
+    finish = Intent(48, 48, "Central Powers", "end_action", None,
+                    {"state": "landwehr"}, {"state": "action_phase"}, ())
+    assert translate_intent(state, finish, ids) == ({"type": "END_LANDWEHR", "actor": "CP"},)
+
+
+def test_rtt_combat_selection_controls_do_not_change_engine_state():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["combat_context"] = None
+    no_attack = Intent(100, 100, "Central Powers", "no_attack", None,
+                       {"state": "choose_attackers"}, {"state": "choose_attackers"}, ())
+    assert translate_intent(state, no_attack, SourceIds.from_data()) == ()
+
+    state["combat_context"] = {"stage": "ADVANCE"}
+    stop = Intent(101, 101, "Central Powers", "stop", None,
+                  {"state": "attacker_advance"}, {"state": "attacker_advance"}, ())
+    assert translate_intent(state, stop, SourceIds.from_data()) == ()
+
+
+def test_single_operation_translates_to_cardless_engine_action(trace):
+    from pog_engine.rtt_replay.translate import translate_intent
+
+    state = action_state(trace, "AP")
+    state["decision"]["options"] = legal_card_actions(state, "AP")
+    intent = Intent(204, 204, "Allied Powers", "single_op", None,
+                    {"state": "action_phase"}, {"state": "activate_spaces"}, ())
+    assert translate_intent(state, intent, SourceIds.from_data()) == (
+        {"type": "SINGLE_OP", "actor": "AP"},)
+
+
+def test_replacement_choice_advances_pending_automatic_phases():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+
+    state = create_game(seed=4)
+    state["phase"] = "SIEGE"
+    state["decision"] = None
+    state["players"]["AP"]["replacement_points"]["FR"] = 1
+    state["units"]["FR_5_ARMY_1"]["reduced"] = True
+    ids = SourceIds.from_data()
+    piece_id = next(int(key) for key, value in ids.mappings["units"].items()
+                    if value == "FR_5_ARMY_1")
+    intent = Intent(217, 217, "Allied Powers", "piece", piece_id,
+                    {"state": "replacement_phase", "reduced": [piece_id], "location": []},
+                    {"state": "replacement_phase", "reduced": [], "location": []}, ())
+    assert [action["type"] for action in translate_intent(state, intent, ids)] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "FLIP_UNIT"]
+
+
+def test_resignation_uses_replay_role_even_out_of_turn(trace):
+    from pog_engine.rtt_replay.translate import translate_intent
+
+    state = action_state(trace, "CP")
+    intent = Intent(9, 9, "Allied Powers", ".resign", "Central Powers",
+                    {"state": "action_phase"}, {"state": "game_over"}, ())
+    action, = translate_intent(state, intent, SourceIds.from_data())
+    assert action == {"type": "RESIGN", "actor": "AP"}
+    assert apply_action(state, action).state["result"]["winner"] == "CP"

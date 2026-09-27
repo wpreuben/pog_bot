@@ -37,7 +37,7 @@ def legal_card_actions(state: FullGameState, side: str) -> list[Action]:
         if handler is not None and not card["combat_card"] and handler.can_play(state, card_id):
             modes.append("EVENT")
         actions.extend({"type": "PLAY_CARD", "actor": side, "card_id": card_id, "mode": mode} for mode in modes)
-    return actions
+    return actions + [{"type": "SINGLE_OP", "actor": side}]
 
 
 def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
@@ -95,7 +95,11 @@ def begin_ops(state: FullGameState, points: int) -> FullGameState:
 
 
 def _apply_card(state: FullGameState, action: Action, random_input: object | None) -> None:
-    play_card(state, action["card_id"], action["mode"])
+    if action["type"] == "SINGLE_OP":
+        state["players"][state["active_side"]]["last_action_mode"] = "OPS"
+        begin_ops(state, 1)
+    else:
+        play_card(state, action["card_id"], action["mode"])
 
 
 def draw_to_hand(state: FullGameState, side: str) -> FullGameState:
