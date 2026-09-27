@@ -1,7 +1,7 @@
 """정적 규칙 자료의 로딩과 참조 무결성 검사."""
 
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from importlib.resources import files
 import json
 
@@ -15,19 +15,23 @@ class RuleData:
     historical: dict
     source_ids: dict
 
+    @cached_property
+    def _adjacency(self) -> dict[str, tuple[tuple[str, frozenset[str] | None], ...]]:
+        adjacent: dict[str, list[tuple[str, frozenset[str] | None]]] = {
+            space_id: [] for space_id in self.spaces
+        }
+        for edge in self.edges:
+            allowed = edge["allowed_nations"]
+            nations = frozenset(allowed) if allowed is not None else None
+            adjacent[edge["a"]].append((edge["b"], nations))
+            adjacent[edge["b"]].append((edge["a"], nations))
+        return {space_id: tuple(edges) for space_id, edges in adjacent.items()}
+
     def neighbors(self, space_id: str, nation: str | None = None) -> frozenset[str]:
         if space_id not in self.spaces:
             raise ValueError(f"알 수 없는 공간: {space_id}")
-        result = set()
-        for edge in self.edges:
-            allowed = edge["allowed_nations"]
-            if allowed is not None and (nation is None or nation not in allowed):
-                continue
-            if edge["a"] == space_id:
-                result.add(edge["b"])
-            elif edge["b"] == space_id:
-                result.add(edge["a"])
-        return frozenset(result)
+        return frozenset(other for other, allowed in self._adjacency[space_id]
+                         if allowed is None or nation is not None and nation in allowed)
 
 
 def _read_json(name: str):
