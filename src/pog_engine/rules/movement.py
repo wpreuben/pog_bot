@@ -21,6 +21,9 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str,
     side, nation = unit["side"], unit["nation"]
     if space["kind"] != "BOARD":
         return False
+    if destination in {"MEF1", "MEF2", "MEF3", "MEF4"}:
+        if destination != state["flags"].get("mef_beachhead"):
+            return False
     if state["events"].get("TREATY_OF_BREST_LITOVSK") and side == "AP":
         if nation == "RU" and space["nation"] not in {"RU", "GE", "TU", "AH", "RO"}:
             return False
@@ -29,7 +32,9 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str,
                for other_id, other in state["units"].items()):
             return False
     if space["nation"] in state["war_nations"] and not state["war_nations"][space["nation"]]:
-        return False
+        if not (space["nation"] == "GR" and state["events"].get("SALONIKA")
+                and destination in {"SALONIKA", "KAVALA"}):
+            return False
     if any(other["location"] == destination and data.units[other_id]["side"] != side
            for other_id, other in state["units"].items()):
         return False
@@ -44,11 +49,6 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str,
                                    moving_group or (unit_id,)):
         return False
     if space["fort"] and not state["spaces"][destination]["fort_destroyed"] and space["side"] != side:
-        from .forts import can_besiege, fort_status
-
-        if not fort_status(state, destination).besieged and not can_besiege(
-                state, destination, side, moving_group or (unit_id,)):
-            return False
         if state["turn"] == 1 and nation == "RU" and space["nation"] == "GE":
             return False
     if not _can_end_move(state, destination):
@@ -152,8 +152,10 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
         from .trenches import legal_entrench_actions
 
         actions.extend(legal_entrench_actions(state))
-        if all(sum(unit["location"] == place for unit in state["units"].values()) <= 3
-               for place, static in data.spaces.items() if static["kind"] == "BOARD"):
+        if (all(sum(unit["location"] == place for unit in state["units"].values()) <= 3
+                for place, static in data.spaces.items() if static["kind"] == "BOARD")
+                and all(state["spaces"][place]["fort_besieged"]
+                        for place in context.get("pending_forts", []))):
             actions.append({"type": "END_MOVEMENT", "actor": side})
     return actions
 
@@ -184,6 +186,12 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
             update_siege_status(state, source)
         update_siege_status(state, destination)
         space = state["spaces"][destination]
+        if enemy_fort:
+            pending = context.setdefault("pending_forts", [])
+            if space["fort_besieged"] and destination in pending:
+                pending.remove(destination)
+            elif not space["fort_besieged"] and destination not in pending:
+                pending.append(destination)
         enemy = "AP" if state["active_side"] == "CP" else "CP"
         opposing_trench = space["trenches"][enemy]
         if opposing_trench:
@@ -194,6 +202,8 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
                 if space["control"] != state["active_side"] and space["vp"]:
                     state["vp"] += 1 if state["active_side"] == "CP" else -1
                 space["control"] = state["active_side"]
+                if state["active_side"] == "CP" and destination == state["flags"].get("mef_beachhead"):
+                    state["flags"]["mef_beachhead_captured"] = True
             context["stack"] = list(action["unit_ids"])
             context["spent"] += 1
             if any(context["spent"] >= (load_data().units[uid]["reduced_mf"] if state["units"][uid]["reduced"]
@@ -219,11 +229,17 @@ def apply_movement_action(state: FullGameState, action: Action) -> FullGameState
             and space["control"] == enemy
         )
         if enemy_fort:
-            space["fort_besieged"] = True
+            pending = context.setdefault("pending_forts", [])
+            if space["fort_besieged"] and destination in pending:
+                pending.remove(destination)
+            elif not space["fort_besieged"] and destination not in pending:
+                pending.append(destination)
         else:
             if space["control"] != state["active_side"] and space["vp"]:
                 state["vp"] += 1 if state["active_side"] == "CP" else -1
             space["control"] = state["active_side"]
+            if state["active_side"] == "CP" and destination == state["flags"].get("mef_beachhead"):
+                state["flags"]["mef_beachhead_captured"] = True
         opposing_trench = space["trenches"][enemy]
         if opposing_trench:
             space["trenches"][enemy] = 0

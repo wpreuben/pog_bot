@@ -4,7 +4,7 @@ from collections import Counter
 from pog_engine import apply_action, create_game, generate_legal_actions
 from pog_engine.data import load_data
 from pog_engine.rules.cards import EVENT_HANDLERS, legal_card_actions
-from pog_engine.rules.events.reinforcements import placement_spaces, reinforcement_unit_ids
+from pog_engine.rules.events.reinforcements import ReinforcementHandler, placement_spaces, reinforcement_unit_ids
 
 
 REINFORCEMENTS = [card_id for card_id, card in load_data().cards.items()
@@ -109,3 +109,21 @@ def test_mef_requires_turkey_and_us_reinforcements_obey_uboats():
     assert not EVENT_HANDLERS["USA_REINFORCEMENTS_US_1"].can_play(state, "USA_REINFORCEMENTS_US_1")
     state["events"]["CONVOY"] = 7
     assert EVENT_HANDLERS["USA_REINFORCEMENTS_US_1"].can_play(state, "USA_REINFORCEMENTS_US_1")
+
+
+def test_new_mef_placement_reopens_captured_beachhead():
+    state = create_game(seed=4)
+    state["active_side"] = "AP"
+    state["phase"] = "REINFORCEMENTS"
+    state["war_nations"]["TU"] = True
+    state["flags"]["mef_beachhead_captured"] = True
+    state["reinforcements"] = {"card_id": "MEF_BR_REINFORCEMENTS",
+                               "pending": ["BR_MEF_ARMY_1", "AUSC_CORPS_1"]}
+    handler = ReinforcementHandler()
+    choice = {"type": "PLACE_REINFORCEMENT", "actor": "AP",
+              "unit_id": "BR_MEF_ARMY_1", "to": "MEF4"}
+
+    handler.apply(state, choice)
+
+    assert state["flags"]["mef_beachhead"] == "MEF4"
+    assert state["flags"]["mef_beachhead_captured"] is False

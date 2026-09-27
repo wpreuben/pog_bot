@@ -21,11 +21,14 @@ def movement_state():
     return state
 
 
-def test_army_can_besiege_fort_but_lone_corps_cannot_enter():
+def test_corps_may_enter_fort_temporarily_but_army_completes_siege():
     state = movement_state()
     state["units"]["GEC_CORPS_1"]["location"] = "AACHEN"
     state["decision"]["options"] = legal_movement_actions(state)
-    assert not any(a.get("unit_id") == "GEC_CORPS_1" and a.get("to") == "LIEGE" for a in generate_legal_actions(state))
+    assert any(a.get("unit_id") == "GEC_CORPS_1" and a.get("to") == "LIEGE" for a in generate_legal_actions(state))
+    state = choose(state, "MOVE", unit_id="GEC_CORPS_1", to="LIEGE")
+    assert not fort_status(state, "LIEGE").besieged
+    assert not any(a["type"] == "END_MOVEMENT" for a in generate_legal_actions(state))
     state = choose(state, "MOVE", unit_id="GE_1_ARMY_1", to="LIEGE")
     status = fort_status(state, "LIEGE")
     assert status.besieged
@@ -214,6 +217,30 @@ def test_combat_loss_can_break_siege():
     action = next(a for a in generate_legal_actions(state) if a["type"] == "TAKE_LOSS")
     state = apply_action(state, action).state
     assert not state["spaces"]["LIEGE"]["fort_besieged"]
+
+
+def test_retreating_army_breaks_siege_when_only_one_corps_remains():
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "CP"
+    state["units"]["AH_4_ARMY_1"]["location"] = "STANISLAU"
+    state["units"]["RU_3_ARMY_1"]["location"] = "PRZEMYSL"
+    state["units"]["RUC_CORPS_9"]["location"] = "PRZEMYSL"
+    state["spaces"]["PRZEMYSL"]["fort_besieged"] = True
+    state["combat_context"] = {
+        "attacker": "CP", "defender": "AP", "defender_space": "PRZEMYSL",
+        "attackers": ["AH_4_ARMY_1"], "defending_units": ["RU_3_ARMY_1"],
+        "stage": "RETREAT", "advanced": [], "retreat_total": 1,
+        "retreat_remaining": 1, "retreat_location": "PRZEMYSL",
+        "cards": {"AP": [], "CP": []}, "results": {"CP": 5, "AP": 3},
+    }
+    state["decision"] = {"kind": "COMBAT", "actor": "AP", "options": legal_combat_actions(state)}
+
+    state = choose(state, "RETREAT_TO", to="LEMBERG")
+
+    assert state["units"]["RUC_CORPS_9"]["location"] == "PRZEMYSL"
+    assert state["units"]["RU_3_ARMY_1"]["location"] == "LEMBERG"
+    assert not state["spaces"]["PRZEMYSL"]["fort_besieged"]
 
 
 def test_corps_from_two_activated_spaces_can_enter_fort_together():

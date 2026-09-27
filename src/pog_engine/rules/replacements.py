@@ -127,8 +127,6 @@ def _award_sedan_bonus(state: FullGameState) -> None:
 def begin_replacement_phase(state: FullGameState, side: str) -> FullGameState:
     state["phase"] = f"REPLACEMENT_{side}"
     state["active_side"] = side
-    if side == "CP":
-        _award_sedan_bonus(state)
     points = state["players"][side]["replacement_points"]
     if any(value > 0 for value in points.values()):
         state["decision"] = {"kind": "REPLACEMENT", "actor": side, "options": legal_replacement_actions(state, side)}

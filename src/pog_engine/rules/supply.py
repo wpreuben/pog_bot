@@ -41,7 +41,8 @@ def _port_allowed(state: FullGameState, space_id: str, side: str) -> bool:
 
 
 def _trace(state: FullGameState, origin: str, side: str, nation: str | None,
-           sources_override: tuple[str, ...] | None = None) -> SupplyStatus:
+           sources_override: tuple[str, ...] | None = None,
+           allow_mef_port: bool = False) -> SupplyStatus:
     data = load_data()
     sources = set(sources_override if sources_override is not None else _sources(state, side, nation))
     if data.spaces[origin]["kind"] != "BOARD":
@@ -61,13 +62,19 @@ def _trace(state: FullGameState, origin: str, side: str, nation: str | None,
         if static["kind"] != "BOARD" or place in enemy_spaces:
             return False
         if static["nation"] in state["war_nations"] and not state["war_nations"][static["nation"]]:
-            return False
+            if not (static["nation"] == "GR" and state["events"].get("SALONIKA")
+                    and place in {"SALONIKA", "KAVALA"}):
+                return False
         dynamic = state["spaces"][place]
         return dynamic["control"] == side or (dynamic["fort_besieged"] and place in friendly_spaces)
 
     if not traversable(origin):
         return SupplyStatus(False)
-    ports = [place for place in data.spaces if traversable(place) and _port_allowed(state, place, side)]
+    beachhead = (state["flags"].get("mef_beachhead")
+                 if allow_mef_port and side == "AP"
+                 and not state["flags"].get("mef_beachhead_captured") else None)
+    ports = [place for place in data.spaces if traversable(place)
+             and (_port_allowed(state, place, side) or place == beachhead)]
     use_sea = side == "CP" or nation not in {"RU", "RO", "SB"}
     queue = deque([origin])
     parent: dict[str, str | None] = {origin: None}
@@ -111,7 +118,9 @@ def supply_status(state: FullGameState, unit_id: str, *, location: str | None = 
         return SupplyStatus(True, special="MEDINA_ATTRITION")
     if nation != "TU" and side == "CP" and place == "MEDINA":
         return SupplyStatus(False)
-    return _trace(state, place, side, nation, allowed_sources)
+    mef_eligible = (unit_id == "BR_MEF_ARMY_1"
+                    or definition["type"] == "CORPS" and definition["name"] in {"BRc", "AUSc"})
+    return _trace(state, place, side, nation, allowed_sources, mef_eligible)
 
 
 def supplied_spaces(state: FullGameState, side: str) -> frozenset[str]:
@@ -170,6 +179,12 @@ def resolve_attrition(state: FullGameState) -> FullGameState:
             continue
         enemy = "AP" if side == "CP" else "CP"
         next_state["spaces"][place]["control"] = enemy
+        trenches = next_state["spaces"][place]["trenches"]
+        trench_level = trenches[side]
+        if trench_level:
+            trenches[side] = 0
+            if trench_level == 2:
+                trenches[enemy] = 1
         if state["spaces"][place]["vp"]:
             next_state["vp"] += 1 if enemy == "CP" else -1
     return next_state

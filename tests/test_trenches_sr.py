@@ -39,12 +39,51 @@ def test_one_point_can_sr_corps_but_not_army_and_reserve_to_stack():
     assert state["units"][unit_id]["location"] == "AACHEN"
 
 
+def test_serbian_reserve_corps_can_sr_to_supplied_serbian_stack():
+    state = sr_state(points=1, side="AP")
+    state["units"]["SB_1_ARMY_1"]["location"] = "VALJEVO"
+    state["units"]["SB_2_ARMY_1"]["location"] = "VALJEVO"
+    state["spaces"]["BELGRADE"]["control"] = "CP"
+    state["spaces"]["SALONIKA"]["control"] = "CP"
+    state["decision"]["options"] = legal_sr_actions(state)
+
+    state = choose(state, "SELECT_SR_UNIT", unit_id="SBC_CORPS_2")
+    assert {"type": "SR_TO", "actor": "AP", "to": "VALJEVO"} in generate_legal_actions(state)
+    state = choose(state, "SR_TO", to="VALJEVO")
+    assert state["units"]["SBC_CORPS_2"]["location"] == "VALJEVO"
+
+
+def test_supplied_serbian_corps_can_sr_into_reserve():
+    state = sr_state(points=1, side="AP")
+    state["units"]["SBC_CORPS_2"]["location"] = "VALJEVO"
+    state["spaces"]["BELGRADE"]["control"] = "CP"
+    state["spaces"]["SALONIKA"]["control"] = "CP"
+    state["decision"]["options"] = legal_sr_actions(state)
+
+    state = choose(state, "SELECT_SR_UNIT", unit_id="SBC_CORPS_2")
+    assert {"type": "SR_TO", "actor": "AP", "to": "AP_RESERVE_BOX"} in generate_legal_actions(state)
+
+
 def test_sr_overland_cannot_enter_enemy_control():
     state = sr_state()
     state["spaces"]["KOBLENZ"]["control"] = "AP"
     state["decision"]["options"] = legal_sr_actions(state)
     state = choose(state, "SELECT_SR_UNIT", unit_id="GE_1_ARMY_1")
     assert not any(a.get("to") == "KOBLENZ" for a in generate_legal_actions(state))
+
+
+def test_sr_can_reinforce_besieged_fort_under_enemy_control():
+    state = sr_state(points=1)
+    state["units"]["SB_1_ARMY_1"]["location"] = "NIS"
+    state["units"]["AH_5_ARMY_1"]["location"] = "BELGRADE"
+    state["units"]["AHC_CORPS_4"]["location"] = "NOVI_SAD"
+    state["spaces"]["BELGRADE"]["fort_besieged"] = True
+    state["decision"]["options"] = legal_sr_actions(state)
+
+    state = choose(state, "SELECT_SR_UNIT", unit_id="AHC_CORPS_4")
+    assert {"type": "SR_TO", "actor": "CP", "to": "BELGRADE"} in generate_legal_actions(state)
+    state = choose(state, "SR_TO", to="BELGRADE")
+    assert state["units"]["AHC_CORPS_4"]["location"] == "BELGRADE"
 
 
 def test_corps_can_sr_by_sea_between_friendly_ports():

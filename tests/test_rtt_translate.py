@@ -172,6 +172,38 @@ def test_supply_warning_ui_actions_leave_engine_state_unchanged():
         assert translate_intent(state, intent, ids) == ()
 
 
+def test_final_end_rp_draws_and_starts_next_turn_before_mo_confirmation():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.replacements import begin_replacement_phase
+
+    state = create_game(seed=4)
+    state["turn"] = 1
+    state["action_round"] = 6
+    for side in ("AP", "CP"):
+        state["players"][side]["actions_taken"] = 6
+        state["players"][side]["hand"] = []
+    state["players"]["CP"]["replacement_points"] = {"GE": 1}
+    state = begin_replacement_phase(state, "CP")
+    intent = Intent(191, 191, "Central Powers", "end_rp", None,
+                    {"state": "replacement_phase", "turn": 1},
+                    {"state": "confirm_mo", "turn": 2}, (2, 1))
+
+    actions = translate_intent(state, intent, SourceIds.from_data())
+    assert [action["type"] for action in actions] == [
+        "END_REPLACEMENT", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE",
+        "RECORD_DIE_RESULT", "RECORD_DIE_RESULT",
+    ]
+    assert [action["value"] for action in actions[-2:]] == [3, 2]
+    state = apply_all(state, actions)
+    assert (state["turn"], state["phase"]) == (2, "ACTION")
+    assert (state["players"]["AP"]["actions_taken"],
+            state["players"]["CP"]["actions_taken"]) == (0, 0)
+    next_intent = Intent(192, 192, "Central Powers", "next", None,
+                         {"state": "confirm_mo"}, {"state": "action_phase"}, ())
+    assert translate_intent(state, next_intent, SourceIds.from_data()) == ()
+
+
 def test_dropping_only_piece_in_move_stack_stops_moving_unit():
     from pog_engine import create_game
     from pog_engine.rtt_replay.translate import translate_intent
@@ -271,6 +303,26 @@ def test_single_operation_translates_to_cardless_engine_action(trace):
         {"type": "SINGLE_OP", "actor": "AP"},)
 
 
+def test_skipping_remaining_ops_finishes_empty_action_round():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.ops import legal_ops_actions
+
+    state = create_game(seed=4)
+    state["phase"] = "OPS"
+    state["active_side"] = "CP"
+    state["ops_remaining"] = 1
+    state["decision"] = {"kind": "OPS", "actor": "CP", "options": legal_ops_actions(state)}
+    intent = Intent(227, 227, "Central Powers", "skip", None,
+                    {"state": "activate_spaces", "ops": 1, "activated": {"move": [], "attack": []}},
+                    {"state": "end_operations", "ops": 0, "activated": {"move": [], "attack": []}}, ())
+
+    actions = translate_intent(state, intent, SourceIds.from_data())
+    assert actions == ({"type": "FINISH_ACTIVATION", "actor": "CP"},
+                       {"type": "END_MOVEMENT", "actor": "CP"})
+    assert apply_all(state, actions)["phase"] == "ACTION"
+
+
 def test_replacement_choice_advances_pending_automatic_phases():
     from pog_engine import create_game
     from pog_engine.rtt_replay.translate import translate_intent
@@ -288,6 +340,121 @@ def test_replacement_choice_advances_pending_automatic_phases():
                     {"state": "replacement_phase", "reduced": [], "location": []}, ())
     assert [action["type"] for action in translate_intent(state, intent, ids)] == [
         "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "FLIP_UNIT"]
+
+
+def test_sr_end_action_advances_through_war_status_when_rtt_reaches_replacements():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.sr import legal_sr_actions
+
+    state = create_game(seed=4)
+    state["turn"] = 2
+    state["action_round"] = 6
+    state["phase"] = "SR"
+    state["active_side"] = "AP"
+    state["players"]["CP"]["actions_taken"] = 6
+    state["players"]["AP"]["actions_taken"] = 5
+    state["players"]["AP"]["war_status"] = 4
+    state["sr"] = {"unit": None, "done": []}
+    state["sr_remaining"] = 4
+    state["decision"] = {"kind": "SR", "actor": "AP", "options": legal_sr_actions(state)}
+    intent = Intent(464, 464, "Allied Powers", "end_action", None,
+                    {"state": "choose_sr_unit"}, {"state": "replacement_phase"}, ())
+
+    actions = translate_intent(state, intent, SourceIds.from_data())
+    assert [action["type"] for action in actions] == [
+        "END_SR", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE",
+        "ADVANCE_AUTOMATIC_PHASE",
+    ]
+    result = apply_all(state, actions)
+    assert result["phase"] == "REPLACEMENT_AP"
+    assert result["players"]["AP"]["commitment"] == "LIMITED"
+
+
+def test_sr_end_action_confirmation_in_same_turn_needs_no_new_roll():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.sr import legal_sr_actions
+
+    state = create_game(seed=4)
+    state["turn"] = 2
+    state["phase"] = "SR"
+    state["active_side"] = "CP"
+    state["sr"] = {"unit": None, "done": []}
+    state["sr_remaining"] = 4
+    state["decision"] = {"kind": "SR", "actor": "CP", "options": legal_sr_actions(state)}
+    intent = Intent(174, 174, "Central Powers", "end_action", None,
+                    {"state": "choose_sr_unit", "turn": 2},
+                    {"state": "confirm_mo", "turn": 2}, ())
+
+    assert [action["type"] for action in translate_intent(
+        state, intent, SourceIds.from_data())] == ["END_SR"]
+
+
+def test_end_operations_advances_through_new_turn_before_rtt_confirmation():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+
+    state = create_game(seed=4)
+    state["turn"] = 2
+    state["phase"] = "ATTRITION"
+    state["active_side"] = "CHANCE"
+    state["decision"] = None
+    state["players"]["AP"]["war_status"] = 4
+    for side in ("AP", "CP"):
+        state["players"][side]["actions_taken"] = 6
+        state["players"][side]["hand"] = []
+    intent = Intent(319, 319, "Allied Powers", "end_action", None,
+                    {"state": "end_operations"}, {"state": "confirm_mo"}, (2, 1))
+
+    actions = translate_intent(state, intent, SourceIds.from_data())
+    assert [action["type"] for action in actions] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE",
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE",
+        "ADVANCE_AUTOMATIC_PHASE", "RECORD_DIE_RESULT", "RECORD_DIE_RESULT",
+    ]
+    result = apply_all(state, actions)
+    assert (result["turn"], result["phase"]) == (3, "ACTION")
+    assert result["players"]["AP"]["commitment"] == "LIMITED"
+
+
+def test_movement_end_action_advances_through_new_turn_before_rtt_confirmation():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.movement import legal_movement_actions
+
+    state = create_game(seed=4)
+    state["turn"] = 2
+    state["action_round"] = 6
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["players"]["AP"]["actions_taken"] = 5
+    state["players"]["AP"]["war_status"] = 4
+    state["players"]["CP"]["actions_taken"] = 6
+    for side in ("AP", "CP"):
+        state["players"][side]["hand"] = []
+    state["activated"] = {"MOVE": [], "ATTACK": []}
+    state["movement"] = {"unit": None, "stack": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+    intent = Intent(319, 319, "Allied Powers", "end_action", None,
+                    {"state": "end_operations", "turn": 2},
+                    {"state": "confirm_mo", "turn": 3}, (2, 1))
+
+    actions = translate_intent(state, intent, SourceIds.from_data())
+    assert actions[0]["type"] == "END_MOVEMENT"
+    result = apply_all(state, actions)
+    assert (result["turn"], result["phase"]) == (3, "ACTION")
+    assert result["players"]["AP"]["commitment"] == "LIMITED"
+
+
+def test_combat_end_action_reaches_war_status_before_next_rtt_confirmation():
+    from pog_engine.rtt_replay.runner import run_replay
+
+    replay = ROOT.parents[1] / "replays/176981.json"
+    report = run_replay(replay, RULES)
+    assert report.final_state["players"]["AP"]["commitment"] == "LIMITED"
+    assert report.first_difference is None or report.first_difference.path != "$.players.AP.commitment"
 
 
 def test_resignation_uses_replay_role_even_out_of_turn(trace):

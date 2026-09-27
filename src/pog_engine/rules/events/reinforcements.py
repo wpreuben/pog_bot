@@ -149,6 +149,7 @@ class ReinforcementHandler:
             state["reinforcements"]["pending"].pop(0)
             if place.startswith("MEF"):
                 state["flags"]["mef_beachhead"] = place
+                state["flags"]["mef_beachhead_captured"] = False
             if not state["reinforcements"]["pending"]:
                 from pog_engine.rules.turn import complete_action
 

@@ -50,6 +50,36 @@ def test_sedan_battle_replays_through_ap_card_action(opening):
     assert state["active_side"] == "AP"
 
 
+def test_negate_trench_card_and_next_translate_to_combat_actions():
+    from pog_engine.rules.combat import legal_combat_actions
+
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "CP"
+    state["units"]["IT_1_ARMY_1"]["location"] = "LIEGE"
+    state["combat_context"] = {
+        "stage": "TRENCH_CARDS", "attacker": "CP", "defender": "AP",
+        "attackers": ["GE_1_ARMY_1"], "defending_units": ["IT_1_ARMY_1"],
+        "defender_space": "LIEGE", "cards": {"AP": [], "CP": []},
+        "results": {}, "rolls": {}, "fire_order": ["CP", "AP"], "fire_index": 0,
+        "loss_queue": [], "loss_side": None, "loss_remaining": 0, "advanced": [],
+    }
+    state["players"]["CP"]["hand"].append("VON_BELOW")
+    state["decision"] = {"kind": "COMBAT", "actor": "CP",
+                         "options": legal_combat_actions(state)}
+    ids = SourceIds.from_data()
+    card = Intent(1130, 1130, "Central Powers", "card", 108,
+                  {"state": "negate_trench"}, {"state": "negate_trench"}, ())
+
+    actions = translate_intent(state, card, ids)
+    assert actions == ({"type": "PLAY_COMBAT_CARD", "actor": "CP", "card_id": "VON_BELOW"},)
+    state = apply_action(state, actions[0]).state
+    assert state["combat_context"]["trench_negated"]
+    advance = Intent(1131, 1131, "Central Powers", "next", None,
+                     {"state": "negate_trench"}, {"state": "confirm_mo"}, ())
+    assert translate_intent(state, advance, ids) == ({"type": "PASS_TRENCH_CARDS", "actor": "CP"},)
+
+
 def test_flank_roll_refuses_missing_random_observation(opening):
     rows, intents = opening
     ids = SourceIds.from_data()
@@ -449,6 +479,33 @@ def test_event_confirmation_resolves_turn_to_replacement(opening):
         "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE"]
 
 
+def test_end_operations_enters_siege_after_empty_attrition(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    state["units"]["GE_1_ARMY_1"]["location"] = "LIEGE"
+    state["spaces"]["LIEGE"]["fort_besieged"] = True
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "end_operations"},
+                     after={**intents[1071].after, "state": "siege_phase"})
+
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE"]
+
+
+def test_mandatory_offensive_confirmation_does_not_repeat_africa_event(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "WAR_IN_AFRICA"
+    state["decision"] = {"kind": "WAR_IN_AFRICA", "actor": "AP", "options": []}
+    intent = replace(intents[1071], kind="next",
+                     before={**intents[1071].before, "state": "confirm_mo"},
+                     after={**intents[1071].after, "state": "war_in_africa"})
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
 def test_cancel_retreat_confirmation_keeps_combat_open(opening):
     _, intents = opening
     state = create_game(seed=4)
@@ -702,6 +759,58 @@ def test_reinforcement_placement_uses_observed_unit_and_space(opening):
             state = apply_action(state, action).state
     assert translate_intent(state, intents[209], ids) == (
         {"type": "PLACE_REINFORCEMENT", "actor": "AP", "unit_id": "BR_2_ARMY_1", "to": "LONDON"},)
+
+
+@pytest.mark.parametrize(
+    ("index", "source_id", "box", "unit_id"),
+    [(1588, 59, 360, "RU_8_ARMY_1"), (1590, 138, 284, "RUC_CORPS_11")],
+)
+def test_retreat_eliminate_selects_observed_unit(index, source_id, box, unit_id):
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["decision"] = {
+        "kind": "COMBAT", "actor": "AP",
+        "options": [
+            {"type": "NO_RETREAT_ROUTE", "actor": "AP", "unit_id": "RU_8_ARMY_1"},
+            {"type": "NO_RETREAT_ROUTE", "actor": "AP", "unit_id": "RUC_CORPS_11"},
+        ],
+    }
+    before_locations = [0] * 361
+    before_locations[source_id] = 105
+    after_locations = before_locations.copy()
+    after_locations[source_id] = box
+    intent = Intent(index, index, "Allied Powers", "eliminate", None,
+                    {"state": "defender_retreat", "location": before_locations,
+                     "attack": {"retreating_pieces": [source_id]}},
+                    {"state": "defender_retreat", "location": after_locations,
+                     "attack": {"retreating_pieces": []}}, ())
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == (
+        {"type": "NO_RETREAT_ROUTE", "actor": "AP", "unit_id": unit_id},)
+
+
+def test_retreat_eliminate_allows_replaced_army_to_be_permanently_removed():
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["combat_context"] = {"defender_replacements": {
+        "SB_1_ARMY_1": "SBC_CORPS_2"}}
+    state["decision"] = {"kind": "COMBAT", "actor": "AP", "options": [
+        {"type": "NO_RETREAT_ROUTE", "actor": "AP", "unit_id": "SBC_CORPS_2"},
+    ]}
+    before_locations = [0] * 361
+    before_locations[66] = 284
+    before_locations[172] = 127
+    after_locations = before_locations.copy()
+    after_locations[66] = 360
+    after_locations[172] = 284
+    intent = Intent(1439, 1439, "Allied Powers", "eliminate", None,
+                    {"state": "defender_retreat", "location": before_locations,
+                     "attack": {"retreating_pieces": [172]}},
+                    {"state": "defender_retreat", "location": after_locations,
+                     "attack": {"retreating_pieces": []}}, ())
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == (
+        {"type": "NO_RETREAT_ROUTE", "actor": "AP", "unit_id": "SBC_CORPS_2"},)
 
 
 def test_fort_destruction_is_resolved_at_defender_loss_completion(opening):

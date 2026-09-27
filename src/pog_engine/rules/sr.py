@@ -25,7 +25,8 @@ def _reserve_sources(nation: str) -> tuple[str, ...] | None:
 
 def _friendly(state: FullGameState, space_id: str, side: str) -> bool:
     data = load_data()
-    return state["spaces"][space_id]["control"] == side and not any(
+    space = state["spaces"][space_id]
+    return (space["control"] == side or space["fort_besieged"]) and not any(
         unit["location"] == space_id and data.units[unit_id]["side"] != side
         for unit_id, unit in state["units"].items()
     )
@@ -92,6 +93,8 @@ def _destinations(state: FullGameState, unit_id: str) -> list[str]:
     start = state["units"][unit_id]["location"]
     side, nation = unit["side"], unit["nation"]
     reserve = f"{side}_RESERVE_BOX"
+    reserve_sources = _reserve_sources(nation)
+    reserve_purpose = "RESERVE_SR" if reserve_sources is not None else "NORMAL"
     if nation == "MN":
         return ["CETINJE"] if start == reserve and _allowed_destination(state, unit_id, "CETINJE") else (
             [reserve] if start == "CETINJE" else []
@@ -162,11 +165,11 @@ def _destinations(state: FullGameState, unit_id: str) -> list[str]:
     if start == reserve:
         return sorted(
             place for place in found
-            if supply_status(state, unit_id, location=place, purpose="RESERVE_SR",
-                             allowed_sources=_reserve_sources(nation)).supplied
+            if supply_status(state, unit_id, location=place, purpose=reserve_purpose,
+                             allowed_sources=reserve_sources).supplied
         )
     if reserve in found and not supply_status(
-        state, unit_id, purpose="RESERVE_SR", allowed_sources=_reserve_sources(nation)
+        state, unit_id, purpose=reserve_purpose, allowed_sources=reserve_sources
     ).supplied:
         found.remove(reserve)
     return sorted(place for place in found if place == reserve or supply_status(state, unit_id, location=place).supplied)

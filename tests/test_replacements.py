@@ -113,14 +113,42 @@ def test_unspent_rps_expire_and_ap_phase_precedes_cp():
 
 
 def test_historical_sedan_bonus_requires_total_war_and_three_spaces():
-    state = rp_state("CP")
+    for commitment, captured in (("TOTAL", ("SEDAN", "LIEGE")),
+                                 ("LIMITED", ("SEDAN", "LIEGE", "BRUSSELS"))):
+        state = create_game(seed=4)
+        state["turn"] = 5
+        state["phase"] = "WAR_STATUS"
+        state["active_side"] = "CHANCE"
+        state["decision"] = None
+        state["players"]["CP"]["commitment"] = commitment
+        state["flags"]["cp_first_total_war_turn"] = 3
+        for place in captured:
+            state["spaces"][place]["control"] = "CP"
+        state = apply_action(state, {"type": "ADVANCE_AUTOMATIC_PHASE", "actor": "CHANCE"}).state
+        assert state["players"]["CP"]["replacement_points"].get("GE", 0) == 0
+
+
+def test_sedan_bonus_is_available_before_allied_replacement_and_not_awarded_twice():
+    state = create_game(seed=4)
+    state["turn"] = 5
+    state["phase"] = "WAR_STATUS"
+    state["active_side"] = "CHANCE"
+    state["decision"] = None
     state["players"]["CP"]["commitment"] = "TOTAL"
+    state["flags"]["cp_first_total_war_turn"] = 3
+    state["events"]["WALTER_RATHENAU"] = 3
+    state["players"]["CP"]["replacement_points"]["GE"] = 3
+    state["players"]["AP"]["replacement_points"] = {}
     for place in ("SEDAN", "LIEGE", "BRUSSELS"):
         state["spaces"][place]["control"] = "CP"
-    state = begin_replacement_phase(state, "CP")
-    assert state["players"]["CP"]["replacement_points"]["GE"] == 1
-    state = begin_replacement_phase(state, "CP")
-    assert state["players"]["CP"]["replacement_points"]["GE"] == 1
+
+    state = apply_action(state, {"type": "ADVANCE_AUTOMATIC_PHASE", "actor": "CHANCE"}).state
+    assert state["phase"] == "REPLACEMENT_AP"
+    assert state["players"]["CP"]["replacement_points"]["GE"] == 5
+
+    state = apply_action(state, {"type": "ADVANCE_AUTOMATIC_PHASE", "actor": "CHANCE"}).state
+    assert state["phase"] == "REPLACEMENT_CP"
+    assert state["players"]["CP"]["replacement_points"]["GE"] == 5
 
 
 def test_oos_reduced_unit_and_unreplaceable_unit_have_no_rp_action():

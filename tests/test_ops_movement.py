@@ -49,6 +49,23 @@ def test_activated_unit_moves_one_edge_and_changes_control():
     assert state["spaces"]["LIEGE"]["control"] == "CP"
 
 
+def test_salonika_event_allows_kavala_move_before_greek_entry():
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["units"]["FR_ORIENT_ARMY_1"]["location"] = "SALONIKA"
+    state["activated"]["MOVE"] = ["SALONIKA"]
+    state["movement"] = {"unit": None, "stack": None, "spent": 0, "done": []}
+    assert not state["war_nations"]["GR"]
+
+    state["events"]["SALONIKA"] = state["turn"]
+    actions = legal_movement_actions(state)
+    assert {"type": "MOVE", "actor": "AP", "unit_id": "FR_ORIENT_ARMY_1",
+            "to": "KAVALA"} in actions
+    assert {"type": "MOVE", "actor": "AP", "unit_id": "FR_ORIENT_ARMY_1",
+            "to": "FLORINA"} not in actions
+
+
 def test_two_armies_can_move_as_a_stack_for_multiple_edges():
     state = ops_state()
     state["active_side"] = "AP"
@@ -150,6 +167,52 @@ def test_moving_corps_stack_can_besiege_two_strength_fort_together():
 
     assert {"type": "MOVE_STACK", "actor": "AP",
             "unit_ids": ["BRC_CORPS_3", "BRC_CORPS_5"], "to": "BEERSHEBA"} in generate_legal_actions(state)
+
+
+def test_three_corps_can_complete_siege_across_separate_moves():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["units"]["GE_6_ARMY_1"]["location"] = "FRANKFURT"
+    state["units"]["GE_7_ARMY_1"]["location"] = "FRANKFURT"
+    state["spaces"]["MULHOUSE"]["control"] = "AP"
+    state["units"]["FRC_CORPS_4"]["location"] = "MULHOUSE"
+    for uid in ("FRC_CORPS_1", "FRC_CORPS_2"):
+        state["units"][uid]["location"] = "BELFORT"
+    state["activated"]["MOVE"] = ["MULHOUSE", "BELFORT"]
+    state["movement"] = {"unit": "FRC_CORPS_4", "spent": 3, "done": [], "stack": None}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+
+    assert any(a["type"] == "MOVE" and a.get("to") == "STRASBOURG"
+               for a in generate_legal_actions(state))
+    state = choose(state, "MOVE", unit_id="FRC_CORPS_4", to="STRASBOURG")
+    assert not state["spaces"]["STRASBOURG"]["fort_besieged"]
+    assert not any(a["type"] == "END_MOVEMENT" for a in generate_legal_actions(state))
+    for uid in ("FRC_CORPS_1", "FRC_CORPS_2"):
+        state = choose(state, "MOVE", unit_id=uid, to="MULHOUSE")
+        state = choose(state, "MOVE", unit_id=uid, to="STRASBOURG")
+    assert state["spaces"]["STRASBOURG"]["fort_besieged"]
+    assert any(a["type"] == "END_MOVEMENT" for a in generate_legal_actions(state))
+
+
+def test_units_enter_only_the_active_mef_beachhead_space():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    state["war_nations"]["TU"] = True
+    state["units"]["TU_YLD_ARMY_1"]["location"] = "CANA_KALE"
+    state["activated"]["MOVE"] = ["CANA_KALE"]
+    state["movement"] = {"unit": "TU_YLD_ARMY_1", "spent": 0,
+                         "done": [], "stack": None}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+
+    assert not any(a["type"] == "MOVE" and a.get("to") == "MEF2"
+                   for a in generate_legal_actions(state))
+    state["flags"]["mef_beachhead"] = "MEF2"
+    state["decision"]["options"] = legal_movement_actions(state)
+    assert {"type": "MOVE", "actor": "CP", "unit_id": "TU_YLD_ARMY_1",
+            "to": "MEF2"} in generate_legal_actions(state)
 
 
 def test_undestroyed_enemy_fort_keeps_control_when_entered():

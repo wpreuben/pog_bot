@@ -173,6 +173,7 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
     if phase == "WAR_STATUS":
         from .war import resolve_war_status
         from .events.economy import apply_replacement_phase_events
+        from .replacements import _award_sedan_bonus
 
         next_state = resolve_war_status(next_state)
         if next_state["phase"] == "GAME_OVER":
@@ -185,6 +186,7 @@ def advance_automatic_phases(state: FullGameState) -> FullGameState:
             assert victory is not None
             return finish_game(next_state, victory)
         apply_replacement_phase_events(next_state)
+        _award_sedan_bonus(next_state)
     if phase == "DRAW":
         for side in ("AP", "CP"):
             player = next_state["players"][side]

@@ -284,6 +284,11 @@ def _loss_options(state: FullGameState) -> list[Action]:
                 actions.append({**base, "replacement_unit_id": None})
         else:
             actions.append(base)
+    if side == context["attacker"] and remaining == context["results"].get(context["defender"]):
+        for priority_id in ("BR_BEF_ARMY_1", "BR_BEFC_CORPS_1"):
+            priority = [action for action in actions if action["unit_id"] == priority_id]
+            if priority:
+                return priority
     active = tuple(sorted((uid, state["units"][uid]["reduced"]) for uid in _context_units(state, side)))
     reserve = tuple(sorted(
         cid for cid, candidate in data.units.items()
@@ -371,6 +376,21 @@ def _retreat_destinations(state: FullGameState, uid: str, progress: dict) -> lis
     return sorted(destinations)
 
 
+def _capture_retreat_destination(state: FullGameState, destination: str) -> None:
+    context = state["combat_context"]
+    static = load_data().spaces[destination]
+    space = state["spaces"][destination]
+    attacker_fort = (static["fort"] and static["side"] == context["attacker"]
+                     and not space["fort_destroyed"])
+    if attacker_fort or space["control"] == context["defender"]:
+        return
+    if space["vp"]:
+        state["vp"] += 1 if context["defender"] == "CP" else -1
+    space["control"] = context["defender"]
+    if context["defender"] == "CP" and destination == state["flags"].get("mef_beachhead"):
+        state["flags"]["mef_beachhead_captured"] = True
+
+
 def _cancel_retreat_options(state: FullGameState) -> list[Action]:
     context = state["combat_context"]
     side = context["defender"]
@@ -422,8 +442,14 @@ def _advance_options(state: FullGameState) -> list[Action]:
             actions.append({"type": "ADVANCE_UNIT", "actor": side, "unit_id": uid})
         elif (uid in context["advanced"] and unit["location"] == target
               and context.get("retreat_total") == 2
-              and data.spaces[target]["terrain"] not in {"DESERT", "FOREST", "MOUNTAIN", "SWAMP"}
-              and not state["spaces"][target]["fort_besieged"]):
+              and data.spaces[target]["terrain"] not in {"DESERT", "FOREST", "MOUNTAIN", "SWAMP"}):
+            if state["spaces"][target]["fort_besieged"]:
+                remaining = [other_id for other_id, other in state["units"].items()
+                             if other_id != uid and other["location"] == target
+                             and data.units[other_id]["side"] == side]
+                if not (any(data.units[other_id]["type"] == "ARMY" for other_id in remaining)
+                        or len(remaining) >= data.spaces[target]["fort"]):
+                    continue
             routes = context.get("retreat_progress", {}).values()
             next_places = {entry["path"][0] for entry in routes if len(entry["path"]) >= 2}
             if not next_places and len(context.get("retreat_path", [])) >= 2:
@@ -674,7 +700,7 @@ def _after_losses(state: FullGameState) -> None:
         context["retreat_location"] = context["defender_space"]
         context["retreat_path"] = []
         context["retreat_progress"] = _retreat_progress(state)
-    elif difference > 0 and not defenders and full_attackers:
+    elif not defenders and full_attackers and (difference > 0 or context["defending_units"]):
         context["stage"] = "ADVANCE"
     else:
         _finish_combat(state)
@@ -835,41 +861,69 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
                 context.setdefault("loss_history", []).append({
                     "unit_id": uid, "location": state["units"][uid]["location"],
                     "was_reduced": state["units"][uid]["reduced"],
+                    "replacement_unit_id": action.get("replacement_unit_id"),
                 })
             context["loss_remaining"] -= _apply_step_loss(state, action["unit_id"], action.get("replacement_unit_id"))
             if action.get("replacement_unit_id"):
                 context["defending_units" if context["loss_side"] == context["defender"] else "attackers"].append(action["replacement_unit_id"])
+                if context["loss_side"] == context["defender"]:
+                    context.setdefault("defender_replacements", {})[action["unit_id"]] = action["replacement_unit_id"]
         elif kind == "END_LOSSES":
             _after_losses(state)
         elif kind == "NEGATE_WITHDRAWAL_LOSS":
-            entry = next(item for item in context["loss_history"] if item["unit_id"] == action["unit_id"])
+            entry = next(item for item in reversed(context["loss_history"])
+                         if item["unit_id"] == action["unit_id"])
             unit = state["units"][entry["unit_id"]]
+            if unit["eliminated"]:
+                replacement = next((item.get("replacement_unit_id") for item in context["loss_history"]
+                                    if item["unit_id"] == action["unit_id"]
+                                    and item.get("replacement_unit_id")), None)
+                if replacement:
+                    state["units"][replacement]["location"] = f'{context["defender"]}_RESERVE_BOX'
+                    context["defending_units"].remove(replacement)
             unit["location"] = entry["location"]
             unit["reduced"] = entry["was_reduced"]
             unit["eliminated"] = False
+            unit["permanent"] = False
             context["withdrawal_negated"] = True
             _after_losses(state)
         elif kind == "CANCEL_RETREAT":
             _apply_step_loss(state, action["unit_id"], action.get("replacement_unit_id"))
             _finish_combat(state)
         elif kind == "NO_RETREAT_ROUTE":
+            from .forts import update_siege_status
+
             progress = _retreat_progress(state)
             uid = action.get("unit_id") or next(iter(progress))
+            source = state["units"][uid]["location"]
             state["units"][uid]["location"] = None
             state["units"][uid]["eliminated"] = True
             if load_data().units[uid]["type"] == "ARMY":
                 state["units"][uid]["permanent"] = True
+            for replaced, replacement in context.get("defender_replacements", {}).items():
+                if replacement == uid and state["units"][replaced]["eliminated"]:
+                    state["units"][replaced]["permanent"] = True
+            update_siege_status(state, source)
+            if progress[uid]["path"]:
+                _capture_retreat_destination(state, progress[uid]["path"][-1])
             progress[uid]["remaining"] = 0
             context["retreat_progress"] = progress
             if all(entry["remaining"] == 0 for entry in progress.values()):
                 context["stage"] = "ADVANCE"
         elif kind == "RETREAT_TO":
+            from .forts import update_siege_status
+
             progress = _retreat_progress(state)
             uid = action.get("unit_id") or next(iter(progress))
+            source = state["units"][uid]["location"]
             state["units"][uid]["location"] = action["to"]
+            update_siege_status(state, source)
+            update_siege_status(state, action["to"])
             progress[uid]["current"] = action["to"]
             progress[uid]["path"].append(action["to"])
             progress[uid]["remaining"] -= 1
+            if progress[uid]["remaining"] == 0 and uid != "BR_ANAC_CORPS_1":
+                _capture_retreat_destination(state, action["to"])
             context["retreat_progress"] = progress
             context["retreat_location"] = action["to"]
             context["retreat_path"] = progress[uid]["path"]
@@ -890,6 +944,8 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
                 if space["control"] != context["attacker"] and space["vp"]:
                     state["vp"] += 1 if context["attacker"] == "CP" else -1
                 space["control"] = context["attacker"]
+                if context["attacker"] == "CP" and target == state["flags"].get("mef_beachhead"):
+                    state["flags"]["mef_beachhead_captured"] = True
             update_siege_status(state, target)
             if source != target:
                 update_siege_status(state, source)

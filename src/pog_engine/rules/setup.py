@@ -99,7 +99,7 @@ def create_game(scenario: str = "HISTORICAL", seed: int = 0) -> FullGameState:
         "russian_capitulation": 0,
         "events": {},
         "temporary_effects": {},
-        "flags": {},
+        "flags": {"mef_beachhead": "MEF1", "mef_beachhead_captured": False},
         "combat_context": None,
         "activated": {"MOVE": [], "ATTACK": []},
         "ops_remaining": 0,

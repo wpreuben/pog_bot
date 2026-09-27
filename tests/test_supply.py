@@ -1,3 +1,5 @@
+import pytest
+
 from pog_engine import create_game
 from pog_engine.rules.supply import resolve_attrition, supplied_spaces, supply_status
 
@@ -30,6 +32,23 @@ def test_allied_port_can_trace_to_london_by_sea():
     assert supply_status(state, "BR_BEFC_CORPS_1").supplied
 
 
+def test_mef_beachhead_supplies_only_eligible_units():
+    state = create_game(seed=4)
+    state["flags"]["mef_beachhead"] = "MEF4"
+    for uid in ("BR_MEF_ARMY_1", "BRC_CORPS_1", "AUSC_CORPS_1", "BR_1_ARMY_1"):
+        state["units"][uid]["location"] = "MEF4"
+
+    for uid in ("BR_MEF_ARMY_1", "BRC_CORPS_1", "AUSC_CORPS_1"):
+        assert supply_status(state, uid).supplied
+    assert not supply_status(state, "BR_1_ARMY_1").supplied
+
+    state["spaces"]["MEF4"]["control"] = "CP"
+    assert not supply_status(state, "BR_MEF_ARMY_1").supplied
+    state["spaces"]["MEF4"]["control"] = "AP"
+    state["flags"]["mef_beachhead_captured"] = True
+    assert not supply_status(state, "BR_MEF_ARMY_1").supplied
+
+
 def test_russian_corps_cannot_use_allied_sea_supply():
     state = create_game(seed=4)
     state["units"]["RUC_CORPS_1"]["location"] = "PORT_SAID"
@@ -44,6 +63,23 @@ def test_special_always_supplied_units_and_serbia():
     assert supply_status(state, "SBC_CORPS_1").supplied
 
 
+def test_salonika_event_opens_greek_supply_source_to_albania_before_greek_entry():
+    state = create_game(seed=4)
+    state["war_nations"]["IT"] = True
+    state["spaces"]["TARANTO"]["control"] = "CP"
+    state["spaces"]["CETINJE"]["control"] = "CP"
+    state["spaces"]["NIS"]["control"] = "CP"
+    assert not state["war_nations"]["GR"]
+    assert "TIRANA" not in supplied_spaces(state, "AP")
+
+    state["events"]["SALONIKA"] = state["turn"]
+    supplied = supplied_spaces(state, "AP")
+    assert {"SALONIKA", "TIRANA", "VALONA"} <= supplied
+    result = resolve_attrition(state)
+    assert result["spaces"]["TIRANA"]["control"] == "AP"
+    assert result["spaces"]["VALONA"]["control"] == "AP"
+
+
 def test_attrition_removes_oos_army_permanently_and_converts_isolated_space():
     state = create_game(seed=4)
     state["units"]["GE_1_ARMY_1"]["location"] = "PARIS"
@@ -54,6 +90,22 @@ def test_attrition_removes_oos_army_permanently_and_converts_isolated_space():
     assert result["units"]["GE_1_ARMY_1"]["location"] is None
     assert result["spaces"]["PARIS"]["control"] == "AP"
     assert state["units"]["GE_1_ARMY_1"]["location"] == "PARIS"
+
+
+@pytest.mark.parametrize("original_level,new_level", [(1, 0), (2, 1)])
+def test_attrition_control_flip_removes_or_captures_trench(original_level, new_level):
+    state = create_game(seed=4)
+    state["units"]["GE_1_ARMY_1"]["location"] = "PARIS"
+    state["spaces"]["PARIS"]["control"] = "CP"
+    state["spaces"]["PARIS"]["fort_destroyed"] = True
+    state["spaces"]["PARIS"]["trenches"]["AP"] = 0
+    state["spaces"]["PARIS"]["trenches"]["CP"] = original_level
+
+    result = resolve_attrition(state)
+
+    assert result["spaces"]["PARIS"]["control"] == "AP"
+    assert result["spaces"]["PARIS"]["trenches"] == {"AP": new_level, "CP": 0}
+    assert state["spaces"]["PARIS"]["trenches"]["CP"] == original_level
 
 
 def test_montenegrin_unit_keeps_cetinje_supplied_during_attrition():

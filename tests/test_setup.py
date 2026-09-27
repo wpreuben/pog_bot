@@ -21,6 +21,13 @@ def test_historical_opening_has_units_vp_trenches_and_hands():
     assert sum(unit["location"] is not None for unit in state["units"].values()) == 112
 
 
+def test_historical_opening_has_uncaptured_mef1_beachhead():
+    state = create_game(seed=7)
+
+    assert state["flags"]["mef_beachhead"] == "MEF1"
+    assert state["flags"]["mef_beachhead_captured"] is False
+
+
 def test_decks_contain_each_base_card_once_and_exclude_later_commitments():
     state = create_game(seed=7)
     zones = [
