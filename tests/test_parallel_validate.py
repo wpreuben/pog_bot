@@ -35,16 +35,21 @@ def _inputs(path: Path) -> None:
 
 
 def _run_parallel(inputs: Path, outputs: Path, report: Path) -> dict:
+    return _run_parallel_with_output(inputs, outputs, report)[0]
+
+
+def _run_parallel_with_output(inputs: Path, outputs: Path, report: Path,
+                              workers: int = 3) -> tuple[dict, str]:
     result = subprocess.run(
         [sys.executable, str(SCRIPT), str(inputs), "--rules", str(RULES),
-         "--output", str(outputs), "--report", str(report), "--workers", "3"],
+         "--output", str(outputs), "--report", str(report), "--workers", str(workers)],
         capture_output=True, text=True, cwd=ROOT,
     )
     assert result.returncode == 0, result.stderr
     assert "전체 병합" in result.stdout
     if any(inputs.iterdir()):
         assert "샤드" in result.stdout
-    return json.loads(report.read_text(encoding="utf-8"))
+    return json.loads(report.read_text(encoding="utf-8")), result.stdout
 
 
 def test_parallel_cli_matches_sequential_and_cleans_only_matching_old_artifacts(tmp_path):
@@ -116,6 +121,138 @@ def test_empty_input_cleans_previous_verified_artifact(tmp_path):
     report = _run_parallel(inputs, output, report_path)
     assert report["input_count"] == 0
     assert list(output.iterdir()) == []
+
+
+def test_fixed_shard_checkpoints_resume_and_verify_input_hash(tmp_path):
+    inputs = tmp_path / "inputs"
+    _inputs(inputs)
+    output, report_path = tmp_path / "parallel", tmp_path / "report.json"
+    first = _run_parallel(inputs, output, report_path)
+    checkpoint_dir = tmp_path / ".report.json.shards"
+    checkpoints = sorted(checkpoint_dir.glob("shard-*.json"))
+    assert checkpoints
+    assert all(json.loads(path.read_text())["complete"] for path in checkpoints)
+
+    report_path.unlink()
+    second, stdout = _run_parallel_with_output(inputs, output, report_path, workers=1)
+    assert second == first
+    assert "체크포인트 재사용" in stdout
+
+    report_path.unlink()
+    source_path = inputs / "replay-258629.json"
+    source = json.loads(source_path.read_text(encoding="utf-8"))
+    source["players"] = {"Central Powers": "changed input"}
+    source_path.write_text(json.dumps(source), encoding="utf-8")
+    changed, stdout = _run_parallel_with_output(inputs, output, report_path)
+    assert changed["input_count"] == first["input_count"]
+    changed_row = next(row for row in changed["games"] if row["file"] == source_path.name)
+    assert changed_row["source_sha256"] == sha256(source_path.read_bytes()).hexdigest()
+    assert "체크포인트 무효" in stdout
+
+
+def test_partial_checkpoint_resumes_same_shard(tmp_path):
+    inputs = tmp_path / "inputs"
+    _inputs(inputs)
+    output, report_path = tmp_path / "parallel", tmp_path / "report.json"
+    first = _run_parallel(inputs, output, report_path)
+    checkpoint_dir = tmp_path / ".report.json.shards"
+    checkpoint = next(path for path in checkpoint_dir.glob("shard-*.json")
+                      if len(json.loads(path.read_text())["report"]["games"]) == 2)
+    payload = json.loads(checkpoint.read_text())
+    payload["complete"] = False
+    payload["report"]["games"] = payload["report"]["games"][:1]
+    payload["report"]["input_count"] = 1
+    payload["report"]["counts"] = {payload["report"]["games"][0]["status"]: 1}
+    checkpoint.write_text(json.dumps(payload), encoding="utf-8")
+    report_path.unlink()
+
+    actual, stdout = _run_parallel_with_output(inputs, output, report_path)
+    assert actual == first
+    assert "체크포인트 재개" in stdout
+    assert json.loads(checkpoint.read_text())["complete"] is True
+
+
+def test_resume_cleans_removed_input_without_previous_final_report(tmp_path):
+    inputs = tmp_path / "inputs"
+    _inputs(inputs)
+    output, report_path = tmp_path / "parallel", tmp_path / "report.json"
+    _run_parallel(inputs, output, report_path)
+    assert (output / "replay-258630.json").is_file()
+    report_path.unlink()
+    (inputs / "replay-258630.json").unlink()
+
+    report = _run_parallel(inputs, output, report_path)
+    assert report["input_count"] == 4
+    assert not (output / "replay-258630.json").exists()
+
+
+def test_refresh_resume_does_not_reuse_old_final_report(tmp_path):
+    inputs = tmp_path / "inputs"
+    _inputs(inputs)
+    output, report_path = tmp_path / "parallel", tmp_path / "report.json"
+    first = _run_parallel(inputs, output, report_path)
+    checkpoint_dir = tmp_path / ".report.json.shards"
+    checkpoint = next(path for path in checkpoint_dir.glob("shard-*.json")
+                      if any(row["status"] == "verified"
+                             for row in json.loads(path.read_text())["report"]["games"]))
+    checkpoint.unlink()
+    stale = json.loads(report_path.read_text())
+    next(row for row in stale["games"] if row["status"] == "verified")["status"] = "mismatch"
+    report_path.write_text(json.dumps(stale), encoding="utf-8")
+    marker = checkpoint_dir / "run.json"
+    marker.write_text(json.dumps({"schema_version": 1,
+                                  "validation_signature": first["validation_signature"],
+                                  "refresh": True}), encoding="utf-8")
+
+    actual = _run_parallel(inputs, output, report_path)
+    assert actual == first
+    assert not marker.exists()
+
+
+def test_checkpoint_signature_mismatch_is_not_reused(tmp_path):
+    inputs = tmp_path / "inputs"
+    _inputs(inputs)
+    output, report_path = tmp_path / "parallel", tmp_path / "report.json"
+    first = _run_parallel(inputs, output, report_path)
+    checkpoint_dir = tmp_path / ".report.json.shards"
+    checkpoint = next(path for path in checkpoint_dir.glob("shard-*.json")
+                      if any(row["status"] == "verified"
+                             for row in json.loads(path.read_text())["report"]["games"]))
+    payload = json.loads(checkpoint.read_text())
+    payload["validation_signature"] = "old rules"
+    payload["report"]["games"][0]["status"] = "mismatch"
+    checkpoint.write_text(json.dumps(payload), encoding="utf-8")
+    report_path.unlink()
+
+    actual, stdout = _run_parallel_with_output(inputs, output, report_path)
+    assert actual == first
+    assert "체크포인트 무효" in stdout
+
+
+def test_checkpoint_rechecks_normalized_artifact_hash(tmp_path):
+    inputs = tmp_path / "inputs"
+    _inputs(inputs)
+    output, report_path = tmp_path / "parallel", tmp_path / "report.json"
+    expected = _run_parallel(inputs, output, report_path)
+    normalized = output / "replay-258629.json"
+    normalized.write_bytes(b"changed by another process")
+    report_path.unlink()
+
+    actual, stdout = _run_parallel_with_output(inputs, output, report_path)
+    assert actual == expected
+    verified = next(row for row in actual["games"] if row["status"] == "verified"
+                    and row["game_id"] == 258629)
+    assert sha256(normalized.read_bytes()).hexdigest() == verified["normalized_sha256"]
+    assert "체크포인트 무효" in stdout
+
+
+def test_parallel_lock_rejects_concurrent_output_use(tmp_path):
+    path_lock = runpy.run_path(str(SCRIPT))["_path_lock"]
+    output_key = tmp_path / "normalized" / ".parallel-validate"
+    with path_lock(output_key):
+        with pytest.raises(RuntimeError, match="이미 같은 경로"):
+            with path_lock(output_key):
+                pass
 
 
 def test_merge_rejects_missing_rows_and_different_signatures():
