@@ -266,6 +266,11 @@ def test_mandatory_offensive_confirm_resumes_combat_cards(opening):
                      random_seeds=())
     assert [a["type"] for a in translate_intent(state, intent, ids)] == [
         "SKIP_FLANK", "PASS_COMBAT_CARDS"]
+    for action_type in ("SKIP_FLANK", "PASS_COMBAT_CARDS"):
+        state = apply_action(state, next(a for a in generate_legal_actions(state)
+                                         if a["type"] == action_type)).state
+    assert state["combat_context"]["stage"] == "DEFENDER_CARDS"
+    assert translate_intent(state, intent, ids) == ()
 
 
 def test_flank_roll_can_advance_to_defender_card_window(opening):
@@ -279,6 +284,22 @@ def test_flank_roll_can_advance_to_defender_card_window(opening):
                      after={**intents[8].after, "state": "defender_combat_cards"})
     assert [a["type"] for a in translate_intent(state, intent, ids)] == [
         "ATTEMPT_FLANK", "RECORD_FLANK_DIE", "PASS_COMBAT_CARDS"]
+
+
+def test_flank_can_use_multiple_bonus_spaces(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(8):
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    state["units"]["GE_2_ARMY_1"]["location"] = "METZ"
+    from pog_engine.rules.combat import legal_combat_actions
+    state["decision"]["options"] = legal_combat_actions(state)
+    liege = next(source for source, name in ids.mappings["spaces"].items() if name == "LIEGE")
+    koblenz = next(source for source, name in ids.mappings["spaces"].items() if name == "KOBLENZ")
+    intent = replace(intents[8], log_delta=(f">+1 s{liege}", f">+1 s{koblenz}"))
+    assert translate_intent(state, intent, ids)[0]["pinning_space"] == "METZ"
 
 
 def test_draw_done_can_cross_finished_replacement_phase(opening):
@@ -303,6 +324,77 @@ def test_event_confirmation_can_follow_engine_action_completion(opening):
                      before={**intents[1071].before, "state": "confirm_event"},
                      after={**intents[1071].after, "state": "attrition_phase"})
     assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_reinforcement_confirmation_advances_attrition_to_siege(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "place_reinforcements"},
+                     after={**intents[1071].after, "state": "siege_phase"})
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE"]
+    replacement = replace(intent, after={**intent.after, "state": "replacement_phase"})
+    assert [a["type"] for a in translate_intent(state, replacement, SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE"]
+
+
+def test_replacement_points_end_does_not_resolve_pending_attrition(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "rps"},
+                     after={**intents[1071].after, "state": "attrition_phase"})
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_end_operations_closes_movement_before_mandatory_offensive_notice(opening):
+    from pog_engine.rules.movement import legal_movement_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "CP"
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "end_operations"},
+                     after={**intents[1071].after, "state": "confirm_mo"})
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "END_MOVEMENT"]
+    attrition = replace(intent, after={**intent.after, "state": "attrition_phase"})
+    assert [a["type"] for a in translate_intent(state, attrition, SourceIds.from_data())] == [
+        "END_MOVEMENT"]
+
+
+def test_siege_roll_can_follow_automatic_attrition(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    state["units"]["GE_1_ARMY_1"]["location"] = "LIEGE"
+    state["spaces"]["LIEGE"]["fort_besieged"] = True
+    ids = SourceIds.from_data()
+    liege = next(int(source) for source, name in ids.mappings["spaces"].items()
+                 if name == "LIEGE")
+    intent = replace(intents[169], argument=liege)
+    assert [a["type"] for a in translate_intent(state, intent, ids)] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "RECORD_SIEGE_DIE",
+        "ADVANCE_AUTOMATIC_PHASE"]
+
+
+def test_last_attrition_choice_reaches_replacement_phase(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "SIEGE"
+    state["decision"] = None
+    assert [a["type"] for a in translate_intent(state, intents[668], SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE"]
 
 
 def test_attack_that_rolls_immediately_enters_losses(opening):

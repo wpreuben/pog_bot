@@ -193,6 +193,32 @@ def test_dropping_only_piece_in_move_stack_stops_moving_unit():
         {"type": "STOP_MOVING_UNIT", "actor": "AP"},)
 
 
+def test_dropping_one_piece_from_moving_stack_keeps_other_moving():
+    from pog_engine import create_game
+    from pog_engine.rtt_replay.translate import translate_intent
+    from pog_engine.rules.movement import legal_movement_actions
+
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    for uid in ("RU_5_ARMY_1", "RU_11_ARMY_1"):
+        state["units"][uid]["location"] = "KIEV"
+    state["movement"] = {"unit": None, "stack": ["RU_11_ARMY_1", "RU_5_ARMY_1"],
+                         "spent": 1, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+    ids = SourceIds.from_data()
+    first = next(int(key) for key, value in ids.mappings["units"].items()
+                 if value == "RU_5_ARMY_1")
+    second = next(int(key) for key, value in ids.mappings["units"].items()
+                  if value == "RU_11_ARMY_1")
+    intent = Intent(10, 10, "Allied Powers", "piece", first,
+                    {"state": "move_stack", "move": {"pieces": [first, second]}},
+                    {"state": "move_stack", "move": {"pieces": [second]}}, ())
+    assert translate_intent(state, intent, ids) == (
+        {"type": "DROP_MOVING_UNIT", "actor": "AP", "unit_id": "RU_5_ARMY_1"},)
+
+
 def test_landwehr_piece_and_finish_use_engine_actions():
     from pog_engine import create_game
     from pog_engine.rtt_replay.translate import translate_intent

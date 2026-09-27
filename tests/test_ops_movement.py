@@ -64,6 +64,24 @@ def test_two_armies_can_move_as_a_stack_for_multiple_edges():
     assert {"type": "MOVE_STACK", "actor": "AP", "unit_ids": group, "to": "ZHITOMIR"} in generate_legal_actions(state)
 
 
+def test_stack_can_drop_one_unit_and_continue_with_the_other():
+    state = ops_state()
+    state["active_side"] = "AP"
+    for uid in ("RU_5_ARMY_1", "RU_11_ARMY_1"):
+        state["units"][uid]["location"] = "KHARKOV"
+    state["activated"]["MOVE"] = ["KHARKOV"]
+    state["phase"] = "MOVEMENT"
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+    state = choose(state, "MOVE_STACK", unit_ids=["RU_11_ARMY_1", "RU_5_ARMY_1"], to="KIEV")
+    state = choose(state, "DROP_MOVING_UNIT", unit_id="RU_5_ARMY_1")
+    assert state["movement"]["unit"] == "RU_11_ARMY_1"
+    assert "RU_5_ARMY_1" in state["movement"]["done"]
+    assert any(a["type"] == "MOVE" and a.get("unit_id") == "RU_11_ARMY_1"
+               and a.get("to") == "ZHITOMIR" for a in generate_legal_actions(state))
+
+
 def test_movement_may_temporarily_overstack_but_cannot_end_overstacked():
     state = ops_state()
     state["active_side"] = "AP"
@@ -98,6 +116,59 @@ def test_undestroyed_enemy_fort_keeps_control_when_entered():
     state = choose(state, "MOVE", unit_id="GE_1_ARMY_1", to="LIEGE")
     assert state["spaces"]["LIEGE"]["control"] == "AP"
     assert not any(a["type"] == "MOVE" and a["unit_id"] == "GE_1_ARMY_1" for a in generate_legal_actions(state))
+
+
+def test_army_can_move_through_already_besieged_enemy_fort():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    state["units"]["AH_3_ARMY_1"]["location"] = "LUBLIN"
+    state["units"]["AH_4_ARMY_1"]["location"] = "BREST_LITOVSK"
+    state["units"]["RU_5_ARMY_1"]["location"] = "KIEV"
+    state["spaces"]["LUBLIN"]["control"] = "CP"
+    state["spaces"]["BREST_LITOVSK"]["fort_besieged"] = True
+    state["activated"]["MOVE"] = ["LUBLIN"]
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+    state = choose(state, "MOVE", unit_id="AH_3_ARMY_1", to="BREST_LITOVSK")
+    assert state["movement"]["unit"] == "AH_3_ARMY_1"
+    assert any(a["type"] == "MOVE" and a.get("unit_id") == "AH_3_ARMY_1"
+               and a.get("to") == "BIALYSTOK" for a in generate_legal_actions(state))
+
+
+def test_stack_can_move_through_already_besieged_enemy_fort():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    for uid in ("AH_2_ARMY_1", "AH_3_ARMY_1"):
+        state["units"][uid]["location"] = "LUBLIN"
+    state["units"]["AH_4_ARMY_1"]["location"] = "BREST_LITOVSK"
+    state["units"]["RU_5_ARMY_1"]["location"] = "KIEV"
+    state["spaces"]["LUBLIN"]["control"] = "CP"
+    state["spaces"]["BREST_LITOVSK"]["fort_besieged"] = True
+    state["activated"]["MOVE"] = ["LUBLIN"]
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+    group = ["AH_2_ARMY_1", "AH_3_ARMY_1"]
+    state = choose(state, "MOVE_STACK", unit_ids=group, to="BREST_LITOVSK")
+    assert state["movement"]["stack"] == group
+    assert state["spaces"]["BREST_LITOVSK"]["control"] == "AP"
+
+
+def test_stack_captures_enemy_trench_when_newly_besieging_fort():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    for uid in ("GEC_CORPS_1", "GEC_CORPS_2", "GEC_CORPS_3"):
+        state["units"][uid]["location"] = "AACHEN"
+    state["units"]["BE_1_ARMY_1"]["location"] = "ANTWERP"
+    state["spaces"]["LIEGE"]["trenches"]["AP"] = 1
+    state["activated"]["MOVE"] = ["AACHEN"]
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+    state = choose(state, "MOVE_STACK", unit_ids=["GEC_CORPS_1", "GEC_CORPS_2", "GEC_CORPS_3"], to="LIEGE")
+    assert state["spaces"]["LIEGE"]["fort_besieged"]
+    assert state["spaces"]["LIEGE"]["trenches"]["AP"] == 0
 
 
 def test_stack_limit_enemy_occupation_and_repeat_move():

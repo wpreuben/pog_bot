@@ -126,11 +126,17 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "space" and before_state == "attrition_phase":
         if current["phase"] == "ATTRITION":
             add("ADVANCE_AUTOMATIC_PHASE")
+        if after_state == "replacement_phase":
+            while current["decision"] is None and current["phase"] in {"SIEGE", "WAR_STATUS"}:
+                add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "piece" and before_state == "attrition_phase":
         if current["phase"] == "ATTRITION":
             add("ADVANCE_AUTOMATIC_PHASE")
+        if after_state == "replacement_phase":
+            while current["decision"] is None and current["phase"] in {"SIEGE", "WAR_STATUS"}:
+                add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "space" and before_state == "siege_phase":
-        if current["phase"] == "SIEGE" and current["decision"] is None:
+        while current["phase"] in {"ATTRITION", "SIEGE"} and current["decision"] is None:
             add("ADVANCE_AUTOMATIC_PHASE")
         add("RECORD_SIEGE_DIE", space_id=_lookup(ids, "spaces", intent.argument, intent), value=die())
         if after_state == "replacement_phase" and current["phase"] == "WAR_STATUS":
@@ -172,8 +178,14 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
         add("PLACE_NEUTRAL", unit_id=uid, to=destination)
     elif name == "space" and before_state == "place_event_trench":
         add("PLACE_EVENT_TRENCH", to=_lookup(ids, "spaces", intent.argument, intent))
-    elif name == "done" and before_state == "place_reinforcements" and state["phase"] == "ACTION":
-        pass
+    elif name == "done" and before_state == "place_reinforcements":
+        if state["phase"] == "ATTRITION" and after_state == "siege_phase":
+            add("ADVANCE_AUTOMATIC_PHASE")
+        elif after_state == "replacement_phase":
+            while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
+                add("ADVANCE_AUTOMATIC_PHASE")
+        elif state["phase"] not in {"ACTION", "SIEGE"}:
+            raise TranslationError(f"index {intent.start_index}: 증원 배치 완료 단계가 맞지 않습니다")
     elif name == "done" and before_state == "place_new_neutral_units" and state["phase"] == "ACTION":
         pass
     elif name == "attack" and before_state == "confirm_attack":
@@ -213,11 +225,11 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "flank" and before_state == "choose_flank_attack":
         flanking = [int(match.group(1)) for line in intent.log_delta
                    if (match := re.fullmatch(r">\+\d+ s(\d+)", line))]
-        if len(flanking) != 1:
+        if not flanking:
             raise TranslationError(f"index {intent.start_index}: 측면 공격 공간이 모호합니다")
-        flanking_space = _lookup(ids, "spaces", flanking[0], intent)
+        flanking_spaces = {_lookup(ids, "spaces", source, intent) for source in flanking}
         attacker_spaces = {current["units"][uid]["location"] for uid in current["combat_context"]["attackers"]}
-        pinning_spaces = attacker_spaces - {flanking_space}
+        pinning_spaces = attacker_spaces - flanking_spaces
         if len(pinning_spaces) != 1:
             raise TranslationError(f"index {intent.start_index}: 고정 공격 공간이 모호합니다")
         if len(intent.random_seeds) not in (1, 2):
@@ -270,6 +282,9 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
                 add("PASS_COMBAT_CARDS")
         elif state["combat_context"] and state["combat_context"]["stage"] == "ATTACKER_CARDS":
             add("PASS_COMBAT_CARDS")
+        elif (before_state == "confirm_mo" and after_state == "defender_combat_cards"
+              and state["combat_context"] and state["combat_context"]["stage"] == "DEFENDER_CARDS"):
+            pass
         elif before_state == "confirm_mo" and state["combat_context"]["stage"] == "LOSSES":
             pass
         else:
@@ -412,14 +427,19 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
         if any(action["type"] == "STOP_MOVING_UNIT" for action in generate_legal_actions(state)):
             add("STOP_MOVING_UNIT")
     elif name in ("done", "end_action") and state["phase"] == "MOVEMENT":
-        if after_state in ("end_operations", "action_phase", "trench_rolls",
-                           "choose_attackers", "choose_attack_space"):
+        if after_state in ("end_operations", "action_phase", "confirm_mo", "trench_rolls",
+                           "choose_attackers", "choose_attack_space", "attrition_phase",
+                           "siege_phase", "replacement_phase"):
             add("END_MOVEMENT")
     elif name == "end_action" and state["phase"] == "SR":
         add("END_SR")
     elif name == "end_action" and before_state == "rps":
-        while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
-            add("ADVANCE_AUTOMATIC_PHASE")
+        if after_state == "siege_phase":
+            if current["phase"] == "ATTRITION" and current["decision"] is None:
+                add("ADVANCE_AUTOMATIC_PHASE")
+        elif after_state != "attrition_phase":
+            while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
+                add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "end_action" and before_state == "end_operations" and after_state == "replacement_phase":
         while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
             add("ADVANCE_AUTOMATIC_PHASE")
@@ -437,10 +457,17 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
         add("ADVANCE_AUTOMATIC_PHASE")
     elif (name == "piece" and before_state in ("choose_move_space", "choose_pieces_to_move")):
         pass
-    elif (name == "piece" and before_state == "move_stack" and state["phase"] == "MOVEMENT"
-          and len(intent.before.get("move", {}).get("pieces", [])) == 1
-          and current["movement"].get("unit") == _lookup(ids, "units", intent.argument, intent)):
-        add("STOP_MOVING_UNIT")
+    elif name == "piece" and before_state == "move_stack" and state["phase"] == "MOVEMENT":
+        uid = _lookup(ids, "units", intent.argument, intent)
+        if (intent.argument not in (intent.before.get("move") or {}).get("pieces", [])
+                or intent.argument in (intent.after.get("move") or {}).get("pieces", [])):
+            raise TranslationError(f"index {intent.start_index}: 이동 중 중지할 유닛을 확인할 수 없습니다")
+        if uid in (current["movement"].get("stack") or []):
+            add("DROP_MOVING_UNIT", unit_id=uid)
+        elif current["movement"].get("unit") == uid:
+            add("STOP_MOVING_UNIT")
+        else:
+            raise TranslationError(f"index {intent.start_index}: 이동 중인 유닛이 다릅니다")
     elif name == "piece" and before_state == "choose_attackers":
         pass
     elif (name == "no_attack" and before_state == "choose_attackers"
