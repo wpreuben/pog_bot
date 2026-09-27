@@ -360,6 +360,20 @@ def test_reinforcement_confirmation_advances_attrition_to_siege(opening):
         "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE"]
 
 
+def test_last_reinforcement_confirmation_reaches_draw(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "place_reinforcements"},
+                     after={**intents[1071].after, "state": "draw_cards_phase"})
+
+    for action in translate_intent(state, intent, SourceIds.from_data()):
+        state = apply_action(state, action).state
+    assert state["phase"] == "DRAW"
+
+
 def test_event_confirmation_advances_empty_attrition_before_siege(opening):
     _, intents = opening
     state = create_game(seed=4)
@@ -375,6 +389,19 @@ def test_event_confirmation_advances_empty_attrition_before_siege(opening):
         "ADVANCE_AUTOMATIC_PHASE"]
 
 
+def test_event_confirmation_resolves_turn_to_replacement(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "confirm_event"},
+                     after={**intents[1071].after, "state": "replacement_phase"})
+
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE"]
+
+
 def test_cancel_retreat_confirmation_keeps_combat_open(opening):
     _, intents = opening
     state = create_game(seed=4)
@@ -383,6 +410,30 @@ def test_cancel_retreat_confirmation_keeps_combat_open(opening):
     intent = replace(intents[1071], kind="done",
                      before={**intents[1071].before, "state": "cancel_retreat_confirm"},
                      after={**intents[1071].after, "state": "choose_attackers"})
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_declined_attack_selection_waits_for_next_declaration(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="no_attack",
+                     before={**intents[1071].before, "state": "choose_attackers"},
+                     after={**intents[1071].after, "state": "choose_attackers"})
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_great_retreat_unit_selection_waits_for_destination(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["combat_context"] = {"stage": "GREAT_RETREAT"}
+    intent = replace(intents[1071], kind="piece",
+                     before={**intents[1071].before, "state": "great_retreat_option"},
+                     after={**intents[1071].after, "state": "great_retreat"})
 
     assert translate_intent(state, intent, SourceIds.from_data()) == ()
 

@@ -6,6 +6,13 @@ from pog_engine.model import Action, FullGameState, IllegalActionError
 from itertools import combinations
 
 
+def _can_end_move(state: FullGameState, destination: str) -> bool:
+    return not (state["active_side"] == "CP"
+                and destination in {"AMIENS", "CALAIS", "OSTEND"}
+                and not state["events"].get("RACE_TO_THE_SEA")
+                and state["players"]["CP"]["war_status"] < 4)
+
+
 def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
     data = load_data()
     unit = data.units[unit_id]
@@ -41,8 +48,9 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
             return False
         if state["turn"] == 1 and nation == "RU" and space["nation"] == "GE":
             return False
-    if side == "CP" and destination in {"AMIENS", "CALAIS", "OSTEND"}:
-        if not state["events"].get("RACE_TO_THE_SEA") and state["players"]["CP"]["war_status"] < 4:
+    if not _can_end_move(state, destination):
+        mf = unit["reduced_mf"] if state["units"][unit_id]["reduced"] else unit["mf"]
+        if state["movement"]["spent"] + 1 >= mf:
             return False
     if state["players"]["AP"]["commitment"] != "TOTAL" and unit["type"] == "ARMY":
         if space["nation"] == "IT" and nation not in {"IT", "AH"}:
@@ -134,8 +142,9 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
         if all(place not in state["activated"]["ATTACK"] for place in current_places):
             if moving_stack:
                 actions.extend({"type": "DROP_MOVING_UNIT", "actor": side, "unit_id": uid}
-                               for uid in moving_stack)
-            actions.append({"type": "STOP_MOVING_UNIT", "actor": side})
+                               for uid in moving_stack if _can_end_move(state, state["units"][uid]["location"]))
+            if all(_can_end_move(state, place) for place in current_places):
+                actions.append({"type": "STOP_MOVING_UNIT", "actor": side})
     else:
         from .trenches import legal_entrench_actions
 

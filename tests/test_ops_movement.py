@@ -110,6 +110,32 @@ def test_unit_cannot_exhaust_movement_in_attack_activated_space():
                    for action in generate_legal_actions(state))
 
 
+def test_german_army_may_pass_through_amiens_before_early_war_limit():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    state["players"]["CP"]["war_status"] = 3
+    state["units"]["GE_3_ARMY_1"]["location"] = "CAMBRAI"
+    for unit in state["units"].values():
+        if unit["location"] == "AMIENS":
+            unit["location"] = None
+    state["activated"]["MOVE"] = ["CAMBRAI"]
+    state["movement"] = {"unit": "GE_3_ARMY_1", "spent": 1, "done": [], "stack": None}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+
+    assert {"type": "MOVE", "actor": "CP", "unit_id": "GE_3_ARMY_1",
+            "to": "AMIENS"} in generate_legal_actions(state)
+    last_step = deepcopy(state)
+    last_step["movement"]["spent"] = 2
+    last_step["decision"]["options"] = legal_movement_actions(last_step)
+    assert not any(a["type"] == "MOVE" and a.get("to") == "AMIENS"
+                   for a in generate_legal_actions(last_step))
+    state = choose(state, "MOVE", unit_id="GE_3_ARMY_1", to="AMIENS")
+    assert not any(a["type"] == "STOP_MOVING_UNIT" for a in generate_legal_actions(state))
+    assert any(a["type"] == "MOVE" and a.get("to") == "CAMBRAI"
+               for a in generate_legal_actions(state))
+
+
 def test_undestroyed_enemy_fort_keeps_control_when_entered():
     state = ops_state()
     state = choose(choose(state, "ACTIVATE_SPACE", space_id="AACHEN", kind="MOVE"), "FINISH_ACTIVATION")

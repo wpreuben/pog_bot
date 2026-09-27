@@ -89,6 +89,19 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
         add("REMOVE_BRITISH_CORPS", unit_id=_lookup(ids, "units", intent.argument, intent))
     elif name == "piece" and before_state == "landwehr":
         add("LANDWEHR_FLIP", unit_id=_lookup(ids, "units", intent.argument, intent))
+    elif name == "piece" and before_state in {"great_retreat_option", "great_retreat"}:
+        pass
+    elif name == "space" and before_state == "great_retreat":
+        moved = _moved_units(intent, ids)
+        if len(moved) != 1:
+            raise TranslationError(f"index {intent.start_index}: Great Retreat 후퇴 유닛이 모호합니다")
+        unit_id, destination = moved[0]
+        add("RETREAT_RUSSIAN_UNIT", unit_id=unit_id, to=destination)
+    elif name == "pass" and before_state == "great_retreat_option":
+        add("PASS_GREAT_RETREAT")
+    elif name == "done" and before_state == "great_retreat":
+        if current["combat_context"] and current["combat_context"]["stage"] == "GREAT_RETREAT":
+            add("PASS_GREAT_RETREAT")
     elif name == "end_action" and before_state == "landwehr":
         add("END_LANDWEHR")
     elif name == "done" and before_state == "war_in_africa" and state["phase"] == "ACTION":
@@ -183,6 +196,10 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             add("ADVANCE_AUTOMATIC_PHASE")
         elif after_state == "replacement_phase":
             while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
+                add("ADVANCE_AUTOMATIC_PHASE")
+        elif after_state == "draw_cards_phase":
+            while current["decision"] is None and current["phase"] in {
+                    "ATTRITION", "SIEGE", "WAR_STATUS", "REPLACEMENT_AP", "REPLACEMENT_CP"}:
                 add("ADVANCE_AUTOMATIC_PHASE")
         elif state["phase"] not in {"ACTION", "SIEGE"}:
             raise TranslationError(f"index {intent.start_index}: 증원 배치 완료 단계가 맞지 않습니다")
@@ -415,6 +432,11 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif (name == "end_action" and before_state == "confirm_event"
           and after_state == "siege_phase" and state["phase"] == "ATTRITION"):
         add("ADVANCE_AUTOMATIC_PHASE")
+    elif (name == "end_action" and before_state == "confirm_event"
+          and after_state == "replacement_phase"
+          and state["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}):
+        while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
+            add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "end_action" and state["phase"] == "COMBAT":
         if current["combat_context"] and current["combat_context"]["stage"] == "ADVANCE":
             add("END_ADVANCE")
@@ -486,7 +508,8 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "piece" and before_state == "choose_attackers":
         pass
     elif (name == "no_attack" and before_state == "choose_attackers"
-          and state["phase"] == "COMBAT" and state["combat_context"] is None):
+          and state["phase"] in {"MOVEMENT", "COMBAT"}
+          and state["combat_context"] is None):
         pass
     elif name == "space" and before_state == "choose_move_space":
         pass
