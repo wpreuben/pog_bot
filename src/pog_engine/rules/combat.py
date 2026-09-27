@@ -635,6 +635,11 @@ def _after_losses(state: FullGameState) -> None:
         state.clear()
         state.update(result)
         context = state["combat_context"]
+        if (context.get("withdrawal") and not context.get("withdrawal_negated")
+                and context.get("loss_history") and "flank_success" not in context
+                and "VON_HUTIER" not in context["cards"][context["attacker"]]):
+            context["stage"] = "WITHDRAWAL_NEGATE"
+            return
     if context["loss_queue"]:
         context["loss_side"] = context["loss_queue"].pop(0)
         enemy = context["defender"] if context["loss_side"] == context["attacker"] else context["attacker"]

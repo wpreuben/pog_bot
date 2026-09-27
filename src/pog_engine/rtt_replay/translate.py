@@ -225,16 +225,26 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "flank" and before_state == "choose_flank_attack":
         flanking = [int(match.group(1)) for line in intent.log_delta
                    if (match := re.fullmatch(r">\+\d+ s(\d+)", line))]
-        if not flanking:
-            raise TranslationError(f"index {intent.start_index}: 측면 공격 공간이 모호합니다")
-        flanking_spaces = {_lookup(ids, "spaces", source, intent) for source in flanking}
-        attacker_spaces = {current["units"][uid]["location"] for uid in current["combat_context"]["attackers"]}
-        pinning_spaces = attacker_spaces - flanking_spaces
-        if len(pinning_spaces) != 1:
-            raise TranslationError(f"index {intent.start_index}: 고정 공격 공간이 모호합니다")
+        if flanking:
+            flanking_spaces = {_lookup(ids, "spaces", source, intent) for source in flanking}
+            attacker_spaces = {current["units"][uid]["location"] for uid in current["combat_context"]["attackers"]}
+            pinning_spaces = attacker_spaces - flanking_spaces
+            if len(pinning_spaces) != 1:
+                raise TranslationError(f"index {intent.start_index}: 고정 공격 공간이 모호합니다")
+            pinning_space = next(iter(pinning_spaces))
+        else:
+            from pog_engine.rules.combat import flank_modifier
+
+            choices = [option for option in generate_legal_actions(current)
+                       if option["type"] == "ATTEMPT_FLANK"]
+            if not choices or any(flank_modifier(current, {**current["combat_context"],
+                                                "pinning_space": option["pinning_space"]}) != 0
+                                  for option in choices):
+                raise TranslationError(f"index {intent.start_index}: 측면 공격 공간이 모호합니다")
+            pinning_space = min(option["pinning_space"] for option in choices)
         if len(intent.random_seeds) not in (1, 2):
             raise TranslationError(f"index {intent.start_index}: 측면 공격 주사위 관측 수가 잘못되었습니다")
-        add("ATTEMPT_FLANK", pinning_space=next(iter(pinning_spaces)))
+        add("ATTEMPT_FLANK", pinning_space=pinning_space)
         add("RECORD_FLANK_DIE", value=intent.random_seeds[0] % 6 + 1)
         if after_state == "defender_combat_cards" and current["combat_context"]["stage"] == "ATTACKER_CARDS":
             add("PASS_COMBAT_CARDS")
@@ -360,8 +370,7 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
           and state["combat_context"] and state["combat_context"]["stage"] == "RETREAT"):
         pass
     elif name == "done" and before_state == "cancel_retreat_confirm":
-        if state["phase"] == "COMBAT":
-            add("END_COMBAT")
+        pass
     elif name == "done" and before_state == "withdrawal_negate_step_loss_confirm":
         pass
     elif name == "piece" and before_state == "defender_retreat":
@@ -403,6 +412,9 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
               ("siege_phase", "SIEGE"), ("replacement_phase", "REPLACEMENT_AP"),
           }):
         pass
+    elif (name == "end_action" and before_state == "confirm_event"
+          and after_state == "siege_phase" and state["phase"] == "ATTRITION"):
+        add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "end_action" and state["phase"] == "COMBAT":
         if current["combat_context"] and current["combat_context"]["stage"] == "ADVANCE":
             add("END_ADVANCE")
@@ -431,6 +443,9 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
                            "choose_attackers", "choose_attack_space", "attrition_phase",
                            "siege_phase", "replacement_phase"):
             add("END_MOVEMENT")
+            if after_state == "replacement_phase":
+                while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
+                    add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "end_action" and state["phase"] == "SR":
         add("END_SR")
     elif name == "end_action" and before_state == "rps":

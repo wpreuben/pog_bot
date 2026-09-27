@@ -302,6 +302,25 @@ def test_flank_can_use_multiple_bonus_spaces(opening):
     assert translate_intent(state, intent, ids)[0]["pinning_space"] == "METZ"
 
 
+def test_flank_with_no_bonus_space_uses_equivalent_pinning_choice(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(8):
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    state["units"]["FR_1_ARMY_1"]["location"] = "AACHEN"
+    from pog_engine.rules.combat import flank_modifier, legal_combat_actions
+    state["decision"]["options"] = legal_combat_actions(state)
+    choices = [a for a in generate_legal_actions(state) if a["type"] == "ATTEMPT_FLANK"]
+    assert len(choices) == 2
+    assert all(flank_modifier(state, {**state["combat_context"],
+                                      "pinning_space": a["pinning_space"]}) == 0 for a in choices)
+    intent = replace(intents[8], log_delta=("Flank attempt:", ">B6 Success"))
+
+    assert translate_intent(state, intent, ids)[0] == min(choices, key=lambda a: a["pinning_space"])
+
+
 def test_draw_done_can_cross_finished_replacement_phase(opening):
     _, intents = opening
     state = create_game(seed=4)
@@ -341,6 +360,33 @@ def test_reinforcement_confirmation_advances_attrition_to_siege(opening):
         "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE"]
 
 
+def test_event_confirmation_advances_empty_attrition_before_siege(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    state["units"]["GE_1_ARMY_1"]["location"] = "LIEGE"
+    state["spaces"]["LIEGE"]["fort_besieged"] = True
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "confirm_event"},
+                     after={**intents[1071].after, "state": "siege_phase"})
+
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE"]
+
+
+def test_cancel_retreat_confirmation_keeps_combat_open(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "cancel_retreat_confirm"},
+                     after={**intents[1071].after, "state": "choose_attackers"})
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
 def test_replacement_points_end_does_not_resolve_pending_attrition(opening):
     _, intents = opening
     state = create_game(seed=4)
@@ -370,6 +416,26 @@ def test_end_operations_closes_movement_before_mandatory_offensive_notice(openin
     attrition = replace(intent, after={**intent.after, "state": "attrition_phase"})
     assert [a["type"] for a in translate_intent(state, attrition, SourceIds.from_data())] == [
         "END_MOVEMENT"]
+
+
+def test_last_movement_action_resolves_turn_to_replacement(opening):
+    from pog_engine.rules.movement import legal_movement_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["action_round"] = 6
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "end_operations"},
+                     after={**intents[1071].after, "state": "replacement_phase"})
+
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "END_MOVEMENT", "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE",
+        "ADVANCE_AUTOMATIC_PHASE"]
 
 
 def test_siege_roll_can_follow_automatic_attrition(opening):
