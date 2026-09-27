@@ -123,18 +123,62 @@ def supply_status(state: FullGameState, unit_id: str, *, location: str | None = 
     return _trace(state, place, side, nation, allowed_sources, mef_eligible)
 
 
+def _reachable_from_sources(state: FullGameState, side: str, nation: str | None) -> set[str]:
+    """공간별 추적과 같은 양방향 경로를 공급원에서 한 번만 탐색한다."""
+    data = load_data()
+    enemy = "AP" if side == "CP" else "CP"
+    enemy_spaces = {unit["location"] for uid, unit in state["units"].items()
+                    if data.units[uid]["side"] == enemy and unit["location"] is not None}
+    friendly_spaces = {unit["location"] for uid, unit in state["units"].items()
+                       if data.units[uid]["side"] == side and unit["location"] is not None}
+
+    def traversable(place: str) -> bool:
+        static = data.spaces[place]
+        if static["kind"] != "BOARD" or place in enemy_spaces:
+            return False
+        if static["nation"] in state["war_nations"] and not state["war_nations"][static["nation"]]:
+            if not (static["nation"] == "GR" and state["events"].get("SALONIKA")
+                    and place in {"SALONIKA", "KAVALA"}):
+                return False
+        dynamic = state["spaces"][place]
+        return dynamic["control"] == side or (dynamic["fort_besieged"] and place in friendly_spaces)
+
+    sources = {place for place in _sources(state, side, nation)
+               if state["spaces"][place]["control"] == side and traversable(place)}
+    ports = {place for place in data.spaces
+             if traversable(place) and _port_allowed(state, place, side)}
+    use_sea = side == "CP" or nation not in {"RU", "RO", "SB"}
+    edge_nation = "RU" if nation in {"RU", "RO", "SB"} else nation
+    visited = set(sources)
+    queue = deque(sources)
+    while queue:
+        current = queue.popleft()
+        neighbors = data.neighbors(current, edge_nation)
+        if use_sea and current in ports:
+            neighbors = neighbors | ports
+        for place in neighbors:
+            if place not in visited and traversable(place):
+                visited.add(place)
+                queue.append(place)
+    return visited
+
+
 def supplied_spaces(state: FullGameState, side: str) -> frozenset[str]:
     if side not in {"AP", "CP"}:
         raise ValueError("진영은 AP 또는 CP여야 합니다")
     data = load_data()
     nations = (None, "RU", "IT") if side == "AP" else (None, "TU")
+    reachable_by_nation = {nation: _reachable_from_sources(state, side, nation)
+                           for nation in nations}
+    reachable = set().union(*reachable_by_nation.values())
     supplied = {
         place for place, definition in data.spaces.items()
         if definition["kind"] == "BOARD" and state["spaces"][place]["control"] == side
-        and any(_trace(state, place, side, nation).supplied for nation in nations)
+        and place in reachable
     }
     if (side == "AP" and
-            (not state["war_nations"]["IT"] or _trace(state, "TARANTO", "AP", None).supplied)):
+            (not state["war_nations"]["IT"]
+             or "TARANTO" in reachable_by_nation[None])):
         if state["spaces"]["VALONA"]["control"] == "AP":
             supplied.add("VALONA")
             if state["spaces"]["TIRANA"]["control"] == "AP":

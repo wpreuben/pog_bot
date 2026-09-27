@@ -1,7 +1,56 @@
 import pytest
+from unittest.mock import patch
 
 from pog_engine import create_game
+from pog_engine.data import load_data
+from pog_engine.rules import supply as supply_rules
 from pog_engine.rules.supply import resolve_attrition, supplied_spaces, supply_status
+
+
+def _reference_supplied_spaces(state, side):
+    """독립된 공간별 경로 탐색 결과를 보급 지도 최적화의 기준으로 삼는다."""
+    data = load_data()
+    nations = (None, "RU", "IT") if side == "AP" else (None, "TU")
+    supplied = {
+        place for place, definition in data.spaces.items()
+        if definition["kind"] == "BOARD" and state["spaces"][place]["control"] == side
+        and any(supply_rules._trace(state, place, side, nation).supplied for nation in nations)
+    }
+    if (side == "AP" and (not state["war_nations"]["IT"]
+                          or supply_rules._trace(state, "TARANTO", "AP", None).supplied)):
+        if state["spaces"]["VALONA"]["control"] == "AP":
+            supplied.add("VALONA")
+            if state["spaces"]["TIRANA"]["control"] == "AP":
+                supplied.add("TIRANA")
+    return frozenset(supplied)
+
+
+@pytest.mark.parametrize("scenario", ("initial", "contested", "neutral_entries", "mef"))
+def test_supplied_spaces_match_independent_trace_for_entire_map(scenario):
+    state = create_game(seed=4)
+    if scenario == "contested":
+        state["units"]["GE_1_ARMY_1"]["location"] = "PARIS"
+        state["spaces"]["PARIS"]["control"] = "CP"
+        state["spaces"]["LIEGE"]["fort_besieged"] = True
+        state["spaces"]["VALONA"]["control"] = "CP"
+    elif scenario == "neutral_entries":
+        state["war_nations"].update({"IT": True, "TU": True, "BU": True})
+        state["events"]["SALONIKA"] = 2
+        state["spaces"]["TARANTO"]["control"] = "CP"
+        state["spaces"]["CETINJE"]["control"] = "CP"
+    elif scenario == "mef":
+        state["war_nations"]["TU"] = True
+        state["flags"]["mef_beachhead"] = "MEF4"
+        state["units"]["BR_MEF_ARMY_1"]["location"] = "MEF4"
+        state["units"]["AUSC_CORPS_1"]["location"] = "MEF4"
+        state["spaces"]["CONSTANTINOPLE"]["control"] = "AP"
+
+    for side in ("AP", "CP"):
+        expected = _reference_supplied_spaces(state, side)
+        with patch.object(supply_rules, "_trace", wraps=supply_rules._trace) as trace:
+            actual = supplied_spaces(state, side)
+        assert actual == expected
+        assert trace.call_count <= 5
 
 
 def test_historical_units_trace_to_correct_friendly_sources():
