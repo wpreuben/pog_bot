@@ -65,6 +65,8 @@ def play_card(state: FullGameState, card_id: str, mode: str) -> FullGameState:
                 continue
             pool = "ALLIED" if nation == "A" else nation
             player["replacement_points"][pool] = player["replacement_points"].get(pool, 0) + points
+        if side == "AP" and state["events"].get("OVER_THERE"):
+            player["replacement_points"]["US"] = player["replacement_points"].get("US", 0) + 1
         next_state = complete_action(state)
         state.clear()
         state.update(next_state)

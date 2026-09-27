@@ -105,7 +105,7 @@ def update_entry_markers(state: dict) -> None:
         state["us_entry"] = 2
     elif combined >= 30:
         state["us_entry"] = max(1, state["us_entry"])
-    state["war_nations"]["US"] = state["us_entry"] >= 2
+    state["war_nations"]["US"] = bool(state["events"].get("OVER_THERE"))
 
     russian = _russian_vp_spaces(state)
     controlled = sum(state["spaces"][space_id]["control"] == "CP" for space_id in russian)

@@ -95,6 +95,9 @@ def test_us_entry_requires_combined_status_and_next_turn():
     update_entry_markers(state)
     state = play_event(state, "ZIMMERMANN_TELEGRAM")
     assert state["us_entry"] == 2
+    assert not state["war_nations"]["US"]
+    update_entry_markers(state)
+    assert not state["war_nations"]["US"]
     assert state["vp"] == 9
     assert state["phase"] == "OPS"
     next_turn = with_card(action_state("AP", 9), "OVER_THERE")
@@ -103,6 +106,27 @@ def test_us_entry_requires_combined_status_and_next_turn():
     next_turn = play_event(next_turn, "OVER_THERE")
     assert next_turn["us_entry"] == 3
     assert next_turn["war_nations"]["US"]
+
+
+def test_over_there_adds_one_us_point_for_each_ap_rp_card_only():
+    before = with_card(action_state("AP", 10), "KERENSKY_OFFENSIVE")
+    before = apply_action(before, {"type": "PLAY_CARD", "actor": "AP",
+                                   "card_id": "KERENSKY_OFFENSIVE", "mode": "RP"}).state
+    assert before["players"]["AP"]["replacement_points"].get("US", 0) == 0
+
+    after = with_card(action_state("AP", 10), "KERENSKY_OFFENSIVE")
+    after["events"]["OVER_THERE"] = 9
+    after["war_nations"]["US"] = True
+    after = apply_action(after, {"type": "PLAY_CARD", "actor": "AP",
+                                 "card_id": "KERENSKY_OFFENSIVE", "mode": "RP"}).state
+    assert after["players"]["AP"]["replacement_points"]["US"] == 1
+
+    cp = with_card(action_state("CP", 10), "SUD_ARMY")
+    cp["events"]["OVER_THERE"] = 9
+    cp["war_nations"]["US"] = True
+    cp = apply_action(cp, {"type": "PLAY_CARD", "actor": "CP",
+                             "card_id": "SUD_ARMY", "mode": "RP"}).state
+    assert cp["players"]["CP"]["replacement_points"].get("US", 0) == 0
 
 
 def test_romania_disallowed_after_fall_of_tsar():
