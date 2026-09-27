@@ -601,6 +601,13 @@ def translate_intent_result(state: FullGameState, intent: Intent, ids: SourceIds
     elif (name == "next" and before_state == "confirm_mo"
           and after_state == "war_in_africa" and state["phase"] == "WAR_IN_AFRICA"):
         pass
+    elif (name == "next" and before_state == "action_phase"
+          and intent.role == "Allied Powers" and intent.argument is None
+          and intent.before == intent.after
+          and not intent.random_seeds and not intent.log_delta
+          and state["phase"] == "ACTION" and state["active_side"] == "AP"
+          and (state["decision"] or {}).get("kind") == "ACTION_PHASE"):
+        pass
     elif name == "next" and state["decision"] is None:
         add("ADVANCE_AUTOMATIC_PHASE")
     elif (name == "piece" and before_state in ("choose_move_space", "choose_pieces_to_move")):
