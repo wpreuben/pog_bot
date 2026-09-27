@@ -13,7 +13,7 @@ from .ids import SourceIds
 from .input import load_replay
 from .normalize import normalize_steps
 from .projection import first_difference, project_engine, project_rtt
-from .translate import TranslationError, translate_intent
+from .translate import TranslationError, translate_intent_result
 
 
 @dataclass(frozen=True)
@@ -152,8 +152,11 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
     for intent in intents:
         before_engine_state = state
         try:
-            actions = translate_intent(state, intent, ids)
-            for action in actions:
+            translated = translate_intent_result(state, intent, ids)
+            if translated.records:
+                state = translated.state
+                records.extend(translated.records)
+            for action in translated.pending_actions:
                 transition = apply_action(state, action)
                 state = transition.state
                 records.append(transition.record)

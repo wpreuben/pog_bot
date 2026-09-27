@@ -1,6 +1,7 @@
 """RTT 미세 입력을 현재 엔진의 합법 행동으로 연결."""
 
 from copy import deepcopy
+from dataclasses import dataclass
 import re
 
 from pog_engine.engine import apply_action, generate_legal_actions
@@ -12,6 +13,14 @@ from .normalize import Intent
 
 class TranslationError(ValueError):
     """의미 행동의 합법 후보가 없거나 모호한 경우."""
+
+
+@dataclass(frozen=True)
+class TranslationResult:
+    actions: tuple[Action, ...]
+    records: tuple[dict, ...]
+    state: FullGameState
+    pending_actions: tuple[Action, ...]
 
 
 def _select(state: FullGameState, intent: Intent, action_type: str, **fields) -> Action:
@@ -43,29 +52,40 @@ def _moved_units(intent: Intent, ids: SourceIds) -> list[tuple[str, str]]:
             if index and old != place and place]
 
 
-def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tuple[Action, ...]:
+def translate_intent_result(state: FullGameState, intent: Intent, ids: SourceIds) -> TranslationResult:
     name = intent.kind
     before_state = intent.before.get("state") if intent.before else None
     after_state = intent.after.get("state")
     current = deepcopy(state)
     actions: list[Action] = []
+    records: list[dict] = []
+
+    def emit(action: Action) -> None:
+        nonlocal current
+        if len(actions) != len(records):
+            raise TranslationError(
+                f"index {intent.start_index}: 적용하지 않은 행동 뒤에 다른 행동을 적용할 수 없습니다")
+        actions.append(action)
+        transition = apply_action(current, action)
+        current = transition.state
+        records.append(transition.record)
+
+    def finish() -> TranslationResult:
+        return TranslationResult(tuple(actions), tuple(records), current,
+                                 tuple(actions[len(records):]))
 
     def add(action_type: str, **fields) -> None:
-        nonlocal current
         action = _select(current, intent, action_type, **fields)
-        actions.append(action)
-        current = apply_action(current, action).state
+        emit(action)
 
     def add_combat_card() -> None:
-        nonlocal current
         card_id = _lookup(ids, "cards", intent.argument, intent)
         choices = [action for action in generate_legal_actions(current)
                    if action["type"] in {"PLAY_COMBAT_CARD", "USE_COMBAT_CARD"}
                    and action["card_id"] == card_id]
         if len(choices) != 1:
             raise TranslationError(f"index {intent.start_index}: 전투 카드 {card_id} 후보 {len(choices)}개")
-        actions.append(choices[0])
-        current = apply_action(current, choices[0]).state
+        emit(choices[0])
 
     def die() -> int:
         if len(intent.random_seeds) != 1:
@@ -259,8 +279,7 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
                         and len(action["unit_ids"]) == len(unit_ids)]
         if len(declarations) != 1:
             raise TranslationError(f"index {intent.start_index}: DECLARE_ATTACK 후보 {len(declarations)}개")
-        actions.append(declarations[0])
-        current = apply_action(current, declarations[0]).state
+        emit(declarations[0])
         if after_state in ("attacker_combat_cards", "defender_combat_cards"):
             if current["combat_context"]["stage"] == "TRENCH_CARDS":
                 add("PASS_TRENCH_CARDS")
@@ -495,8 +514,7 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
                           and action.get("to", destination) == destination]
             if len(candidates) != 1:
                 raise TranslationError(f"index {intent.start_index}: 진격 후보 {len(candidates)}개 {uid}")
-            actions.append(candidates[0])
-            current = apply_action(current, candidates[0]).state
+            emit(candidates[0])
     elif name == "done" and before_state == "attacker_advance":
         if current["phase"] == "COMBAT" and current["combat_context"] is not None:
             add("END_ADVANCE")
@@ -533,7 +551,7 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
                           and set(action["unit_ids"]) == {uid for uid, _ in moved}]
                 if len(groups) == 1:
                     add("MOVE_STACK", to=destination, unit_ids=groups[0]["unit_ids"])
-                    return tuple(actions)
+                    return finish()
         for uid, destination in moved:
             add("MOVE", unit_id=uid, to=destination)
     elif name == "stop" and state["phase"] == "MOVEMENT":
@@ -620,4 +638,9 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
         raise TranslationError(
             f"index {intent.start_index}: 번역하지 않은 RTT 행동 {name!r}, 상태 {before_state!r}"
         )
-    return tuple(actions)
+    return finish()
+
+
+def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tuple[Action, ...]:
+    """기존의 행동 목록 API를 유지한다."""
+    return translate_intent_result(state, intent, ids).actions
