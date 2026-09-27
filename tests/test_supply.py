@@ -56,6 +56,27 @@ def test_attrition_removes_oos_army_permanently_and_converts_isolated_space():
     assert state["units"]["GE_1_ARMY_1"]["location"] == "PARIS"
 
 
+def test_montenegrin_unit_keeps_cetinje_supplied_during_attrition():
+    state = create_game(seed=4)
+    state["spaces"]["MOSTAR"]["control"] = "CP"
+    state["spaces"]["TIRANA"]["control"] = "CP"
+    assert "CETINJE" not in supplied_spaces(state, "AP")
+    assert supply_status(state, "MNC_CORPS_1", purpose="ATTRITION").supplied
+    result = resolve_attrition(state)
+    assert result["spaces"]["CETINJE"]["control"] == "AP"
+
+
+def test_albanian_spaces_use_valona_and_taranto_supply_exception():
+    state = create_game(seed=4)
+    for place in ("CETINJE", "SKOPJE", "FLORINA"):
+        state["spaces"][place]["control"] = "CP"
+    assert "VALONA" in supplied_spaces(state, "AP")
+    assert "TIRANA" in supplied_spaces(state, "AP")
+    assert resolve_attrition(state)["spaces"]["TIRANA"]["control"] == "AP"
+    state["spaces"]["VALONA"]["control"] = "CP"
+    assert "TIRANA" not in supplied_spaces(state, "AP")
+
+
 def test_oos_unit_cannot_move_entrench_or_sr():
     from pog_engine.rules.movement import legal_movement_actions
     from pog_engine.rules.sr import legal_sr_actions

@@ -256,6 +256,15 @@ def _loss_options(state: FullGameState) -> list[Action]:
     side = context["loss_side"]
     remaining = context["loss_remaining"]
     data = load_data()
+    def can_replace(army_id: str, corps_id: str) -> bool:
+        if army_id == "BR_BEF_ARMY_1":
+            return corps_id == "BR_BEFC_CORPS_1"
+        army = data.units[army_id]
+        corps = data.units[corps_id]
+        if army["nation"] == "BR":
+            return corps_id.startswith("BRC_CORPS_")
+        return corps["nation"] == army["nation"]
+
     actions: list[Action] = []
     for uid in _context_units(state, side):
         unit = state["units"][uid]
@@ -267,7 +276,7 @@ def _loss_options(state: FullGameState) -> list[Action]:
         if unit["reduced"] and definition["type"] == "ARMY":
             reserve = f"{side}_RESERVE_BOX"
             corps = [cid for cid, candidate in data.units.items()
-                     if candidate["side"] == side and candidate["nation"] == definition["nation"]
+                     if candidate["side"] == side and can_replace(uid, cid)
                      and candidate["type"] == "CORPS" and state["units"][cid]["location"] == reserve]
             if corps:
                 actions.extend({**base, "replacement_unit_id": cid} for cid in sorted(corps))
@@ -306,7 +315,7 @@ def _loss_options(state: FullGameState) -> list[Action]:
             replacements = [None]
             if reduced and definition["type"] == "ARMY":
                 replacements = [cid for cid in reserve_units
-                                if data.units[cid]["nation"] == definition["nation"]] or [None]
+                                if can_replace(uid, cid)] or [None]
             for replacement in replacements:
                 following, remaining_reserve = after(active_units, reserve_units, uid, replacement)
                 best = max(best, lf + payable(following, remaining_reserve, budget - lf))
@@ -664,9 +673,14 @@ def _apply_step_loss(state: FullGameState, uid: str, replacement: str | None = N
     old_place = unit["location"]
     lf = definition["reduced_lf"] if unit["reduced"] else definition["lf"]
     if unit["reduced"]:
+        was_supplied = supply_status(state, uid).supplied
         old_place = unit["location"]
         unit["location"] = None
         unit["eliminated"] = True
+        if (definition["not_replaceable"]
+                or (definition["type"] == "ARMY" and
+                    (replacement is None or not was_supplied))):
+            unit["permanent"] = True
         if replacement:
             state["units"][replacement]["location"] = old_place
     else:
@@ -854,6 +868,7 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
 
             uid = action["unit_id"]
             target = action.get("to", context["defender_space"])
+            source = state["units"][uid]["location"]
             state["units"][uid]["location"] = target
             if uid not in context["advanced"]:
                 context["advanced"].append(uid)
@@ -862,8 +877,15 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
                 if space["control"] != context["attacker"] and space["vp"]:
                     state["vp"] += 1 if context["attacker"] == "CP" else -1
                 space["control"] = context["attacker"]
-            else:
-                update_siege_status(state, target)
+            update_siege_status(state, target)
+            if source != target:
+                update_siege_status(state, source)
+            defender = "AP" if context["attacker"] == "CP" else "CP"
+            opposing_trench = space["trenches"][defender]
+            if opposing_trench:
+                space["trenches"][defender] = 0
+                if opposing_trench == 2:
+                    space["trenches"][context["attacker"]] = 1
         elif kind == "END_ADVANCE":
             _finish_combat(state)
     _refresh(state)

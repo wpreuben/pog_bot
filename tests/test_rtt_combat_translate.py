@@ -136,6 +136,12 @@ def test_pass_flank_and_confirm_end_attack(opening):
         "SKIP_FLANK", "PASS_COMBAT_CARDS", "PASS_COMBAT_CARDS",
         "RECORD_COMBAT_DIE", "RECORD_COMBAT_DIE"]
     assert [action["value"] for action in passed[-2:]] == [4, 6]
+    without_rolls = translate_intent(
+        state, replace(intents[963], after={**intents[963].after,
+                                             "state": "defender_combat_cards"},
+                       random_seeds=()), ids)
+    assert [action["type"] for action in without_rolls] == [
+        "SKIP_FLANK", "PASS_COMBAT_CARDS"]
 
     from pog_engine.rules.combat import legal_combat_actions
     state["combat_context"] = None
@@ -143,6 +149,160 @@ def test_pass_flank_and_confirm_end_attack(opening):
                          "options": legal_combat_actions(state)}
     assert translate_intent(state, intents[1071], ids) == (
         {"type": "END_COMBAT", "actor": "CP"},)
+    state["phase"] = "ACTION"
+    assert translate_intent(state, intents[1071], ids) == ()
+
+
+def test_end_action_finishes_pending_advance_before_combat(opening):
+    from pog_engine.rules.combat import legal_combat_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "CP"
+    state["attacked_units"] = []
+    state["attacked_spaces"] = []
+    state["combat_context"] = {
+        "stage": "ADVANCE", "attacker": "CP", "defender": "AP",
+        "defender_space": "LIEGE", "attackers": ["GE_1_ARMY_1"],
+        "advanced": [], "results": {"CP": 3, "AP": 1},
+        "cards": {"CP": [], "AP": []},
+    }
+    state["decision"] = {"kind": "COMBAT", "actor": "CP",
+                         "options": legal_combat_actions(state)}
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "end_operations"},
+                     after={**intents[1071].after, "state": "action_phase"})
+    assert [action["type"] for action in translate_intent(state, intent, SourceIds.from_data())] == [
+        "END_ADVANCE", "END_COMBAT"]
+
+
+def test_done_advance_ui_can_follow_automatic_combat_finish(opening):
+    from pog_engine.rules.combat import legal_combat_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "CP"
+    state["combat_context"] = None
+    state["decision"] = {"kind": "COMBAT", "actor": "CP",
+                         "options": legal_combat_actions(state)}
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "attacker_advance"},
+                     after={**intents[1071].after, "state": "choose_attackers"})
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_losses_done_can_finish_unshown_advance(opening):
+    from pog_engine.rules.combat import legal_combat_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "CP"
+    state["attacked_units"] = []
+    state["attacked_spaces"] = []
+    state["combat_context"] = {
+        "stage": "LOSSES", "attacker": "CP", "defender": "AP",
+        "defender_space": "LIEGE", "attackers": ["GE_1_ARMY_1"],
+        "defending_units": [], "loss_side": "CP", "loss_remaining": 0,
+        "loss_queue": [], "fire_index": 1, "fire_order": ["CP", "AP"],
+        "advanced": [], "results": {"CP": 3, "AP": 1},
+        "cards": {"CP": [], "AP": []},
+    }
+    state["decision"] = {"kind": "COMBAT", "actor": "CP",
+                         "options": legal_combat_actions(state)}
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "apply_attacker_losses"},
+                     after={**intents[1071].after, "state": "choose_attackers"},
+                     random_seeds=())
+    assert [action["type"] for action in translate_intent(state, intent, SourceIds.from_data())] == [
+        "END_LOSSES", "END_ADVANCE"]
+
+
+def test_movement_done_enters_attack_selection(opening):
+    from pog_engine.rules.movement import legal_movement_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "CP"
+    state["activated"]["ATTACK"] = ["AACHEN"]
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "CP",
+                         "options": legal_movement_actions(state)}
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "choose_pieces_to_move"},
+                     after={**intents[1071].after, "state": "choose_attackers"})
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "END_MOVEMENT"]
+
+
+def test_flank_done_keeps_attacker_card_window_open(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(8):
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    state = apply_action(state, next(a for a in generate_legal_actions(state)
+                                     if a["type"] == "SKIP_FLANK")).state
+    intent = replace(intents[963], kind="done",
+                     after={**intents[963].after, "state": "attacker_combat_cards"},
+                     random_seeds=())
+    assert translate_intent(state, intent, ids) == ()
+
+
+def test_mandatory_offensive_confirm_resumes_combat_cards(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(8):
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    intent = replace(intents[963], kind="next",
+                     before={**intents[963].before, "state": "confirm_mo"},
+                     after={**intents[963].after, "state": "defender_combat_cards"},
+                     random_seeds=())
+    assert [a["type"] for a in translate_intent(state, intent, ids)] == [
+        "SKIP_FLANK", "PASS_COMBAT_CARDS"]
+
+
+def test_flank_roll_can_advance_to_defender_card_window(opening):
+    rows, intents = opening
+    ids = SourceIds.from_data()
+    state = bootstrap_historical(10762091171, rows[0]["after"], ids)
+    for index in range(8):
+        for action in translate_intent(state, intents[index], ids):
+            state = apply_action(state, action).state
+    intent = replace(intents[8],
+                     after={**intents[8].after, "state": "defender_combat_cards"})
+    assert [a["type"] for a in translate_intent(state, intent, ids)] == [
+        "ATTEMPT_FLANK", "RECORD_FLANK_DIE", "PASS_COMBAT_CARDS"]
+
+
+def test_draw_done_can_cross_finished_replacement_phase(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "REPLACEMENT_CP"
+    state["active_side"] = "CP"
+    state["decision"] = None
+    intent = replace(intents[187],
+                     after={**intents[187].after, "state": "draw_cards_phase"},
+                     random_seeds=())
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "END_DRAW_DISCARD"]
+
+
+def test_event_confirmation_can_follow_engine_action_completion(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="end_action",
+                     before={**intents[1071].before, "state": "confirm_event"},
+                     after={**intents[1071].after, "state": "attrition_phase"})
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
 
 
 def test_attack_that_rolls_immediately_enters_losses(opening):

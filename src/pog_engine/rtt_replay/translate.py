@@ -224,6 +224,8 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             raise TranslationError(f"index {intent.start_index}: 측면 공격 주사위 관측 수가 잘못되었습니다")
         add("ATTEMPT_FLANK", pinning_space=next(iter(pinning_spaces)))
         add("RECORD_FLANK_DIE", value=intent.random_seeds[0] % 6 + 1)
+        if after_state == "defender_combat_cards" and current["combat_context"]["stage"] == "ATTACKER_CARDS":
+            add("PASS_COMBAT_CARDS")
         if len(intent.random_seeds) == 2:
             add("PASS_COMBAT_CARDS")
             add("PASS_COMBAT_CARDS")
@@ -234,24 +236,39 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "done" and before_state == "choose_flank_attack":
         if current["combat_context"]["stage"] != "ATTACKER_CARDS":
             raise TranslationError(f"index {intent.start_index}: 측면 공격 완료 단계가 맞지 않습니다")
-        add("PASS_COMBAT_CARDS")
-        add("PASS_COMBAT_CARDS")
+        if after_state != "attacker_combat_cards":
+            add("PASS_COMBAT_CARDS")
+        if after_state not in ("attacker_combat_cards", "defender_combat_cards"):
+            add("PASS_COMBAT_CARDS")
         if intent.random_seeds:
             add("RECORD_COMBAT_DIE", side=current["combat_context"]["fire_order"][0], value=die())
     elif name == "pass" and before_state == "choose_flank_attack":
         add("SKIP_FLANK")
-        add("PASS_COMBAT_CARDS")
-        add("PASS_COMBAT_CARDS")
-        if len(intent.random_seeds) != 2:
+        if after_state in ("defender_combat_cards", "apply_defender_losses", "apply_attacker_losses") or intent.random_seeds:
+            add("PASS_COMBAT_CARDS")
+        if intent.random_seeds:
+            add("PASS_COMBAT_CARDS")
+        if len(intent.random_seeds) not in (0, 2):
             raise TranslationError(f"index {intent.start_index}: 전투 주사위 두 개가 필요합니다")
         for seed in intent.random_seeds:
             context = current["combat_context"]
             add("RECORD_COMBAT_DIE", side=context["fire_order"][context["fire_index"]],
                 value=seed % 6 + 1)
-    elif name == "confirm_pass_attack" and state["phase"] == "COMBAT":
-        add("END_COMBAT")
+    elif name == "confirm_pass_attack" and before_state == "choose_attackers":
+        if state["phase"] == "COMBAT" and state["combat_context"] is None:
+            add("END_COMBAT")
+        elif state["phase"] != "ACTION":
+            raise TranslationError(f"index {intent.start_index}: 전투 종료 단계가 맞지 않습니다")
     elif name == "next" and state["phase"] == "COMBAT":
-        if state["combat_context"] and state["combat_context"]["stage"] == "ATTACKER_CARDS":
+        if (before_state == "confirm_mo" and state["combat_context"]
+                and state["combat_context"]["stage"] in {"TRENCH_CARDS", "FLANK"}):
+            if current["combat_context"]["stage"] == "TRENCH_CARDS":
+                add("PASS_TRENCH_CARDS")
+            if current["combat_context"]["stage"] == "FLANK":
+                add("SKIP_FLANK")
+            if after_state == "defender_combat_cards":
+                add("PASS_COMBAT_CARDS")
+        elif state["combat_context"] and state["combat_context"]["stage"] == "ATTACKER_CARDS":
             add("PASS_COMBAT_CARDS")
         elif before_state == "confirm_mo" and state["combat_context"]["stage"] == "LOSSES":
             pass
@@ -266,6 +283,9 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             add("ADVANCE_AUTOMATIC_PHASE")
         add("DISCARD_DRAW_CARD", card_id=_lookup(ids, "cards", intent.argument, intent))
     elif name == "done" and before_state == "draw_cards_phase":
+        while current["decision"] is None and current["phase"] in {
+                "ATTRITION", "SIEGE", "WAR_STATUS", "REPLACEMENT_AP", "REPLACEMENT_CP"}:
+            add("ADVANCE_AUTOMATIC_PHASE")
         if current["phase"] == "DRAW" and current["decision"] is None:
             add("ADVANCE_AUTOMATIC_PHASE")
         add("END_DRAW_DISCARD")
@@ -300,6 +320,10 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             add("END_LOSSES")
         if intent.random_seeds:
             add("RECORD_COMBAT_DIE", side=current["combat_context"]["fire_order"][current["combat_context"]["fire_index"]], value=die())
+        if (after_state in ("choose_attackers", "end_operations")
+                and current["phase"] == "COMBAT" and current["combat_context"]
+                and current["combat_context"]["stage"] == "ADVANCE"):
+            add("END_ADVANCE")
     elif name == "piece" and before_state in ("apply_attacker_losses", "apply_defender_losses"):
         replacements = [int(match.group(1)) for line in intent.log_delta
                         if (match := re.search(r"broke to P(\d+)", line))]
@@ -352,12 +376,21 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             actions.append(candidates[0])
             current = apply_action(current, candidates[0]).state
     elif name == "done" and before_state == "attacker_advance":
-        add("END_ADVANCE")
+        if current["phase"] == "COMBAT" and current["combat_context"] is not None:
+            add("END_ADVANCE")
     elif (name == "stop" and before_state == "attacker_advance"
           and after_state == "attacker_advance" and state["phase"] == "COMBAT"
           and state["combat_context"] and state["combat_context"]["stage"] == "ADVANCE"):
         pass
+    elif (name == "end_action" and before_state == "confirm_event"
+          and (after_state, state["phase"]) in {
+              ("action_phase", "ACTION"), ("attrition_phase", "ATTRITION"),
+              ("siege_phase", "SIEGE"), ("replacement_phase", "REPLACEMENT_AP"),
+          }):
+        pass
     elif name == "end_action" and state["phase"] == "COMBAT":
+        if current["combat_context"] and current["combat_context"]["stage"] == "ADVANCE":
+            add("END_ADVANCE")
         add("END_COMBAT")
         if after_state == "replacement_phase":
             while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
@@ -379,7 +412,8 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
         if any(action["type"] == "STOP_MOVING_UNIT" for action in generate_legal_actions(state)):
             add("STOP_MOVING_UNIT")
     elif name in ("done", "end_action") and state["phase"] == "MOVEMENT":
-        if after_state in ("end_operations", "action_phase", "trench_rolls"):
+        if after_state in ("end_operations", "action_phase", "trench_rolls",
+                           "choose_attackers", "choose_attack_space"):
             add("END_MOVEMENT")
     elif name == "end_action" and state["phase"] == "SR":
         add("END_SR")

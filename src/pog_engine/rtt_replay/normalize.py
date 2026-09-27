@@ -29,6 +29,22 @@ def normalize_steps(steps: tuple[ReplayStep, ...],
     if len(rows) != len(steps):
         raise NormalizeError(f"행동 {len(steps)}개와 관측 {len(rows)}개가 일치하지 않습니다")
     committed: list[Intent] = []
+    pending_rollback = False
+
+    def finish_rollback(target: dict, index: int) -> None:
+        from .ids import SourceIds
+        from .projection import first_difference, project_rtt
+
+        ids = SourceIds.from_data()
+        target_view = project_rtt(target, ids)
+        match = next((position for position in range(len(committed) - 1, -1, -1)
+                      if committed[position].after.get("state") == target.get("state")
+                      and first_difference(project_rtt(committed[position].after, ids),
+                                           target_view) is None), None)
+        if match is None:
+            raise NormalizeError(f"index {index}: 되돌리기 대상 상태를 찾지 못했습니다")
+        del committed[match + 1:]
+
     for step, observation in zip(steps, rows, strict=True):
         index = step.index
         if observation.get("index") != index:
@@ -39,6 +55,22 @@ def normalize_steps(steps: tuple[ReplayStep, ...],
         before, after = observation.get("before"), observation.get("after")
         if not isinstance(after, dict):
             raise NormalizeError(f"index {index}: after 상태가 없습니다")
+        if step.name == "propose_rollback" and after.get("state") == "review_rollback_proposal":
+            pending_rollback = True
+            continue
+        if pending_rollback and step.name == "reject":
+            pending_rollback = False
+            continue
+        if pending_rollback and step.name == "accept":
+            if after.get("state") == "action_phase":
+                finish_rollback(after, index)
+                pending_rollback = False
+            continue
+        if (pending_rollback and step.name == "next" and before is not None
+                and before.get("state") == "confirm_rollback"):
+            finish_rollback(after, index)
+            pending_rollback = False
+            continue
         if step.name == "undo":
             match = next((position for position in range(len(committed) - 1, -1, -1)
                           if committed[position].before == after), None)

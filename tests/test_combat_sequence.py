@@ -71,10 +71,12 @@ def test_losses_two_space_retreat_and_advance_are_replayable():
     assert state["decision"]["actor"] == "AP"
     state = choose(state, "RETREAT_TO", to="BRUSSELS")
     state = choose(state, "RETREAT_TO", to="ANTWERP")
+    state["spaces"]["LIEGE"]["trenches"]["AP"] = 2
     state = choose(state, "ADVANCE_UNIT", unit_id="GE_1_ARMY_1")
     assert state["units"]["GE_1_ARMY_1"]["location"] == "LIEGE"
     assert state["units"]["BE_1_ARMY_1"]["location"] == "ANTWERP"
     assert state["spaces"]["LIEGE"]["control"] == "AP"
+    assert state["spaces"]["LIEGE"]["trenches"] == {"AP": 0, "CP": 1}
 
 
 def test_reduced_army_loss_replaces_with_reserve_corps():
@@ -87,7 +89,74 @@ def test_reduced_army_loss_replaces_with_reserve_corps():
     state = choose(state, "RECORD_COMBAT_DIE", side="AP", value=1)
     state = choose(state, "TAKE_LOSS", unit_id="BE_1_ARMY_1", replacement_unit_id="BEC_CORPS_1")
     assert state["units"]["BE_1_ARMY_1"]["eliminated"]
+    assert not state["units"]["BE_1_ARMY_1"]["permanent"]
     assert state["units"]["BEC_CORPS_1"]["location"] == "LIEGE"
+
+
+def test_bef_army_is_permanently_eliminated_after_second_step_loss():
+    from pog_engine.rules.combat import _apply_step_loss
+
+    state = create_game(seed=4)
+    state["units"]["BR_BEF_ARMY_1"]["reduced"] = True
+    _apply_step_loss(state, "BR_BEF_ARMY_1")
+    assert state["units"]["BR_BEF_ARMY_1"]["permanent"]
+
+
+def test_army_without_reserve_corps_is_permanently_eliminated():
+    from pog_engine.rules.combat import _apply_step_loss
+
+    state = create_game(seed=4)
+    state["units"]["RU_2_ARMY_1"]["reduced"] = True
+    for uid, unit in state["units"].items():
+        if uid.startswith("RUC_") and unit["location"] == "AP_RESERVE_BOX":
+            unit["location"] = None
+    _apply_step_loss(state, "RU_2_ARMY_1")
+    assert state["units"]["RU_2_ARMY_1"]["permanent"]
+
+
+def test_out_of_supply_army_is_permanent_even_with_reserve_corps():
+    from pog_engine.rules.combat import _apply_step_loss
+
+    state = create_game(seed=4)
+    state["units"]["GE_1_ARMY_1"]["location"] = "PARIS"
+    state["units"]["GE_1_ARMY_1"]["reduced"] = True
+    state["spaces"]["PARIS"]["control"] = "CP"
+    _apply_step_loss(state, "GE_1_ARMY_1", "GEC_CORPS_1")
+    assert state["units"]["GE_1_ARMY_1"]["permanent"]
+
+
+def test_bef_loss_can_only_break_down_to_bef_corps():
+    state = combat_state()
+    state["units"]["BR_BEF_ARMY_1"]["location"] = "LIEGE"
+    state["units"]["BR_BEF_ARMY_1"]["reduced"] = True
+    state["units"]["BR_BEFC_CORPS_1"]["location"] = "AP_RESERVE_BOX"
+    state["units"]["BRC_CORPS_4"]["location"] = "AP_RESERVE_BOX"
+    state["combat_context"] = {
+        "attacker": "CP", "defender": "AP", "attackers": ["GE_1_ARMY_1"],
+        "defender_space": "LIEGE", "defending_units": ["BR_BEF_ARMY_1"],
+        "stage": "LOSSES", "loss_side": "AP", "loss_remaining": 3,
+    }
+    choices = legal_combat_actions(state)
+    assert {a.get("replacement_unit_id") for a in choices if a["type"] == "TAKE_LOSS"} == {
+        "BR_BEFC_CORPS_1"}
+
+
+def test_advance_into_friendly_fort_clears_stale_siege():
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["active_side"] = "AP"
+    state["units"]["FR_1_ARMY_1"]["location"] = "NANCY"
+    state["spaces"]["VERDUN"]["fort_besieged"] = True
+    state["combat_context"] = {
+        "stage": "ADVANCE", "attacker": "AP", "defender": "CP",
+        "defender_space": "VERDUN", "attackers": ["FR_1_ARMY_1"],
+        "advanced": [], "results": {"AP": 3, "CP": 1},
+        "cards": {"AP": [], "CP": []},
+    }
+    state["decision"] = {"kind": "COMBAT", "actor": "AP",
+                         "options": legal_combat_actions(state)}
+    state = choose(state, "ADVANCE_UNIT", unit_id="FR_1_ARMY_1")
+    assert not state["spaces"]["VERDUN"]["fort_besieged"]
 
 
 def test_loss_choices_preserve_maximum_payable_loss_number():

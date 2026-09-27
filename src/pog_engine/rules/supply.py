@@ -119,11 +119,18 @@ def supplied_spaces(state: FullGameState, side: str) -> frozenset[str]:
         raise ValueError("진영은 AP 또는 CP여야 합니다")
     data = load_data()
     nations = (None, "RU", "IT") if side == "AP" else (None, "TU")
-    return frozenset(
+    supplied = {
         place for place, definition in data.spaces.items()
         if definition["kind"] == "BOARD" and state["spaces"][place]["control"] == side
         and any(_trace(state, place, side, nation).supplied for nation in nations)
-    )
+    }
+    if (side == "AP" and
+            (not state["war_nations"]["IT"] or _trace(state, "TARANTO", "AP", None).supplied)):
+        if state["spaces"]["VALONA"]["control"] == "AP":
+            supplied.add("VALONA")
+            if state["spaces"]["TIRANA"]["control"] == "AP":
+                supplied.add("TIRANA")
+    return frozenset(supplied)
 
 
 def resolve_attrition(state: FullGameState) -> FullGameState:
@@ -152,6 +159,10 @@ def resolve_attrition(state: FullGameState) -> FullGameState:
             continue
         side = state["spaces"][place]["control"]
         if side not in {"AP", "CP"} or place not in unsupplied_spaces[side]:
+            continue
+        if any(unit["location"] == place and data.units[uid]["side"] == side
+               and supply_status(state, uid, purpose="ATTRITION").supplied
+               for uid, unit in state["units"].items()):
             continue
         if side == "AP" and definition["nation"] == "SB":
             continue

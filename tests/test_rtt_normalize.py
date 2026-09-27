@@ -1,6 +1,7 @@
 """RTT 초기 카드 순서와 되돌리기 정제."""
 
 import json
+from copy import deepcopy
 from pathlib import Path
 import subprocess
 
@@ -62,6 +63,36 @@ def test_undo_removes_uncommitted_choice_and_preserves_source_index():
     intents = normalize_steps(steps, observations)
     assert [(intent.start_index, intent.end_index, intent.kind) for intent in intents] == [
         (3, 3, "play_event")]
+
+
+def test_accepted_rollback_removes_reverted_actions_and_ui_steps():
+    from pog_engine.rtt_replay.normalize import normalize_steps
+
+    trace = subprocess.run(["node", str(ROOT / "tools/rtt_trace.cjs"), str(FIXTURE), str(RULES)],
+                           capture_output=True, text=True, check=True)
+    rows = [json.loads(line) for line in trace.stdout.splitlines()[:3]]
+    action_phase = rows[1]["after"]
+    event_state = rows[2]["after"]
+    review = deepcopy(event_state)
+    review["state"] = "review_rollback_proposal"
+    confirm = deepcopy(event_state)
+    confirm["state"] = "confirm_rollback"
+    observations = [
+        {"index": 1, "before": rows[1]["before"], "after": action_phase,
+         "random": {"seeds": []}},
+        {"index": 2, "before": action_phase, "after": event_state,
+         "random": {"seeds": []}},
+        {"index": 3, "before": event_state, "after": review,
+         "random": {"seeds": []}},
+        {"index": 4, "before": review, "after": confirm,
+         "random": {"seeds": []}},
+        {"index": 5, "before": confirm, "after": action_phase,
+         "random": {"seeds": []}},
+    ]
+    steps = tuple(ReplayStep(index, "Central Powers", kind, None) for index, kind in
+                  enumerate(("next", "play_event", "propose_rollback", "accept", "next"), 1))
+    intents = normalize_steps(steps, observations)
+    assert [(intent.end_index, intent.kind) for intent in intents] == [(1, "next")]
 
 
 def test_missing_random_observation_is_error():

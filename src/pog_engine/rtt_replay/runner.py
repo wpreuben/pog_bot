@@ -59,7 +59,10 @@ def compare_checkpoint(rtt_state: dict, engine_state: FullGameState,
                        before_engine_state: FullGameState | None = None) -> ReplayDifference | None:
     expected = project_rtt(rtt_state, ids)
     actual = project_engine(engine_state)
-    if (adjudications is not None and index >= 168
+    if (adjudications is not None
+            and ((before_rtt_state is not None
+                  and before_rtt_state.get("state") == "attrition_phase")
+                 or any(item.path == "$.spaces.ARABIA.control" for item in adjudications))
             and expected["spaces"]["ARABIA"]["control"] == "AP"
             and actual["spaces"]["ARABIA"]["control"] == "CP"):
         if not any(item.path == "$.spaces.ARABIA.control" for item in adjudications):
@@ -136,12 +139,15 @@ def run_replay(path: Path, rules_path: Path) -> ReplayReport:
         raise ValueError("RTT 관측 행동 수가 입력과 다릅니다")
     ids = SourceIds.from_data()
     state = bootstrap_historical(source.seed, observations[0]["after"], ids)
-    state["flags"]["rtt_replay_draws"] = build_draw_schedule(observations[:-1], ids)
+    intents = normalize_steps(source.actions, observations[:-1])
+    committed_indices = {intent.end_index for intent in intents}
+    state["flags"]["rtt_replay_draws"] = build_draw_schedule(
+        [observation for observation in observations[:-1]
+         if observation["index"] in committed_indices], ids)
     initial = state
     records: list[dict] = []
     adjudications: list[AdjudicatedDifference] = []
     checked_steps = 0
-    intents = normalize_steps(source.actions, observations[:-1])
     for intent in intents:
         before_engine_state = state
         try:

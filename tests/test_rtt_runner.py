@@ -66,10 +66,43 @@ def test_official_arabia_attrition_difference_is_reported_not_hidden():
     engine = bootstrap_historical(10762091171, setup, ids)
     engine["spaces"]["ARABIA"]["control"] = "CP"
     adjudications = []
-    assert compare_checkpoint(setup, engine, 188, "next", ids, adjudications) is None
+    assert compare_checkpoint(setup, engine, 154, "space", ids, adjudications,
+                              {"state": "attrition_phase"}) is None
     assert len(adjudications) == 1
     assert adjudications[0].path == "$.spaces.ARABIA.control"
     assert adjudications[0].rule == "14.3.6"
+
+
+def test_arabia_difference_requires_attrition_evidence():
+    from pog_engine.rtt_replay.runner import compare_checkpoint
+
+    output = subprocess.run(["node", str(ROOT / "tools/rtt_trace.cjs"), str(FIXTURE), str(RULES)],
+                            capture_output=True, text=True, check=True).stdout
+    setup = json.loads(output.splitlines()[0])["after"]
+    ids = SourceIds.from_data()
+    engine = bootstrap_historical(10762091171, setup, ids)
+    engine["spaces"]["ARABIA"]["control"] = "CP"
+    adjudications = []
+    difference = compare_checkpoint(setup, engine, 154, "space", ids, adjudications,
+                                    {"state": "action_phase"})
+    assert difference.path == "$.spaces.ARABIA.control"
+    assert adjudications == []
+
+
+def test_arabia_attrition_difference_can_surface_on_next_action():
+    from pog_engine.rtt_replay.runner import compare_checkpoint
+
+    output = subprocess.run(["node", str(ROOT / "tools/rtt_trace.cjs"), str(FIXTURE), str(RULES)],
+                            capture_output=True, text=True, check=True).stdout
+    setup = json.loads(output.splitlines()[0])["after"]
+    ids = SourceIds.from_data()
+    engine = bootstrap_historical(10762091171, setup, ids)
+    engine["spaces"]["ARABIA"]["control"] = "CP"
+    adjudications = []
+    assert compare_checkpoint(setup, engine, 20, "next", ids, adjudications,
+                              {"state": "attrition_phase"}) is None
+    assert [(item.path, item.rule) for item in adjudications] == [
+        ("$.spaces.ARABIA.control", "14.3.6")]
 
 
 def test_entire_historical_replay_matches_and_records_are_replayable():
