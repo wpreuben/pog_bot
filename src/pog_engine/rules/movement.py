@@ -13,7 +13,8 @@ def _can_end_move(state: FullGameState, destination: str) -> bool:
                 and state["players"]["CP"]["war_status"] < 4)
 
 
-def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
+def _can_enter(state: FullGameState, unit_id: str, destination: str,
+               moving_group: tuple[str, ...] | None = None) -> bool:
     data = load_data()
     unit = data.units[unit_id]
     space = data.spaces[destination]
@@ -39,12 +40,14 @@ def _can_enter(state: FullGameState, unit_id: str, destination: str) -> bool:
             return False
     from .forts import siege_survives_departure
 
-    if not siege_survives_departure(state, state["units"][unit_id]["location"], (unit_id,)):
+    if not siege_survives_departure(state, state["units"][unit_id]["location"],
+                                   moving_group or (unit_id,)):
         return False
     if space["fort"] and not state["spaces"][destination]["fort_destroyed"] and space["side"] != side:
         from .forts import can_besiege, fort_status
 
-        if not fort_status(state, destination).besieged and not can_besiege(state, destination, side, (unit_id,)):
+        if not fort_status(state, destination).besieged and not can_besiege(
+                state, destination, side, moving_group or (unit_id,)):
             return False
         if state["turn"] == 1 and nation == "RU" and space["nation"] == "GE":
             return False
@@ -109,7 +112,7 @@ def legal_movement_actions(state: FullGameState) -> list[Action]:
             destinations.intersection_update(data.neighbors(source, data.units[uid]["nation"]))
         for destination in sorted(destinations):
             if all(context["spent"] < (data.units[uid]["reduced_mf"] if state["units"][uid]["reduced"] else data.units[uid]["mf"])
-                   and _can_enter(state, uid, destination) for uid in group):
+                   and _can_enter(state, uid, destination, group) for uid in group):
                 actions.append({"type": "MOVE_STACK", "actor": side, "unit_ids": list(group), "to": destination})
     if not moving:
         from .forts import siege_survives_departure

@@ -192,7 +192,9 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "space" and before_state == "place_event_trench":
         add("PLACE_EVENT_TRENCH", to=_lookup(ids, "spaces", intent.argument, intent))
     elif name == "done" and before_state == "place_reinforcements":
-        if state["phase"] == "ATTRITION" and after_state == "siege_phase":
+        if state["phase"] == "ATTRITION" and after_state == "attrition_phase":
+            pass
+        elif state["phase"] == "ATTRITION" and after_state == "siege_phase":
             add("ADVANCE_AUTOMATIC_PHASE")
         elif after_state == "replacement_phase":
             while current["decision"] is None and current["phase"] in {"ATTRITION", "SIEGE", "WAR_STATUS"}:
@@ -319,7 +321,11 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
     elif name == "card" and before_state in ("attacker_combat_cards", "defender_combat_cards"):
         add_combat_card()
     elif name == "card" and before_state == "draw_cards_phase":
-        while current["decision"] is None and current["phase"] in {"WAR_STATUS", "REPLACEMENT_AP", "REPLACEMENT_CP"}:
+        if current["phase"] == "MOVEMENT" and any(
+                option["type"] == "END_MOVEMENT" for option in generate_legal_actions(current)):
+            add("END_MOVEMENT")
+        while current["decision"] is None and current["phase"] in {
+                "ATTRITION", "SIEGE", "WAR_STATUS", "REPLACEMENT_AP", "REPLACEMENT_CP"}:
             add("ADVANCE_AUTOMATIC_PHASE")
         if current["phase"] == "DRAW" and current["decision"] is None:
             add("ADVANCE_AUTOMATIC_PHASE")
@@ -356,9 +362,11 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
                     add("RECORD_COMBAT_DIE", side=context["fire_order"][context["fire_index"]],
                         value=seed % 6 + 1)
     elif name == "space" and before_state == "apply_defender_losses" and "Fort destroyed" in " ".join(intent.log_delta):
-        add("END_LOSSES")
+        pass
     elif name == "done" and before_state in ("apply_attacker_losses", "apply_defender_losses"):
-        if before_state == "apply_attacker_losses" or current["combat_context"]["loss_side"] == current["combat_context"]["defender"]:
+        if (current["combat_context"]["stage"] == "LOSSES"
+                and (before_state == "apply_attacker_losses"
+                     or current["combat_context"]["loss_side"] == current["combat_context"]["defender"])):
             add("END_LOSSES")
         if intent.random_seeds:
             add("RECORD_COMBAT_DIE", side=current["combat_context"]["fire_order"][current["combat_context"]["fire_index"]], value=die())
@@ -482,7 +490,7 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             add("ADVANCE_AUTOMATIC_PHASE")
     elif name == "end_action" and before_state == "end_operations" and after_state == "attrition_phase":
         pass
-    elif name == "end_rp" and state["phase"].startswith("REPLACEMENT_"):
+    elif name in {"end_rp", "confirm_end_rp"} and state["phase"].startswith("REPLACEMENT_"):
         add("END_REPLACEMENT")
     elif name == "flag_supply_warnings" and after_state == "flag_supply_warnings":
         pass

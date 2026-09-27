@@ -334,6 +334,25 @@ def test_draw_done_can_cross_finished_replacement_phase(opening):
         "ADVANCE_AUTOMATIC_PHASE", "ADVANCE_AUTOMATIC_PHASE", "END_DRAW_DISCARD"]
 
 
+def test_draw_card_can_follow_unclosed_final_movement(opening):
+    from pog_engine.rules.movement import legal_movement_actions
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["action_round"] = 6
+    state["players"]["AP"]["hand"] = ["SEVERE_WEATHER_AP"]
+    state["movement"] = {"unit": None, "spent": 0, "done": []}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+    intent = replace(intents[1071], kind="card", argument=7,
+                     before={**intents[1071].before, "state": "draw_cards_phase"},
+                     after={**intents[1071].after, "state": "draw_cards_phase"})
+
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())][-1] == "DISCARD_DRAW_CARD"
+
+
 def test_event_confirmation_can_follow_engine_action_completion(opening):
     _, intents = opening
     state = create_game(seed=4)
@@ -372,6 +391,34 @@ def test_last_reinforcement_confirmation_reaches_draw(opening):
     for action in translate_intent(state, intent, SourceIds.from_data()):
         state = apply_action(state, action).state
     assert state["phase"] == "DRAW"
+
+
+def test_last_reinforcement_confirmation_can_leave_attrition_pending(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "ATTRITION"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "place_reinforcements"},
+                     after={**intents[1071].after, "state": "attrition_phase"})
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_replacement_confirmation_ends_current_side(opening):
+    from pog_engine.rules.replacements import begin_replacement_phase
+
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "REPLACEMENT_AP"
+    state["players"]["AP"]["replacement_points"]["FR"] = 1
+    state = begin_replacement_phase(state, "AP")
+    intent = replace(intents[1071], kind="confirm_end_rp",
+                     before={**intents[1071].before, "state": "replacement_phase"},
+                     after={**intents[1071].after, "state": "replacement_phase"})
+
+    assert [a["type"] for a in translate_intent(state, intent, SourceIds.from_data())] == [
+        "END_REPLACEMENT"]
 
 
 def test_event_confirmation_advances_empty_attrition_before_siege(opening):
@@ -434,6 +481,32 @@ def test_great_retreat_unit_selection_waits_for_destination(opening):
     intent = replace(intents[1071], kind="piece",
                      before={**intents[1071].before, "state": "great_retreat_option"},
                      after={**intents[1071].after, "state": "great_retreat"})
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_fort_destruction_waits_for_defender_losses_done(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["decision"] = None
+    intent = replace(intents[1071], kind="space",
+                     before={**intents[1071].before, "state": "apply_defender_losses"},
+                     after={**intents[1071].after, "state": "apply_defender_losses"},
+                     log_delta=(">Fort destroyed",))
+
+    assert translate_intent(state, intent, SourceIds.from_data()) == ()
+
+
+def test_zero_attacker_losses_enter_advance_without_extra_loss_action(opening):
+    _, intents = opening
+    state = create_game(seed=4)
+    state["phase"] = "COMBAT"
+    state["combat_context"] = {"stage": "ADVANCE"}
+    intent = replace(intents[1071], kind="done",
+                     before={**intents[1071].before, "state": "apply_attacker_losses"},
+                     after={**intents[1071].after, "state": "attacker_advance"},
+                     random_seeds=())
 
     assert translate_intent(state, intent, SourceIds.from_data()) == ()
 
@@ -631,7 +704,7 @@ def test_reinforcement_placement_uses_observed_unit_and_space(opening):
         {"type": "PLACE_REINFORCEMENT", "actor": "AP", "unit_id": "BR_2_ARMY_1", "to": "LONDON"},)
 
 
-def test_fort_destruction_uses_defender_loss_completion(opening):
+def test_fort_destruction_is_resolved_at_defender_loss_completion(opening):
     rows, intents = opening
     from pog_engine.rtt_replay.runner import build_draw_schedule
 
@@ -643,4 +716,5 @@ def test_fort_destruction_uses_defender_loss_completion(opening):
             continue
         for action in translate_intent(state, intents[index], ids):
             state = apply_action(state, action).state
-    assert translate_intent(state, intents[235], ids) == ({"type": "END_LOSSES", "actor": "AP"},)
+    assert translate_intent(state, intents[235], ids) == ()
+    assert translate_intent(state, intents[236], ids)[0]["type"] == "END_LOSSES"

@@ -136,6 +136,22 @@ def test_german_army_may_pass_through_amiens_before_early_war_limit():
                for a in generate_legal_actions(state))
 
 
+def test_moving_corps_stack_can_besiege_two_strength_fort_together():
+    state = ops_state()
+    state["phase"] = "MOVEMENT"
+    state["active_side"] = "AP"
+    state["war_nations"]["TU"] = True
+    for uid in ("BRC_CORPS_3", "BRC_CORPS_5"):
+        state["units"][uid]["location"] = "SINAI"
+    state["movement"] = {"unit": None, "spent": 1, "done": [],
+                         "stack": ["BRC_CORPS_3", "BRC_CORPS_5"]}
+    state["decision"] = {"kind": "MOVEMENT", "actor": "AP",
+                         "options": legal_movement_actions(state)}
+
+    assert {"type": "MOVE_STACK", "actor": "AP",
+            "unit_ids": ["BRC_CORPS_3", "BRC_CORPS_5"], "to": "BEERSHEBA"} in generate_legal_actions(state)
+
+
 def test_undestroyed_enemy_fort_keeps_control_when_entered():
     state = ops_state()
     state = choose(choose(state, "ACTIVATE_SPACE", space_id="AACHEN", kind="MOVE"), "FINISH_ACTIVATION")

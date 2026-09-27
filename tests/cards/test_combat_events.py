@@ -238,6 +238,37 @@ def test_flank_defers_withdrawal_until_attacker_losses_are_complete():
     assert state["combat_context"]["loss_side"] == "CP"
 
 
+def test_destroyed_defenders_cannot_fire_after_first_strike():
+    from pog_engine.rules.combat import _after_losses
+
+    state = combat_state(defender_space="SEDAN", defender_ids=("FR_1_ARMY_1",))
+    state["units"]["FR_1_ARMY_1"]["location"] = None
+    state["combat_context"].update({"stage": "LOSSES", "loss_side": "AP",
+                                    "results": {"CP": 7}, "fire_index": 0,
+                                    "loss_queue": []})
+
+    _after_losses(state)
+
+    assert state["combat_context"]["stage"] == "ADVANCE"
+    assert state["combat_context"]["results"]["AP"] == 0
+
+
+def test_withdrawal_requires_retreat_even_after_attackers_are_eliminated():
+    from pog_engine.rules.combat import _after_losses
+
+    state = combat_state(attacker_ids=("AHC_CORPS_3",), defender_ids=("RU_8_ARMY_1",))
+    state["units"]["AHC_CORPS_3"]["location"] = None
+    state["combat_context"].update({"stage": "LOSSES", "loss_side": "CP",
+                                    "results": {"CP": 0, "AP": 3}, "fire_index": 1,
+                                    "loss_queue": [], "withdrawal": True,
+                                    "withdrawal_negated": True})
+
+    _after_losses(state)
+
+    assert state["combat_context"]["stage"] == "RETREAT"
+    assert state["combat_context"]["retreat_total"] == 1
+
+
 def test_lloyd_george_blocks_british_attack_on_german_level_two_trench():
     state = combat_state(attacker="AP", attacker_ids=("BR_1_ARMY_1",),
                          defender_ids=("GE_1_ARMY_1",))

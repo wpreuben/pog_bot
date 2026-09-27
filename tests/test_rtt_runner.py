@@ -26,6 +26,21 @@ FIXTURE = ROOT / "tests/fixtures/replay-258629.json"
 RULES = rules_path(__file__)
 
 
+def test_draw_schedule_records_cards_drawn_when_final_action_ends():
+    ids = SourceIds.from_data()
+    before = {"state": "end_operations", "turn": 2,
+              "ap": {"hand": [], "deck": [7], "discard": []},
+              "cp": {"hand": [67], "deck": [], "discard": []}}
+    after = {"state": "draw_cards_phase", "turn": 2,
+             "ap": {"hand": [7], "deck": [], "discard": []},
+             "cp": {"hand": [67], "deck": [], "discard": []}}
+
+    schedule = build_draw_schedule([{"index": 365, "before": before, "after": after}], ids)
+
+    assert schedule["AP"] == [{"turn": 2, "hand": ["SEVERE_WEATHER_AP"],
+                                "deck": [], "discard": []}]
+
+
 def test_trace_error_preserves_original_action_index(tmp_path):
     from pog_engine.rtt_replay.runner import ReplayTraceError, _trace
 

@@ -119,7 +119,8 @@ def build_draw_schedule(observations: list[dict], ids: SourceIds) -> dict[str, l
         before, after = observation["before"], observation["after"]
         if before is None:
             continue
-        if before["state"] not in ("replacement_phase", "draw_cards_phase"):
+        if (before["state"] not in ("replacement_phase", "draw_cards_phase")
+                and after["state"] != "draw_cards_phase"):
             continue
         for side, key in (("AP", "ap"), ("CP", "cp")):
             if len(after[key]["hand"]) <= len(before[key]["hand"]):

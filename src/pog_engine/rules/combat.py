@@ -647,9 +647,17 @@ def _after_losses(state: FullGameState) -> None:
         context["stage"] = "LOSSES"
         return
     if context["fire_index"] + 1 < len(context["fire_order"]):
-        context["fire_index"] += 1
-        context["stage"] = "FIRE"
-        return
+        next_side = context["fire_order"][context["fire_index"] + 1]
+        destination = context["defender_space"]
+        fort_stands = (load_data().spaces[destination]["fort"]
+                       and not state["spaces"][destination]["fort_destroyed"])
+        if next_side == context["defender"] and not _context_units(state, next_side) and not fort_stands:
+            context["fire_index"] += 1
+            context["results"][next_side] = 0
+        else:
+            context["fire_index"] += 1
+            context["stage"] = "FIRE"
+            return
     if context.get("withdrawal") and not context.get("withdrawal_negated") and context.get("loss_history"):
         context["stage"] = "WITHDRAWAL_NEGATE"
         return
@@ -659,7 +667,7 @@ def _after_losses(state: FullGameState) -> None:
     difference = context["results"].get(attacker, 0) - context["results"].get(defender, 0)
     if context.get("retreat_canceled") and difference > 0 and defenders:
         _finish_combat(state)
-    elif (difference > 0 or context.get("withdrawal")) and defenders and full_attackers:
+    elif ((difference > 0 and full_attackers) or context.get("withdrawal")) and defenders:
         context["stage"] = "RETREAT"
         context["retreat_total"] = 1 if context.get("withdrawal") or difference <= 1 else 2
         context["retreat_remaining"] = context["retreat_total"]
