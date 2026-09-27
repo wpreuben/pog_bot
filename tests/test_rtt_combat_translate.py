@@ -166,6 +166,11 @@ def test_pass_flank_and_confirm_end_attack(opening):
         "SKIP_FLANK", "PASS_COMBAT_CARDS", "PASS_COMBAT_CARDS",
         "RECORD_COMBAT_DIE", "RECORD_COMBAT_DIE"]
     assert [action["value"] for action in passed[-2:]] == [4, 6]
+    first_roll = translate_intent(
+        state, replace(intents[963], random_seeds=intents[963].random_seeds[:1]), ids)
+    assert [action["type"] for action in first_roll] == [
+        "SKIP_FLANK", "PASS_COMBAT_CARDS", "PASS_COMBAT_CARDS", "RECORD_COMBAT_DIE"]
+    assert first_roll[-1]["value"] == 4
     without_rolls = translate_intent(
         state, replace(intents[963], after={**intents[963].after,
                                              "state": "defender_combat_cards"},

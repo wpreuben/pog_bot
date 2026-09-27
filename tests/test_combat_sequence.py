@@ -79,6 +79,29 @@ def test_losses_two_space_retreat_and_advance_are_replayable():
     assert state["spaces"]["LIEGE"]["trenches"] == {"AP": 0, "CP": 1}
 
 
+def test_von_hutier_resolves_defender_losses_before_defender_fire():
+    state = combat_state()
+    state = choose(state, "DECLARE_ATTACK", unit_ids=["GE_1_ARMY_1"], defender_space="LIEGE")
+    state = choose(state, "SKIP_FLANK")
+    state["combat_context"]["cards"]["CP"].append("VON_HUTIER")
+    state = choose(choose(state, "PASS_COMBAT_CARDS"), "PASS_COMBAT_CARDS")
+    state = choose(state, "RECORD_COMBAT_DIE", side="CP", value=4)
+    assert state["combat_context"]["stage"] == "LOSSES"
+    assert state["combat_context"]["loss_side"] == "AP"
+    while not any(a["type"] == "END_LOSSES" for a in generate_legal_actions(state)):
+        loss = next(a for a in generate_legal_actions(state) if a["type"] == "TAKE_LOSS")
+        state = apply_action(state, loss).state
+    state = choose(state, "END_LOSSES")
+    assert state["combat_context"]["stage"] == "FIRE"
+    assert any(a["type"] == "RECORD_COMBAT_DIE" and a["side"] == "AP"
+               for a in generate_legal_actions(state))
+    state = choose(state, "RECORD_COMBAT_DIE", side="AP", value=3)
+    assert state["combat_context"]["stage"] == "LOSSES"
+    assert state["combat_context"]["loss_side"] == "CP"
+    assert any(a["type"] == "TAKE_LOSS" and a["unit_id"] == "GE_1_ARMY_1"
+               for a in generate_legal_actions(state))
+
+
 def test_reduced_army_loss_replaces_with_reserve_corps():
     state = combat_state()
     state["units"]["BE_1_ARMY_1"]["reduced"] = True

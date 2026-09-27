@@ -846,7 +846,8 @@ def apply_combat_action(state: FullGameState, action: Action) -> FullGameState:
             result = crt_result(snapshot["tables"][side], column, action["value"] + drm)
             context["rolls"][side] = action["value"]
             context["results"][side] = result
-            if "flank_success" in context:
+            if ("flank_success" in context
+                    or "VON_HUTIER" in context["cards"][context["attacker"]]):
                 opponent = context["defender"] if side == context["attacker"] else context["attacker"]
                 context["loss_queue"] = [opponent]
                 _after_losses(state)

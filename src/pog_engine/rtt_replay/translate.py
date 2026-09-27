@@ -328,8 +328,8 @@ def translate_intent(state: FullGameState, intent: Intent, ids: SourceIds) -> tu
             add("PASS_COMBAT_CARDS")
         if intent.random_seeds:
             add("PASS_COMBAT_CARDS")
-        if len(intent.random_seeds) not in (0, 2):
-            raise TranslationError(f"index {intent.start_index}: 전투 주사위 두 개가 필요합니다")
+        if len(intent.random_seeds) > 2:
+            raise TranslationError(f"index {intent.start_index}: 전투 주사위 관측 수가 잘못되었습니다")
         for seed in intent.random_seeds:
             context = current["combat_context"]
             add("RECORD_COMBAT_DIE", side=context["fire_order"][context["fire_index"]],
